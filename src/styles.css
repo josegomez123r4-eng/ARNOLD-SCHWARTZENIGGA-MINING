@@ -41,3 +41,10 @@
 .language-picker select{max-width:92px;border:0;outline:0;background:transparent;color:#e8b34f;font:700 9px 'DM Sans',sans-serif;letter-spacing:.2px}
 .language-picker select option{background:#17140f;color:#f4f0e7}
 @media(max-width:370px){.language-picker{padding:0 5px}.language-picker select{max-width:75px;font-size:8px}.header-actions{gap:5px}.live-pill{padding:7px 7px;font-size:8px}}
+
+/* Right-to-left language support */
+html[dir="rtl"] .app-shell{direction:rtl}
+html[dir="rtl"] .brand{flex-direction:row}
+html[dir="rtl"] .notice{ text-align:right }
+html[dir="rtl"] .profile-row{flex-direction:row}
+.language-picker select{direction:ltr;text-align:left}
