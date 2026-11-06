@@ -8,6 +8,51 @@ import {
 
 type Tab = 'mining' | 'tasks' | 'referrals' | 'wallet' | 'market' | 'p2p'
 
+function playShotSound() {
+  try {
+    const AudioContextClass = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+    if (!AudioContextClass) return
+    const context = new AudioContextClass()
+    const now = context.currentTime
+    const duration = 0.16
+    const buffer = context.createBuffer(1, Math.floor(context.sampleRate * duration), context.sampleRate)
+    const data = buffer.getChannelData(0)
+    for (let i = 0; i < data.length; i++) {
+      const envelope = Math.pow(1 - i / data.length, 3)
+      data[i] = (Math.random() * 2 - 1) * envelope
+    }
+    const noise = context.createBufferSource()
+    noise.buffer = buffer
+    const filter = context.createBiquadFilter()
+    filter.type = 'lowpass'
+    filter.frequency.setValueAtTime(1800, now)
+    filter.frequency.exponentialRampToValueAtTime(220, now + duration)
+    const noiseGain = context.createGain()
+    noiseGain.gain.setValueAtTime(0.22, now)
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + duration)
+    noise.connect(filter)
+    filter.connect(noiseGain)
+    noiseGain.connect(context.destination)
+    noise.start(now)
+    noise.stop(now + duration)
+
+    const thump = context.createOscillator()
+    const thumpGain = context.createGain()
+    thump.type = 'triangle'
+    thump.frequency.setValueAtTime(125, now)
+    thump.frequency.exponentialRampToValueAtTime(42, now + 0.12)
+    thumpGain.gain.setValueAtTime(0.28, now)
+    thumpGain.gain.exponentialRampToValueAtTime(0.001, now + 0.13)
+    thump.connect(thumpGain)
+    thumpGain.connect(context.destination)
+    thump.start(now)
+    thump.stop(now + 0.14)
+    window.setTimeout(() => { void context.close() }, 350)
+  } catch {
+    // Audio is optional; the interface remains usable if the browser blocks it.
+  }
+}
+
 const tabs: { id: Tab; label: string; icon: typeof Pickaxe }[] = [
   { id: 'mining', label: 'Mining', icon: Pickaxe },
   { id: 'tasks', label: 'Tasks', icon: ListChecks },
@@ -22,7 +67,7 @@ function Header({ language, onLanguageChange }: { language: LanguageCode; onLang
     <div className="brand"><div className="brand-symbol"><Flame size={21} fill="currentColor" /></div>
       <div><div className="brand-name">ARNOLD</div><div className="brand-sub">SCHWARTZENIGGA MINING</div></div>
     </div>
-    <div className="header-actions"><label className="language-picker" aria-label={translate(language, 'Select language')}><span>{languages.find((item) => item.code === language)?.flag}</span><select value={language} onChange={(event) => onLanguageChange(event.target.value as LanguageCode)}>{languages.map((item) => <option key={item.code} value={item.code}>{item.flag} {item.name}</option>)}</select></label><div className="live-pill"><span /> MINI APP</div></div>
+    <div className="header-actions"><label className="language-picker" aria-label={translate(language, 'Select language')}><span>{languages.find((item) => item.code === language)?.flag}</span><select value={language} onChange={(event) => { playShotSound(); onLanguageChange(event.target.value as LanguageCode) }}>{languages.map((item) => <option key={item.code} value={item.code}>{item.flag} {item.name}</option>)}</select></label><div className="live-pill"><span /> MINI APP</div></div>
   </header>
 }
 
@@ -121,7 +166,7 @@ export default function App() {
       {tab === 'p2p' && <P2PPage t={t} />}
     </div>
     <nav className="bottom-nav" aria-label="Main navigation">
-      {tabs.map(({ id, label, icon: Icon }) => <button key={id} className={tab === id ? 'selected' : ''} aria-current={tab === id ? 'page' : undefined} onClick={() => setTab(id)}>
+      {tabs.map(({ id, label, icon: Icon }) => <button key={id} className={tab === id ? 'selected' : ''} aria-current={tab === id ? 'page' : undefined} onClick={() => { playShotSound(); setTab(id) }}>
         <Icon size={18} strokeWidth={tab === id ? 2.4 : 1.8} /><span>{t(label)}</span>
       </button>)}
     </nav>
