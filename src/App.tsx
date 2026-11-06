@@ -56,7 +56,7 @@ function playShotSound() {
 
 function startBackgroundMusic() {
   const AudioClass = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
-  if (!AudioClass) return () => {}
+  if (!AudioClass) return { resume: () => {}, stop: () => {} }
   const audio = new AudioClass()
   const master = audio.createGain()
   master.gain.value = 0.12
@@ -101,7 +101,7 @@ function startBackgroundMusic() {
   void audio.resume()
   schedule()
   const timer = window.setInterval(schedule, 200)
-  return () => { window.clearInterval(timer); void audio.close() }
+  return { resume: () => { void audio.resume() }, stop: () => { window.clearInterval(timer); void audio.close() } }
 }
 
 const tabs: { id: Tab; label: string; icon: typeof Pickaxe }[] = [
@@ -197,11 +197,10 @@ function P2PPage({ t }: { t: (phrase: string) => string }) {
 export default function App() {
   const [tab, setTab] = useState<Tab>('mining')
   const [language, setLanguage] = useState<LanguageCode>(detectLanguage)
-  const [musicOn, setMusicOn] = useState(false)
-  const stopMusic = useRef<(() => void) | null>(null)
+  const [musicOn, setMusicOn] = useState(true)
+  const stopMusic = useRef<ReturnType<typeof startBackgroundMusic> | null>(null)
   const t = (phrase: string) => translate(language, phrase)
-  const toggleMusic = () => { if (musicOn) { stopMusic.current?.(); stopMusic.current = null; setMusicOn(false) } else { stopMusic.current = startBackgroundMusic(); setMusicOn(true) } }
-  useEffect(() => () => { stopMusic.current?.() }, [])
+  useEffect(() => {\n    const player = startBackgroundMusic()\n    stopMusic.current = player\n    player.resume()\n    const unlockAudio = () => player.resume()\n    window.addEventListener('pointerdown', unlockAudio)\n    window.addEventListener('touchstart', unlockAudio)\n    window.addEventListener('keydown', unlockAudio)\n    return () => {\n      window.removeEventListener('pointerdown', unlockAudio)\n      window.removeEventListener('touchstart', unlockAudio)\n      window.removeEventListener('keydown', unlockAudio)\n      player.stop()\n      stopMusic.current = null\n    }\n  }, [])\n  const toggleMusic = () => { if (musicOn) { stopMusic.current?.stop(); stopMusic.current = null; setMusicOn(false) } else { const player = startBackgroundMusic(); stopMusic.current = player; player.resume(); setMusicOn(true) } }
   const changeLanguage = (next: LanguageCode) => { localStorage.setItem('arnold-language', next); setLanguage(next); document.documentElement.lang = next; document.documentElement.dir = next === 'ar' ? 'rtl' : 'ltr' }
   useEffect(() => {
     document.documentElement.lang = language
