@@ -200,7 +200,23 @@ export default function App() {
   const [musicOn, setMusicOn] = useState(true)
   const stopMusic = useRef<ReturnType<typeof startBackgroundMusic> | null>(null)
   const t = (phrase: string) => translate(language, phrase)
-  useEffect(() => {\n    const player = startBackgroundMusic()\n    stopMusic.current = player\n    player.resume()\n    const unlockAudio = () => player.resume()\n    window.addEventListener('pointerdown', unlockAudio)\n    window.addEventListener('touchstart', unlockAudio)\n    window.addEventListener('keydown', unlockAudio)\n    return () => {\n      window.removeEventListener('pointerdown', unlockAudio)\n      window.removeEventListener('touchstart', unlockAudio)\n      window.removeEventListener('keydown', unlockAudio)\n      player.stop()\n      stopMusic.current = null\n    }\n  }, [])\n  const toggleMusic = () => { if (musicOn) { stopMusic.current?.stop(); stopMusic.current = null; setMusicOn(false) } else { const player = startBackgroundMusic(); stopMusic.current = player; player.resume(); setMusicOn(true) } }
+  useEffect(() => {
+    const player = startBackgroundMusic()
+    stopMusic.current = player
+    player.resume()
+    const unlockAudio = () => player.resume()
+    window.addEventListener('pointerdown', unlockAudio)
+    window.addEventListener('touchstart', unlockAudio)
+    window.addEventListener('keydown', unlockAudio)
+    return () => {
+      window.removeEventListener('pointerdown', unlockAudio)
+      window.removeEventListener('touchstart', unlockAudio)
+      window.removeEventListener('keydown', unlockAudio)
+      player.stop()
+      stopMusic.current = null
+    }
+  }, [])
+  const toggleMusic = () => { if (musicOn) { stopMusic.current?.stop(); stopMusic.current = null; setMusicOn(false) } else { const player = startBackgroundMusic(); stopMusic.current = player; player.resume(); setMusicOn(true) } }
   const changeLanguage = (next: LanguageCode) => { localStorage.setItem('arnold-language', next); setLanguage(next); document.documentElement.lang = next; document.documentElement.dir = next === 'ar' ? 'rtl' : 'ltr' }
   useEffect(() => {
     document.documentElement.lang = language
