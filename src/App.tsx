@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { detectLanguage, languages, translate, type LanguageCode } from './i18n'
 import WebApp from '@twa-dev/sdk'
 import {
   CircleHelp, Clock3, Coins, Flame, Gift, Handshake, ListChecks, LockKeyhole,
-  Pickaxe, ShoppingBag, ShieldCheck, Wallet, Zap
+  Pickaxe, ShoppingBag, ShieldCheck, Wallet, Zap, Volume2, VolumeX
 } from 'lucide-react'
 
 type Tab = 'mining' | 'tasks' | 'referrals' | 'wallet' | 'market' | 'p2p'
@@ -53,6 +53,55 @@ function playShotSound() {
   }
 }
 
+
+function startBackgroundMusic() {
+  const AudioClass = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+  if (!AudioClass) return () => {}
+  const audio = new AudioClass()
+  const master = audio.createGain()
+  master.gain.value = 0.12
+  master.connect(audio.destination)
+  const bpm = 96
+  const beat = 60 / bpm
+  const bar = beat * 4
+  const roots = [55, 49, 43.65, 46.25, 55, 49, 43.65, 46.25]
+  const notes = [220, 261.63, 293.66, 329.63, 293.66, 261.63, 196, 220]
+  const play = (hz: number, at: number, length: number, shape: OscillatorType, level: number) => {
+    const osc = audio.createOscillator()
+    const amp = audio.createGain()
+    osc.type = shape
+    osc.frequency.setValueAtTime(hz, at)
+    amp.gain.setValueAtTime(0.0001, at)
+    amp.gain.linearRampToValueAtTime(level, at + 0.07)
+    amp.gain.exponentialRampToValueAtTime(0.0001, at + length)
+    osc.connect(amp); amp.connect(master)
+    osc.start(at); osc.stop(at + length + 0.02)
+  }
+  let step = 0
+  const schedule = () => {
+    const limit = audio.currentTime + 1
+    while (audio.currentTime + step * bar < limit) {
+      const at = audio.currentTime + step * bar
+      const root = roots[step % roots.length]
+      play(root, at, bar * 0.95, 'sawtooth', 0.035)
+      play(root * 1.5, at, bar * 0.9, 'triangle', 0.035)
+      play(root * 2, at, bar * 0.9, 'triangle', 0.025)
+      play(root / 2, at, beat * 1.8, 'sine', 0.14)
+      play(notes[step % notes.length], at + beat * 2, beat * 1.5, 'sawtooth', 0.04)
+      for (let n = 0; n < 4; n++) {
+        const hit = at + n * beat
+        if (n === 0 || n === 2) play(75, hit, 0.18, 'sine', 0.22)
+        else play(190, hit, 0.09, 'triangle', 0.07)
+      }
+      step++
+    }
+  }
+  void audio.resume()
+  schedule()
+  const timer = window.setInterval(schedule, 200)
+  return () => { window.clearInterval(timer); void audio.close() }
+}
+
 const tabs: { id: Tab; label: string; icon: typeof Pickaxe }[] = [
   { id: 'mining', label: 'Mining', icon: Pickaxe },
   { id: 'tasks', label: 'Tasks', icon: ListChecks },
@@ -62,12 +111,12 @@ const tabs: { id: Tab; label: string; icon: typeof Pickaxe }[] = [
   { id: 'p2p', label: 'P2P', icon: Handshake },
 ]
 
-function Header({ language, onLanguageChange }: { language: LanguageCode; onLanguageChange: (language: LanguageCode) => void }) {
+function Header({ language, onLanguageChange, musicOn, onMusicToggle }: { language: LanguageCode; onLanguageChange: (language: LanguageCode) => void; musicOn: boolean; onMusicToggle: () => void }) {
   return <header className="topbar">
     <div className="brand"><div className="brand-symbol"><Flame size={21} fill="currentColor" /></div>
       <div><div className="brand-name">ARNOLD</div><div className="brand-sub">SCHWARTZENIGGA MINING</div></div>
     </div>
-    <div className="header-actions"><label className="language-picker" aria-label={translate(language, 'Select language')}><span>{languages.find((item) => item.code === language)?.flag}</span><select value={language} onChange={(event) => { playShotSound(); onLanguageChange(event.target.value as LanguageCode) }}>{languages.map((item) => <option key={item.code} value={item.code}>{item.flag} {item.name}</option>)}</select></label><div className="live-pill"><span /> MINI APP</div></div>
+    <div className="header-actions"><button className="music-toggle" type="button" onClick={onMusicToggle} aria-label={musicOn ? "Mute music" : "Play music"}>{musicOn ? <Volume2 size={16} /> : <VolumeX size={16} />}<span>{musicOn ? "MUSIC ON" : "MUSIC OFF"}</span></button><label className="language-picker" aria-label={translate(language, 'Select language')}><span>{languages.find((item) => item.code === language)?.flag}</span><select value={language} onChange={(event) => { playShotSound(); onLanguageChange(event.target.value as LanguageCode) }}>{languages.map((item) => <option key={item.code} value={item.code}>{item.flag} {item.name}</option>)}</select></label><div className="live-pill"><span /> MINI APP</div></div>
   </header>
 }
 
@@ -146,7 +195,11 @@ function P2PPage({ t }: { t: (phrase: string) => string }) {
 export default function App() {
   const [tab, setTab] = useState<Tab>('mining')
   const [language, setLanguage] = useState<LanguageCode>(detectLanguage)
+  const [musicOn, setMusicOn] = useState(false)
+  const stopMusic = useRef<(() => void) | null>(null)
   const t = (phrase: string) => translate(language, phrase)
+  const toggleMusic = () => { if (musicOn) { stopMusic.current?.(); stopMusic.current = null; setMusicOn(false) } else { stopMusic.current = startBackgroundMusic(); setMusicOn(true) } }
+  useEffect(() => () => { stopMusic.current?.() }, [])
   const changeLanguage = (next: LanguageCode) => { localStorage.setItem('arnold-language', next); setLanguage(next); document.documentElement.lang = next; document.documentElement.dir = next === 'ar' ? 'rtl' : 'ltr' }
   useEffect(() => {
     document.documentElement.lang = language
@@ -156,7 +209,7 @@ export default function App() {
 
   return <main className="app-shell">
     <div className="glow glow-a" /><div className="glow glow-b" />
-    <Header language={language} onLanguageChange={changeLanguage} />
+    <Header language={language} onLanguageChange={changeLanguage} musicOn={musicOn} onMusicToggle={toggleMusic} />
     <div className="content">
       {tab === 'mining' && <MiningPage t={t} />}
       {tab === 'tasks' && <TasksPage t={t} />}
