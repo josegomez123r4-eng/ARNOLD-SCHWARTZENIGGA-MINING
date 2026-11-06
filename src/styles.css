@@ -33,3 +33,11 @@
 .p2p-page>p{max-width:290px;color:#a49a86;font-size:11px;line-height:1.7;margin:19px auto}
 .p2p-lock{display:flex;align-items:center;gap:8px;margin-top:16px;color:#817b70;font-size:8px;letter-spacing:1px}
 @media(max-width:370px){.bottom-nav{height:70px}.bottom-nav button{font-size:6.5px;letter-spacing:0}.bottom-nav button svg{width:16px;height:16px}.app-shell{padding-left:14px;padding-right:14px}.stat-card{padding:13px 10px}}
+
+/* Multilingual language selector */
+.header-actions{display:flex;align-items:center;gap:7px}
+.language-picker{height:32px;display:flex;align-items:center;gap:4px;padding:0 7px;border:1px solid #b58a3c66;border-radius:9px;background:#17140f;color:#e8b34f}
+.language-picker>span{font-size:14px;line-height:1}
+.language-picker select{max-width:92px;border:0;outline:0;background:transparent;color:#e8b34f;font:700 9px 'DM Sans',sans-serif;letter-spacing:.2px}
+.language-picker select option{background:#17140f;color:#f4f0e7}
+@media(max-width:370px){.language-picker{padding:0 5px}.language-picker select{max-width:75px;font-size:8px}.header-actions{gap:5px}.live-pill{padding:7px 7px;font-size:8px}}
