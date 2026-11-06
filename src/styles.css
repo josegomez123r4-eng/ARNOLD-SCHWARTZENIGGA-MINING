@@ -109,3 +109,10 @@ body{background:#050505}
 @keyframes arnoldPulse{0%,100%{box-shadow:0 0 18px #ff8c1b14,inset 0 1px #fff2}50%{box-shadow:0 0 34px #ff8c1b32,inset 0 1px #fff3}}
 .mining-card{animation:arnoldPulse 4s ease-in-out infinite}
 @media(prefers-reduced-motion:reduce){.mining-card{animation:none}}
+
+/* Optional cinematic soundtrack control */
+.header-actions{gap:6px}
+.music-toggle{height:32px;display:flex;align-items:center;justify-content:center;gap:5px;padding:0 8px;border:1px solid #ffad3970;border-radius:9px;background:linear-gradient(135deg,#321b0b,#17100a);color:#ffd06b;font-size:8px;font-weight:800;letter-spacing:.55px;white-space:nowrap;cursor:pointer}
+.music-toggle svg{flex:none}
+.music-toggle:active{transform:scale(.97)}
+@media(max-width:370px){.music-toggle{padding:0 6px;gap:3px;font-size:7px}.music-toggle svg{width:14px;height:14px}}
