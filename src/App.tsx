@@ -64,8 +64,8 @@ function startBackgroundMusic() {
   const bpm = 96
   const beat = 60 / bpm
   const bar = beat * 4
-  const roots = [55, 49, 43.65, 46.25, 55, 49, 43.65, 46.25]
-  const notes = [220, 261.63, 293.66, 329.63, 293.66, 261.63, 196, 220]
+  const roots = [55, 49, 43.65, 46.25, 55, 49, 43.65, 46.25, 55, 65.41, 73.42, 49, 55, 49, 46.25, 55, 55, 49, 43.65, 46.25, 65.41, 73.42, 49, 55]
+  const notes = [220, 261.63, 293.66, 329.63, 293.66, 261.63, 196, 220, 261.63, 293.66, 329.63, 392, 349.23, 329.63, 293.66, 261.63, 220, 261.63, 329.63, 392, 440, 392, 329.63, 261.63]
   const play = (hz: number, at: number, length: number, shape: OscillatorType, level: number) => {
     const osc = audio.createOscillator()
     const amp = audio.createGain()
