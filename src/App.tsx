@@ -98,10 +98,26 @@ function startBackgroundMusic() {
       nextBarTime += bar
     }
   }
-  void audio.resume()
-  schedule()
-  const timer = window.setInterval(schedule, 200)
-  return { resume: () => { void audio.resume() }, stop: () => { window.clearInterval(timer); void audio.close() } }
+  let timer: number | null = null
+  let started = false
+  const resume = async () => {
+    try {
+      await audio.resume()
+      if (audio.state !== 'running' || started) return
+      started = true
+      schedule()
+      timer = window.setInterval(schedule, 200)
+    } catch {
+      // The browser may require another direct user interaction before audio can start.
+    }
+  }
+  const stop = () => {
+    if (timer !== null) window.clearInterval(timer)
+    timer = null
+    started = false
+    void audio.close()
+  }
+  return { resume, stop, isRunning: () => audio.state === 'running' }
 }
 
 const tabs: { id: Tab; label: string; icon: typeof Pickaxe }[] = [
@@ -216,7 +232,22 @@ export default function App() {
       stopMusic.current = null
     }
   }, [])
-  const toggleMusic = () => { if (musicOn) { stopMusic.current?.stop(); stopMusic.current = null; setMusicOn(false) } else { const player = startBackgroundMusic(); stopMusic.current = player; player.resume(); setMusicOn(true) } }
+  const toggleMusic = () => {
+    if (musicOn && stopMusic.current?.isRunning()) {
+      stopMusic.current.stop()
+      stopMusic.current = null
+      setMusicOn(false)
+      return
+    }
+    if (musicOn && stopMusic.current) {
+      void stopMusic.current.resume()
+      return
+    }
+    const player = startBackgroundMusic()
+    stopMusic.current = player
+    void player.resume()
+    setMusicOn(true)
+  }
   const changeLanguage = (next: LanguageCode) => { localStorage.setItem('arnold-language', next); setLanguage(next); document.documentElement.lang = next; document.documentElement.dir = next === 'ar' ? 'rtl' : 'ltr' }
   useEffect(() => {
     document.documentElement.lang = language
