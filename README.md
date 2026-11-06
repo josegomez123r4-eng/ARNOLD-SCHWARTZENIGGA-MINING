@@ -1,36 +1,37 @@
 # ARNOLD SCHWARTZENIGGA MINING
 
-Telegram Mini App for the **$ARNOLD** token community.
+Telegram Mini App frontend for the **$ARNOLD** token community.
 
-## Project overview
+## Current prototype
 
-A manual mining experience where eligible users start a mining cycle, wait for it to finish, and claim their **$ARNOLD** rewards.
+- Responsive mobile-first mining dashboard.
+- Telegram Mini App SDK initialization and viewport expansion.
+- 24-hour mining-cycle interface with a live countdown.
+- Claimed and pending $ARNOLD reward panels.
+- Preview-only start, complete, and claim interactions.
+- Mine, leaderboard, and profile navigation.
 
-## Initial product rules
+## Product rules represented
 
-- Mining cycle: 24 hours.
-- Initial base reward: 5 $ARNOLD per completed daily cycle.
-- Mining is manual: users must start a cycle and claim after it completes.
-- Wallet holdings can provide reward bonuses based on the user's $ARNOLD balance.
-- Holding eligibility is checked when a cycle starts and again when rewards are claimed.
-- If a user no longer meets the required holding level at claim time, the corresponding holding bonus is not granted.
-- Mining rewards are designed to decrease progressively as the mining reserve is depleted.
+- Initial base reward: 5 $ARNOLD per completed 24-hour cycle.
+- Mining is manual: users start a cycle and claim after it completes.
+- Holding eligibility must be checked at cycle start and again at claim time.
+- If a user no longer meets a holding tier at claim time, that tier's bonus is not granted.
+- Rewards are intended to decrease progressively as the mining reserve is depleted.
 
-## Important implementation notes
+## Important: prototype only
 
-- Validate wallet ownership and token balances on the server; do not trust client-side balances.
-- Prevent multiple active cycles and duplicate claims.
-- Store cycle start/end times and claim state persistently.
-- Keep reward calculations deterministic and auditable.
+Frontend interactions currently use local demo state. They do not authenticate a Telegram user, connect or verify a wallet, persist mining sessions, or issue real $ARNOLD tokens. Client-side values must never be used as proof of holdings or as the source of truth for rewards.
 
-## To be defined
+## Next milestones
 
-- Supported wallet connection flow and $ARNOLD token contract address.
-- Holding tiers and bonus amounts.
-- Mining reserve size and the exact reward-reduction formula.
-- Backend, database, hosting, and Telegram Mini App configuration.
-- UI design, supported languages, and admin controls.
+1. Configure the production Telegram bot and Mini App URL.
+2. Verify Telegram Web App init data on a trusted backend.
+3. Connect a supported TON wallet and verify $ARNOLD balances on-chain.
+4. Implement secure, persistent mining cycles and duplicate-claim protection.
+5. Define holding tiers, reserve size, and reward decay formula.
+6. Add admin controls, leaderboard, and production deployment.
 
-## Status
+## Development
 
-Project repository initialized. Implementation has not started.
+Install dependencies with npm install, start with npm run dev, and build with npm run build.
