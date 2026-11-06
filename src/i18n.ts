@@ -223,7 +223,7 @@ export function detectLanguage(): LanguageCode {
   if (languages.some((item) => item.code === saved)) return saved as LanguageCode
   const telegramLang = (window as Window & { Telegram?: { WebApp?: { initDataUnsafe?: { user?: { language_code?: string } } } }).Telegram?.WebApp?.initDataUnsafe?.user?.language_code
   const browserLang = telegramLang || navigator.language || 'en'
-  if (browserLang.toLowerCase().startsWith('zh-tw') || browserLang.toLowerCase().startsWith('zh-hk')) return 'zh-TW'
+  if (browserLang.toLowerCase().startsWith('zh-tw') || browserLang.toLowerCase().startsWith('zh-hk') || browserLang.toLowerCase().startsWith('zh-hant')) return 'zh-TW'
   const match = languages.find((item) => browserLang.toLowerCase().startsWith(item.code.toLowerCase().split('-')[0]))
   return match?.code || 'en'
 }
