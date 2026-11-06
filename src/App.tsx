@@ -26,75 +26,75 @@ function Header({ language, onLanguageChange }: { language: LanguageCode; onLang
   </header>
 }
 
-function MiningPage() {
+function MiningPage({ t }: { t: (phrase: string) => string }) {
   return <section className="page-section">
     <div className="hero"><div className="overline"><span /> THE DAILY GRIND <span /></div>
-      <h1>MAKE YOUR<br /><em>HOLDINGS</em><br />WORK.</h1>
-      <p>Mine $ARNOLD every 24 hours. Stay active, stack rewards.</p>
+      <h1>{t('MAKE YOUR')}<br /><em>{t('HOLDINGS')}</em><br />{t('WORK.')}</h1>
+      <p>{t('Mine $ARNOLD every 24 hours. Stay active, stack rewards.')}</p>
     </div>
-    <div className="notice notice-large"><ShieldCheck size={17} /><span>Mining is not active yet. Your rewards and wallet eligibility will be verified securely before the first cycle begins.</span></div>
+    <div className="notice notice-large"><ShieldCheck size={17} /><span>{t('Mining is not active yet. Your rewards and wallet eligibility will be verified securely before the first cycle begins.')}</span></div>
     <section className="stats">
-      <article className="stat-card featured"><div className="stat-label"><Coins size={14} /> BASE REWARD</div><div className="stat-number">5 <small>$ARNOLD</small></div><div className="stat-caption">Per completed 24-hour cycle</div></article>
-      <article className="stat-card"><div className="stat-label"><Clock3 size={14} /> CYCLE</div><div className="stat-number">24 <small>HOURS</small></div><div className="stat-caption">One manual cycle at a time</div></article>
+      <article className="stat-card featured"><div className="stat-label"><Coins size={14} /> {t('BASE REWARD')}</div><div className="stat-number">5 <small>$ARNOLD</small></div><div className="stat-caption">{t('Per completed 24-hour cycle')}</div></article>
+      <article className="stat-card"><div className="stat-label"><Clock3 size={14} /> {t('CYCLE')}</div><div className="stat-number">24 <small>{t('HOURS')}</small></div><div className="stat-caption">{t('One manual cycle at a time')}</div></article>
     </section>
     <section className="mining-card">
-      <div className="card-head"><div><div className="kicker">MINING STATION</div><h2><Pickaxe size={20} /> MINING SESSION</h2></div><div className="status"><span /> NOT ACTIVE</div></div>
-      <div className="timer-panel"><div className="timer-label">MINING WILL OPEN SOON</div>
-        <div className="timer"><div><strong>24</strong><span>HOURS</span></div><i>:</i><div><strong>00</strong><span>MINUTES</span></div><i>:</i><div><strong>00</strong><span>SECONDS</span></div></div>
-        <div className="progress"><div style={{ width: '0%' }} /></div><div className="progress-meta"><span>0H</span><span>NOT STARTED</span><span>24H</span></div>
+      <div className="card-head"><div><div className="kicker">{t('MINING STATION')}</div><h2><Pickaxe size={20} /> {t('MINING SESSION')}</h2></div><div className="status"><span /> {t('NOT ACTIVE')}</div></div>
+      <div className="timer-panel"><div className="timer-label">{t('MINING WILL OPEN SOON')}</div>
+        <div className="timer"><div><strong>24</strong><span>{t('HOURS')}</span></div><i>:</i><div><strong>00</strong><span>{t('MINUTES')}</span></div><i>:</i><div><strong>00</strong><span>{t('SECONDS')}</span></div></div>
+        <div className="progress"><div style={{ width: '0%' }} /></div><div className="progress-meta"><span>0H</span><span>{t('NOT STARTED')}</span><span>24H</span></div>
       </div>
-      <div className="reward-line"><div className="reward-icon"><Zap size={19} /></div><div className="reward-desc"><b>BASE CYCLE REWARD</b><span>Initial reward before holding bonuses</span></div><div className="reward-value">+5<small>$ARNOLD</small></div></div>
-      <button className="primary-btn" disabled><LockKeyhole size={17} /> MINING COMING SOON</button>
-      <p className="helper">Mining remains disabled until all security checks are completed.</p>
+      <div className="reward-line"><div className="reward-icon"><Zap size={19} /></div><div className="reward-desc"><b>{t('BASE CYCLE REWARD')}</b><span>{t('Initial reward before holding bonuses')}</span></div><div className="reward-value">+5<small>$ARNOLD</small></div></div>
+      <button className="primary-btn" disabled><LockKeyhole size={17} /> {t('MINING COMING SOON')}</button>
+      <p className="helper">{t('Mining remains disabled until all security checks are completed.')}</p>
     </section>
-    <div className="section-footnote">Total supply: 1,000,000 $ARNOLD · Mining allocation: 500,000 $ARNOLD</div>
+    <div className="section-footnote">{t('Total supply: 1,000,000 $ARNOLD · Mining allocation: 500,000 $ARNOLD')}</div>
   </section>
 }
 
-function TasksPage() {
+function TasksPage({ t }: { t: (phrase: string) => string }) {
   return <section className="inner-page">
-    <div className="kicker">EARN MORE $ARNOLD</div><h1>DAILY<br /><span>TASKS.</span></h1>
-    <div className="feature-panel"><div className="feature-icon"><ListChecks size={22} /></div><div><b>REWARD TASKS</b><span>Complete activities to earn additional rewards.</span></div></div>
-    <div className="empty-state"><CircleHelp size={34} /><b>TASKS COMING SOON</b><span>Available tasks and their rewards will be published here.</span></div>
+    <div className="kicker">{t('EARN MORE $ARNOLD')}</div><h1>{t('DAILY')}<br /><span>{t('TASKS.')}</span></h1>
+    <div className="feature-panel"><div className="feature-icon"><ListChecks size={22} /></div><div><b>{t('REWARD TASKS')}</b><span>{t('Complete activities to earn additional rewards.')}</span></div></div>
+    <div className="empty-state"><CircleHelp size={34} /><b>{t('TASKS COMING SOON')}</b><span>{t('Available tasks and their rewards will be published here.')}</span></div>
   </section>
 }
 
-function ReferralsPage() {
+function ReferralsPage({ t }: { t: (phrase: string) => string }) {
   return <section className="inner-page">
-    <div className="kicker">GROW THE COMMUNITY</div><h1>INVITE.<br /><span>EARN.</span></h1>
-    <div className="feature-panel"><div className="feature-icon"><Gift size={22} /></div><div><b>5% LIFETIME REFERRAL REWARD</b><span>Earn 5% of eligible mining rewards generated by your direct referrals, subject to the referral reserve.</span></div></div>
-    <div className="stats referral-stats"><article className="stat-card"><div className="stat-label">YOUR REFERRALS</div><div className="stat-number">—</div><div className="stat-caption">Telegram account required</div></article><article className="stat-card"><div className="stat-label">PENDING REWARDS</div><div className="stat-number">—</div><div className="stat-caption">$ARNOLD</div></article></div>
-    <div className="empty-state"><Gift size={34} /><b>REFERRAL DASHBOARD SOON</b><span>Your personal invite link and referral history will appear here after Telegram verification is connected.</span></div>
+    <div className="kicker">{t('GROW THE COMMUNITY')}</div><h1>{t('INVITE.')}<br /><span>{t('EARN.')}</span></h1>
+    <div className="feature-panel"><div className="feature-icon"><Gift size={22} /></div><div><b>{t('5% LIFETIME REFERRAL REWARD')}</b><span>{t('Earn 5% of eligible mining rewards generated by your direct referrals, subject to the referral reserve.')}</span></div></div>
+    <div className="stats referral-stats"><article className="stat-card"><div className="stat-label">{t('YOUR REFERRALS')}</div><div className="stat-number">—</div><div className="stat-caption">{t('Telegram account required')}</div></article><article className="stat-card"><div className="stat-label">{t('PENDING REWARDS')}</div><div className="stat-number">—</div><div className="stat-caption">$ARNOLD</div></article></div>
+    <div className="empty-state"><Gift size={34} /><b>{t('REFERRAL DASHBOARD SOON')}</b><span>{t('Your personal invite link and referral history will appear here after Telegram verification is connected.')}</span></div>
   </section>
 }
 
-function WalletPage() {
+function WalletPage({ t }: { t: (phrase: string) => string }) {
   return <section className="inner-page">
-    <div className="kicker">YOUR TON ACCOUNT</div><h1>YOUR<br /><span>WALLET.</span></h1>
-    <div className="wallet-connect-card"><div className="wallet-icon"><Wallet size={23} /></div><b>TON WALLET</b><span>Connect your TON wallet to verify $ARNOLD holdings and access eligible features.</span><button className="primary-btn" disabled><LockKeyhole size={17} /> WALLET CONNECT COMING SOON</button></div>
-    <div className="profile-row"><span>Minimum balance for withdrawals</span><b>500 $ARNOLD</b></div>
-    <div className="profile-row"><span>Minimum withdrawal</span><b>2,500 $ARNOLD</b></div>
-    <div className="profile-row"><span>One-time verification</span><b>0.10 GRAM</b></div>
-    <p className="helper helper-left">The verification payment and withdrawals are not enabled until on-chain transaction validation is implemented.</p>
+    <div className="kicker">{t('YOUR TON ACCOUNT')}</div><h1>{t('YOUR')}<br /><span>{t('WALLET.')}</span></h1>
+    <div className="wallet-connect-card"><div className="wallet-icon"><Wallet size={23} /></div><b>{t('TON WALLET')}</b><span>{t('Connect your TON wallet to verify $ARNOLD holdings and access eligible features.')}</span><button className="primary-btn" disabled><LockKeyhole size={17} /> {t('WALLET CONNECT COMING SOON')}</button></div>
+    <div className="profile-row"><span>{t('Minimum balance for withdrawals')}</span><b>500 $ARNOLD</b></div>
+    <div className="profile-row"><span>{t('Minimum withdrawal')}</span><b>2,500 $ARNOLD</b></div>
+    <div className="profile-row"><span>{t('One-time verification')}</span><b>0.10 GRAM</b></div>
+    <p className="helper helper-left">{t('The verification payment and withdrawals are not enabled until on-chain transaction validation is implemented.')}</p>
   </section>
 }
 
-function MarketPage() {
+function MarketPage({ t }: { t: (phrase: string) => string }) {
   return <section className="inner-page">
-    <div className="kicker">OFFICIAL ARNOLD STORE</div><h1>THE<br /><span>MARKET.</span></h1>
-    <div className="feature-panel"><div className="feature-icon"><ShoppingBag size={22} /></div><div><b>BUY $ARNOLD DIRECTLY</b><span>Official token listings, purchase amounts and prices will be displayed here.</span></div></div>
-    <div className="market-preview"><div className="market-coin"><Flame size={30} fill="currentColor" /></div><div className="market-token"><b>$ARNOLD</b><span>Official token · TON</span></div><div className="market-state">NOT LISTED</div></div>
-    <div className="empty-state"><ShoppingBag size={34} /><b>OFFICIAL MARKET COMING SOON</b><span>The administrator will publish token quantities and prices here. Purchases will open only after the TON sale contract is deployed and tested.</span></div>
+    <div className="kicker">{t('OFFICIAL ARNOLD STORE')}</div><h1>{t('THE')}<br /><span>{t('MARKET.')}</span></h1>
+    <div className="feature-panel"><div className="feature-icon"><ShoppingBag size={22} /></div><div><b>{t('BUY $ARNOLD DIRECTLY')}</b><span>{t('Official token listings, purchase amounts and prices will be displayed here.')}</span></div></div>
+    <div className="market-preview"><div className="market-coin"><Flame size={30} fill="currentColor" /></div><div className="market-token"><b>$ARNOLD</b><span>{t('Official token · TON')}</span></div><div className="market-state">{t('NOT LISTED')}</div></div>
+    <div className="empty-state"><ShoppingBag size={34} /><b>{t('OFFICIAL MARKET COMING SOON')}</b><span>{t('The administrator will publish token quantities and prices here. Purchases will open only after the TON sale contract is deployed and tested.')}</span></div>
   </section>
 }
 
-function P2PPage() {
+function P2PPage({ t }: { t: (phrase: string) => string }) {
   return <section className="inner-page p2p-page">
-    <div className="p2p-emblem"><Handshake size={38} /></div><div className="kicker">PEER-TO-PEER TRADING</div>
-    <h1>P2P<br /><span>MARKET.</span></h1>
-    <div className="coming-soon">COMING SOON</div>
-    <p>Trade $ARNOLD directly with other community members. User listings and peer-to-peer orders will arrive in the next phase.</p>
-    <div className="p2p-lock"><LockKeyhole size={16} /> P2P TRADING IS NOT ACTIVE</div>
+    <div className="p2p-emblem"><Handshake size={38} /></div><div className="kicker">{t('PEER-TO-PEER TRADING')}</div>
+    <h1>P2P<br /><span>{t('MARKET.')}</span></h1>
+    <div className="coming-soon">{t('COMING SOON')}</div>
+    <p>{t('Trade $ARNOLD directly with other community members. User listings and peer-to-peer orders will arrive in the next phase.')}</p>
+    <div className="p2p-lock"><LockKeyhole size={16} /> P2P TRADING IS {t('NOT ACTIVE')}</div>
   </section>
 }
 
@@ -111,18 +111,18 @@ export default function App() {
     <div className="glow glow-a" /><div className="glow glow-b" />
     <Header language={language} onLanguageChange={changeLanguage} />
     <div className="content">
-      {tab === 'mining' && <MiningPage />}
-      {tab === 'tasks' && <TasksPage />}
-      {tab === 'referrals' && <ReferralsPage />}
-      {tab === 'wallet' && <WalletPage />}
-      {tab === 'market' && <MarketPage />}
-      {tab === 'p2p' && <P2PPage />}
+      {tab === 'mining' && <MiningPage t={t} />}
+      {tab === 'tasks' && <TasksPage t={t} />}
+      {tab === 'referrals' && <ReferralsPage t={t} />}
+      {tab === 'wallet' && <WalletPage t={t} />}
+      {tab === 'market' && <MarketPage t={t} />}
+      {tab === 'p2p' && <P2PPage t={t} />}
     </div>
     <nav className="bottom-nav" aria-label="Main navigation">
       {tabs.map(({ id, label, icon: Icon }) => <button key={id} className={tab === id ? 'selected' : ''} aria-current={tab === id ? 'page' : undefined} onClick={() => setTab(id)}>
         <Icon size={18} strokeWidth={tab === id ? 2.4 : 1.8} /><span>{t(label)}</span>
       </button>)}
     </nav>
-    <div className="demo-tag">EARLY BUILD · LIVE FEATURES DISABLED</div>
+    <div className="demo-tag">{t('EARLY BUILD · LIVE FEATURES DISABLED')}</div>
   </main>
 }
