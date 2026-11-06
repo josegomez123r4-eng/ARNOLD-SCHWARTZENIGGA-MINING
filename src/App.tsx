@@ -13,8 +13,15 @@ function startBackgroundMusic() {
   if (!AudioClass) return { resume: () => {}, stop: () => {}, isRunning: () => false }
   const audio = new AudioClass()
   const master = audio.createGain()
-  master.gain.value = 0.12
-  master.connect(audio.destination)
+  master.gain.value = 0.42
+  const compressor = audio.createDynamicsCompressor()
+  compressor.threshold.value = -18
+  compressor.knee.value = 10
+  compressor.ratio.value = 8
+  compressor.attack.value = 0.003
+  compressor.release.value = 0.22
+  master.connect(compressor)
+  compressor.connect(audio.destination)
   const bpm = 96
   const beat = 60 / bpm
   const bar = beat * 4
