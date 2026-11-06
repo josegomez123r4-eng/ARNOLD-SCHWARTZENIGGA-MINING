@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { detectLanguage, languages, translate, type LanguageCode } from './i18n'
 import WebApp from '@twa-dev/sdk'
 import {
   CircleHelp, Clock3, Coins, Flame, Gift, Handshake, ListChecks, LockKeyhole,
@@ -16,12 +17,12 @@ const tabs: { id: Tab; label: string; icon: typeof Pickaxe }[] = [
   { id: 'p2p', label: 'P2P', icon: Handshake },
 ]
 
-function Header() {
+function Header({ language, onLanguageChange }: { language: LanguageCode; onLanguageChange: (language: LanguageCode) => void }) {
   return <header className="topbar">
     <div className="brand"><div className="brand-symbol"><Flame size={21} fill="currentColor" /></div>
       <div><div className="brand-name">ARNOLD</div><div className="brand-sub">SCHWARTZENIGGA MINING</div></div>
     </div>
-    <div className="live-pill"><span /> MINI APP</div>
+    <div className="header-actions"><label className="language-picker" aria-label="Select language"><span>{languages.find((item) => item.code === language)?.flag}</span><select value={language} onChange={(event) => onLanguageChange(event.target.value as LanguageCode)}>{languages.map((item) => <option key={item.code} value={item.code}>{item.flag} {item.name}</option>)}</select></label><div className="live-pill"><span /> MINI APP</div></div>
   </header>
 }
 
@@ -99,13 +100,16 @@ function P2PPage() {
 
 export default function App() {
   const [tab, setTab] = useState<Tab>('mining')
+  const [language, setLanguage] = useState<LanguageCode>(detectLanguage)
+  const t = (phrase: string) => translate(language, phrase)
+  const changeLanguage = (next: LanguageCode) => { localStorage.setItem('arnold-language', next); setLanguage(next); document.documentElement.lang = next }
   useEffect(() => {
     try { WebApp.ready(); WebApp.expand(); WebApp.setHeaderColor('#090909'); WebApp.setBackgroundColor('#090909') } catch { /* Browser preview */ }
   }, [])
 
   return <main className="app-shell">
     <div className="glow glow-a" /><div className="glow glow-b" />
-    <Header />
+    <Header language={language} onLanguageChange={changeLanguage} />
     <div className="content">
       {tab === 'mining' && <MiningPage />}
       {tab === 'tasks' && <TasksPage />}
@@ -116,7 +120,7 @@ export default function App() {
     </div>
     <nav className="bottom-nav" aria-label="Main navigation">
       {tabs.map(({ id, label, icon: Icon }) => <button key={id} className={tab === id ? 'selected' : ''} aria-current={tab === id ? 'page' : undefined} onClick={() => setTab(id)}>
-        <Icon size={18} strokeWidth={tab === id ? 2.4 : 1.8} /><span>{label}</span>
+        <Icon size={18} strokeWidth={tab === id ? 2.4 : 1.8} /><span>{t(label)}</span>
       </button>)}
     </nav>
     <div className="demo-tag">EARLY BUILD · LIVE FEATURES DISABLED</div>
