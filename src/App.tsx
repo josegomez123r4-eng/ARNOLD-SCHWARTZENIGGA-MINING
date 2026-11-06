@@ -22,7 +22,7 @@ function Header({ language, onLanguageChange }: { language: LanguageCode; onLang
     <div className="brand"><div className="brand-symbol"><Flame size={21} fill="currentColor" /></div>
       <div><div className="brand-name">ARNOLD</div><div className="brand-sub">SCHWARTZENIGGA MINING</div></div>
     </div>
-    <div className="header-actions"><label className="language-picker" aria-label="Select language"><span>{languages.find((item) => item.code === language)?.flag}</span><select value={language} onChange={(event) => onLanguageChange(event.target.value as LanguageCode)}>{languages.map((item) => <option key={item.code} value={item.code}>{item.flag} {item.name}</option>)}</select></label><div className="live-pill"><span /> MINI APP</div></div>
+    <div className="header-actions"><label className="language-picker" aria-label={translate(language, 'Select language')}><span>{languages.find((item) => item.code === language)?.flag}</span><select value={language} onChange={(event) => onLanguageChange(event.target.value as LanguageCode)}>{languages.map((item) => <option key={item.code} value={item.code}>{item.flag} {item.name}</option>)}</select></label><div className="live-pill"><span /> MINI APP</div></div>
   </header>
 }
 
@@ -81,7 +81,7 @@ function WalletPage({ t }: { t: (phrase: string) => string }) {
 
 function MarketPage({ t }: { t: (phrase: string) => string }) {
   return <section className="inner-page">
-    <div className="kicker">{t('OFFICIAL ARNOLD STORE')}</div><h1>{t('THE')}<br /><span>{t('MARKET.')}</span></h1>
+    <div className="kicker">{t('OFFICIAL ARNOLD STORE')}</div><h1><span>{t('MARKET.')}</span></h1>
     <div className="feature-panel"><div className="feature-icon"><ShoppingBag size={22} /></div><div><b>{t('BUY $ARNOLD DIRECTLY')}</b><span>{t('Official token listings, purchase amounts and prices will be displayed here.')}</span></div></div>
     <div className="market-preview"><div className="market-coin"><Flame size={30} fill="currentColor" /></div><div className="market-token"><b>$ARNOLD</b><span>{t('Official token · TON')}</span></div><div className="market-state">{t('NOT LISTED')}</div></div>
     <div className="empty-state"><ShoppingBag size={34} /><b>{t('OFFICIAL MARKET COMING SOON')}</b><span>{t('The administrator will publish token quantities and prices here. Purchases will open only after the TON sale contract is deployed and tested.')}</span></div>
@@ -94,7 +94,7 @@ function P2PPage({ t }: { t: (phrase: string) => string }) {
     <h1>P2P<br /><span>{t('MARKET.')}</span></h1>
     <div className="coming-soon">{t('COMING SOON')}</div>
     <p>{t('Trade $ARNOLD directly with other community members. User listings and peer-to-peer orders will arrive in the next phase.')}</p>
-    <div className="p2p-lock"><LockKeyhole size={16} /> P2P TRADING IS {t('NOT ACTIVE')}</div>
+    <div className="p2p-lock"><LockKeyhole size={16} /> {t('P2P TRADING IS NOT ACTIVE')}</div>
   </section>
 }
 
@@ -102,7 +102,7 @@ export default function App() {
   const [tab, setTab] = useState<Tab>('mining')
   const [language, setLanguage] = useState<LanguageCode>(detectLanguage)
   const t = (phrase: string) => translate(language, phrase)
-  const changeLanguage = (next: LanguageCode) => { localStorage.setItem('arnold-language', next); setLanguage(next); document.documentElement.lang = next }
+  const changeLanguage = (next: LanguageCode) => { localStorage.setItem('arnold-language', next); setLanguage(next); document.documentElement.lang = next; document.documentElement.dir = next === 'ar' ? 'rtl' : 'ltr' }
   useEffect(() => {
     try { WebApp.ready(); WebApp.expand(); WebApp.setHeaderColor('#090909'); WebApp.setBackgroundColor('#090909') } catch { /* Browser preview */ }
   }, [])
