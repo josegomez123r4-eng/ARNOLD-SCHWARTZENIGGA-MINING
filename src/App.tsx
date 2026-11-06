@@ -13,67 +13,65 @@ function startBackgroundMusic() {
   if (!AudioClass) return { resume: () => {}, stop: () => {}, isRunning: () => false }
   const audio = new AudioClass()
   const master = audio.createGain()
-  master.gain.value = 0.42
+  master.gain.value = 0.22
   const compressor = audio.createDynamicsCompressor()
-  compressor.threshold.value = -18
-  compressor.knee.value = 10
-  compressor.ratio.value = 8
-  compressor.attack.value = 0.003
-  compressor.release.value = 0.22
+  compressor.threshold.value = -20
+  compressor.knee.value = 12
+  compressor.ratio.value = 6
+  compressor.attack.value = 0.004
+  compressor.release.value = 0.18
   master.connect(compressor)
   compressor.connect(audio.destination)
-  const bpm = 96
+
+  // Original retro arcade soundtrack: bright 8-bit lead, pulsing bass and game-like percussion.
+  const bpm = 112
   const beat = 60 / bpm
   const bar = beat * 4
-  // Deep cinematic war drums: low battlefield booms and resonant marching toms.
-  const drum = (startHz: number, endHz: number, at: number, length: number, level: number) => {
+  const melody = [659.25, 783.99, 987.77, 783.99, 587.33, 659.25, 783.99, 523.25,
+    659.25, 783.99, 1046.5, 987.77, 783.99, 659.25, 587.33, 523.25]
+  const bassline = [130.81, 130.81, 196, 196, 174.61, 174.61, 146.83, 146.83]
+  const tone = (frequency: number, at: number, length: number, level: number, wave: OscillatorType, endFrequency?: number) => {
     const osc = audio.createOscillator()
     const amp = audio.createGain()
-    osc.type = 'sine'
-    osc.frequency.setValueAtTime(startHz, at)
-    osc.frequency.exponentialRampToValueAtTime(endHz, at + Math.min(0.22, length))
+    osc.type = wave
+    osc.frequency.setValueAtTime(frequency, at)
+    if (endFrequency) osc.frequency.exponentialRampToValueAtTime(endFrequency, at + length)
     amp.gain.setValueAtTime(0.0001, at)
-    amp.gain.linearRampToValueAtTime(level, at + 0.012)
+    amp.gain.linearRampToValueAtTime(level, at + 0.008)
     amp.gain.exponentialRampToValueAtTime(0.0001, at + length)
     osc.connect(amp); amp.connect(master)
-    osc.start(at); osc.stop(at + length + 0.03)
+    osc.start(at); osc.stop(at + length + 0.02)
   }
-  const drumNoise = (at: number, length: number, level: number) => {
+  const noiseHit = (at: number, length: number, level: number) => {
     const buffer = audio.createBuffer(1, Math.floor(audio.sampleRate * length), audio.sampleRate)
-    const samples = buffer.getChannelData(0)
-    for (let i = 0; i < samples.length; i++) {
-      samples[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / samples.length, 3)
-    }
-    const source = audio.createBufferSource()
+    const data = buffer.getChannelData(0)
+    for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 2)
+    const src = audio.createBufferSource()
     const filter = audio.createBiquadFilter()
     const amp = audio.createGain()
-    source.buffer = buffer
-    filter.type = 'lowpass'
-    filter.frequency.value = 700
+    src.buffer = buffer
+    filter.type = 'highpass'
+    filter.frequency.value = 1600
     amp.gain.setValueAtTime(level, at)
     amp.gain.exponentialRampToValueAtTime(0.0001, at + length)
-    source.connect(filter); filter.connect(amp); amp.connect(master)
-    source.start(at); source.stop(at + length)
+    src.connect(filter); filter.connect(amp); amp.connect(master)
+    src.start(at); src.stop(at + length)
   }
   let step = 0
-  let nextBarTime = audio.currentTime
+  let nextTime = audio.currentTime + 0.05
   const schedule = () => {
     const limit = audio.currentTime + 1
-    while (nextBarTime < limit) {
-      const at = nextBarTime
-      // Heavy war-drum march: alternating bass booms and hollow tom strikes.
-      drum(105, 43, at, 0.62, 0.72)
-      drum(155, 72, at + beat, 0.38, 0.38)
-      drum(92, 38, at + beat * 2, 0.58, 0.62)
-      drum(138, 64, at + beat * 3, 0.42, 0.42)
-      drumNoise(at, 0.16, 0.10)
-      drumNoise(at + beat * 2, 0.13, 0.07)
-      if (step % 4 === 3) {
-        drum(190, 85, at + beat * 3.5, 0.24, 0.30)
-        drum(220, 95, at + beat * 3.75, 0.20, 0.26)
-      }
+    while (nextTime < limit) {
+      const at = nextTime
+      const note = step % melody.length
+      // Eighth-note arcade melody and a steady pulsing low bass.
+      tone(melody[note], at, beat * 0.42, 0.095, 'square')
+      if (step % 2 === 0) tone(bassline[Math.floor(step / 2) % bassline.length], at, beat * 0.78, 0.12, 'triangle')
+      if (step % 4 === 0) tone(95, at, 0.11, 0.10, 'sine', 42)
+      if (step % 4 === 2) noiseHit(at, 0.075, 0.035)
+      if (step % 8 === 6) noiseHit(at, 0.045, 0.025)
       step++
-      nextBarTime += bar
+      nextTime += beat / 2
     }
   }
   let timer: number | null = null
@@ -84,7 +82,7 @@ function startBackgroundMusic() {
       if (audio.state !== 'running' || started) return
       started = true
       schedule()
-      timer = window.setInterval(schedule, 200)
+      timer = window.setInterval(schedule, 100)
     } catch {
       // The browser may require another direct user interaction before audio can start.
     }
@@ -97,15 +95,6 @@ function startBackgroundMusic() {
   }
   return { resume, stop, isRunning: () => audio.state === 'running' }
 }
-
-const tabs: { id: Tab; label: string; icon: typeof Pickaxe }[] = [
-  { id: 'mining', label: 'Mining', icon: Pickaxe },
-  { id: 'tasks', label: 'Tasks', icon: ListChecks },
-  { id: 'referrals', label: 'Referrals', icon: Gift },
-  { id: 'wallet', label: 'Wallet', icon: Wallet },
-  { id: 'market', label: 'Market', icon: ShoppingBag },
-  { id: 'p2p', label: 'P2P', icon: Handshake },
-]
 
 function Header({ language, onLanguageChange, musicOn, onMusicToggle }: { language: LanguageCode; onLanguageChange: (language: LanguageCode) => void; musicOn: boolean; onMusicToggle: () => void }) {
   return <header className="topbar">
