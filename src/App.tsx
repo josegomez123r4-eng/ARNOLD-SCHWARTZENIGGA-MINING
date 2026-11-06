@@ -8,52 +8,6 @@ import {
 
 type Tab = 'mining' | 'tasks' | 'referrals' | 'wallet' | 'market' | 'p2p'
 
-function playShotSound() {
-  try {
-    const AudioContextClass = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
-    if (!AudioContextClass) return
-    const context = new AudioContextClass()
-    const now = context.currentTime
-    const duration = 0.16
-    const buffer = context.createBuffer(1, Math.floor(context.sampleRate * duration), context.sampleRate)
-    const data = buffer.getChannelData(0)
-    for (let i = 0; i < data.length; i++) {
-      const envelope = Math.pow(1 - i / data.length, 3)
-      data[i] = (Math.random() * 2 - 1) * envelope
-    }
-    const noise = context.createBufferSource()
-    noise.buffer = buffer
-    const filter = context.createBiquadFilter()
-    filter.type = 'lowpass'
-    filter.frequency.setValueAtTime(1800, now)
-    filter.frequency.exponentialRampToValueAtTime(220, now + duration)
-    const noiseGain = context.createGain()
-    noiseGain.gain.setValueAtTime(0.22, now)
-    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + duration)
-    noise.connect(filter)
-    filter.connect(noiseGain)
-    noiseGain.connect(context.destination)
-    noise.start(now)
-    noise.stop(now + duration)
-
-    const thump = context.createOscillator()
-    const thumpGain = context.createGain()
-    thump.type = 'triangle'
-    thump.frequency.setValueAtTime(125, now)
-    thump.frequency.exponentialRampToValueAtTime(42, now + 0.12)
-    thumpGain.gain.setValueAtTime(0.28, now)
-    thumpGain.gain.exponentialRampToValueAtTime(0.001, now + 0.13)
-    thump.connect(thumpGain)
-    thumpGain.connect(context.destination)
-    thump.start(now)
-    thump.stop(now + 0.14)
-    window.setTimeout(() => { void context.close() }, 350)
-  } catch {
-    // Audio is optional; the interface remains usable if the browser blocks it.
-  }
-}
-
-
 function startBackgroundMusic() {
   const AudioClass = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
   if (!AudioClass) return { resume: () => {}, stop: () => {}, isRunning: () => false }
@@ -64,18 +18,35 @@ function startBackgroundMusic() {
   const bpm = 96
   const beat = 60 / bpm
   const bar = beat * 4
-  const roots = [55, 49, 43.65, 46.25, 55, 49, 43.65, 46.25, 55, 65.41, 73.42, 49, 55, 49, 46.25, 55, 55, 49, 43.65, 46.25, 65.41, 73.42, 49, 55]
-  const notes = [220, 261.63, 293.66, 329.63, 293.66, 261.63, 196, 220, 261.63, 293.66, 329.63, 392, 349.23, 329.63, 293.66, 261.63, 220, 261.63, 329.63, 392, 440, 392, 329.63, 261.63]
-  const play = (hz: number, at: number, length: number, shape: OscillatorType, level: number) => {
+  // Deep cinematic war drums: low battlefield booms and resonant marching toms.
+  const drum = (startHz: number, endHz: number, at: number, length: number, level: number) => {
     const osc = audio.createOscillator()
     const amp = audio.createGain()
-    osc.type = shape
-    osc.frequency.setValueAtTime(hz, at)
+    osc.type = 'sine'
+    osc.frequency.setValueAtTime(startHz, at)
+    osc.frequency.exponentialRampToValueAtTime(endHz, at + Math.min(0.22, length))
     amp.gain.setValueAtTime(0.0001, at)
-    amp.gain.linearRampToValueAtTime(level, at + 0.07)
+    amp.gain.linearRampToValueAtTime(level, at + 0.012)
     amp.gain.exponentialRampToValueAtTime(0.0001, at + length)
     osc.connect(amp); amp.connect(master)
-    osc.start(at); osc.stop(at + length + 0.02)
+    osc.start(at); osc.stop(at + length + 0.03)
+  }
+  const drumNoise = (at: number, length: number, level: number) => {
+    const buffer = audio.createBuffer(1, Math.floor(audio.sampleRate * length), audio.sampleRate)
+    const samples = buffer.getChannelData(0)
+    for (let i = 0; i < samples.length; i++) {
+      samples[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / samples.length, 3)
+    }
+    const source = audio.createBufferSource()
+    const filter = audio.createBiquadFilter()
+    const amp = audio.createGain()
+    source.buffer = buffer
+    filter.type = 'lowpass'
+    filter.frequency.value = 700
+    amp.gain.setValueAtTime(level, at)
+    amp.gain.exponentialRampToValueAtTime(0.0001, at + length)
+    source.connect(filter); filter.connect(amp); amp.connect(master)
+    source.start(at); source.stop(at + length)
   }
   let step = 0
   let nextBarTime = audio.currentTime
@@ -83,16 +54,16 @@ function startBackgroundMusic() {
     const limit = audio.currentTime + 1
     while (nextBarTime < limit) {
       const at = nextBarTime
-      const root = roots[step % roots.length]
-      play(root, at, bar * 0.95, 'sawtooth', 0.035)
-      play(root * 1.5, at, bar * 0.9, 'triangle', 0.035)
-      play(root * 2, at, bar * 0.9, 'triangle', 0.025)
-      play(root / 2, at, beat * 1.8, 'sine', 0.14)
-      play(notes[step % notes.length], at + beat * 2, beat * 1.5, 'sawtooth', 0.04)
-      for (let n = 0; n < 4; n++) {
-        const hit = at + n * beat
-        if (n === 0 || n === 2) play(75, hit, 0.18, 'sine', 0.22)
-        else play(190, hit, 0.09, 'triangle', 0.07)
+      // Heavy war-drum march: alternating bass booms and hollow tom strikes.
+      drum(105, 43, at, 0.62, 0.72)
+      drum(155, 72, at + beat, 0.38, 0.38)
+      drum(92, 38, at + beat * 2, 0.58, 0.62)
+      drum(138, 64, at + beat * 3, 0.42, 0.42)
+      drumNoise(at, 0.16, 0.10)
+      drumNoise(at + beat * 2, 0.13, 0.07)
+      if (step % 4 === 3) {
+        drum(190, 85, at + beat * 3.5, 0.24, 0.30)
+        drum(220, 95, at + beat * 3.75, 0.20, 0.26)
       }
       step++
       nextBarTime += bar
@@ -134,7 +105,7 @@ function Header({ language, onLanguageChange, musicOn, onMusicToggle }: { langua
     <div className="brand"><div className="brand-symbol"><Flame size={21} fill="currentColor" /></div>
       <div><div className="brand-name">ARNOLD</div><div className="brand-sub">SCHWARTZENIGGA MINING</div></div>
     </div>
-    <div className="header-actions"><button className="music-toggle" type="button" onClick={onMusicToggle} aria-label={musicOn ? "Mute music" : "Play music"}>{musicOn ? <Volume2 size={16} /> : <VolumeX size={16} />}<span>{musicOn ? "MUSIC ON" : "MUSIC OFF"}</span></button><label className="language-picker" aria-label={translate(language, 'Select language')}><span>{languages.find((item) => item.code === language)?.flag}</span><select value={language} onChange={(event) => { playShotSound(); onLanguageChange(event.target.value as LanguageCode) }}>{languages.map((item) => <option key={item.code} value={item.code}>{item.flag} {item.name}</option>)}</select></label><div className="live-pill"><span /> MINI APP</div></div>
+    <div className="header-actions"><button className="music-toggle" type="button" onClick={onMusicToggle} aria-label={musicOn ? "Mute music" : "Play music"}>{musicOn ? <Volume2 size={16} /> : <VolumeX size={16} />}<span>{musicOn ? "MUSIC ON" : "MUSIC OFF"}</span></button><label className="language-picker" aria-label={translate(language, 'Select language')}><span>{languages.find((item) => item.code === language)?.flag}</span><select value={language} onChange={(event) => { onLanguageChange(event.target.value as LanguageCode) }}>{languages.map((item) => <option key={item.code} value={item.code}>{item.flag} {item.name}</option>)}</select></label><div className="live-pill"><span /> MINI APP</div></div>
   </header>
 }
 
@@ -267,7 +238,7 @@ export default function App() {
       {tab === 'p2p' && <P2PPage t={t} />}
     </div>
     <nav className="bottom-nav" aria-label="Main navigation">
-      {tabs.map(({ id, label, icon: Icon }) => <button key={id} className={tab === id ? 'selected' : ''} aria-current={tab === id ? 'page' : undefined} onClick={() => { playShotSound(); setTab(id) }}>
+      {tabs.map(({ id, label, icon: Icon }) => <button key={id} className={tab === id ? 'selected' : ''} aria-current={tab === id ? 'page' : undefined} onClick={() => { setTab(id) }}>
         <Icon size={18} strokeWidth={tab === id ? 2.4 : 1.8} /><span>{t(label)}</span>
       </button>)}
     </nav>
