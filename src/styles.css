@@ -48,3 +48,64 @@ html[dir="rtl"] .brand{flex-direction:row}
 html[dir="rtl"] .notice{ text-align:right }
 html[dir="rtl"] .profile-row{flex-direction:row}
 .language-picker select{direction:ltr;text-align:left}
+
+
+/* ARNOLD visual impact refresh */
+:root{--arnold-gold:#ffd36a;--arnold-orange:#ff7417;--arnold-ember:#d83b12}
+body{background:#050505}
+.app-shell{background:radial-gradient(ellipse at 50% 4%,#5a2b0b 0%,#241507 19%,#0d0b09 48%,#050505 78%);padding-left:16px;padding-right:16px}
+.app-shell:before{content:"";position:absolute;z-index:-1;inset:0;opacity:.16;pointer-events:none;background-image:linear-gradient(115deg,transparent 0 47%,#ffb13a 48%,transparent 49%),linear-gradient(25deg,transparent 0 48%,#ff6b1a 49%,transparent 50%);background-size:170px 190px,230px 250px;mask-image:linear-gradient(to bottom,#000,transparent 65%)}
+.glow{filter:blur(85px);opacity:.24}.glow-a{background:#ff6b12;width:310px;height:310px;top:100px}.glow-b{background:#ffb52e;width:280px;height:280px}
+.topbar{height:82px;border-bottom-color:#ffad382c}
+.brand-symbol{width:43px;height:43px;border-radius:14px;border:1px solid #ffbd50;background:linear-gradient(145deg,#ffb52d35,#d83b121c);color:#ffc34f;box-shadow:0 0 22px #ff851c35,inset 0 0 15px #ffb52d18}
+.brand-name{font-size:23px;letter-spacing:2px;text-shadow:0 0 18px #ff9c2b55}.brand-sub{color:#d5a75d;font-size:8px;letter-spacing:1.7px}
+.live-pill{border-color:#ffb23a45;background:#1c120a;color:#ffcf79}
+.live-pill span{background:#ff9d2e;box-shadow:0 0 12px #ff6b16}
+.hero{padding:40px 0 29px;position:relative}
+.overline{color:#ffbd50;text-shadow:0 0 12px #ff8c1b55}
+.hero h1,.inner-page h1{font-size:clamp(57px,15vw,78px);letter-spacing:1.4px;text-shadow:0 5px 28px #000}
+.hero h1 em,.inner-page h1 span{background:linear-gradient(100deg,#fff0b2 0%,#ffc34e 38%,#ff7417 78%,#ffd77c 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 16px #ff8b2855)}
+.hero p{color:#c1ad8d;font-size:12px}
+.stats{gap:11px}
+.stat-card{position:relative;overflow:hidden;border-radius:16px;border-color:#ffbd3b36;background:linear-gradient(145deg,#21170d,#100e0b 75%);box-shadow:inset 0 1px #ffffff0c,0 10px 28px #0007}
+.stat-card:after{content:"";position:absolute;width:110px;height:110px;right:-60px;top:-65px;border-radius:50%;background:#ff9d2b20;filter:blur(12px)}
+.stat-card.featured{border-color:#ffb83f9c;background:linear-gradient(145deg,#49300f,#1b120a 76%);box-shadow:0 0 28px #ff9d2b19,inset 0 1px #fff2}
+.stat-label{color:#d7c29c}.stat-label svg{color:#ffc04d}
+.stat-number{font-size:36px;color:#fff2d5;text-shadow:0 0 18px #ff9c2b30}.stat-number small{color:#ffc34f}
+.stat-caption{color:#b0a087}
+.mining-card{position:relative;overflow:hidden;border:1px solid #ffb43d99;border-radius:20px;padding:18px 15px 15px;background:radial-gradient(ellipse at 50% 0%,#58300f99,transparent 48%),linear-gradient(155deg,#24180d,#100e0b 62%);box-shadow:0 18px 60px #000b,0 0 35px #ff8c1b18,inset 0 1px #fff2}
+.mining-card:before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;background:linear-gradient(135deg,#ffe39a,#ff7a1a55 35%,transparent 58%,#ffb83d88);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
+.card-head h2{font-size:22px;color:#fff0d4}.card-head h2 svg{color:#ffb83e;filter:drop-shadow(0 0 8px #ff861b)}
+.kicker{color:#ffc15a}
+.status{background:#28180c;border-color:#ff9a2c55;color:#ffc36b}
+.status span{background:#ff7c24;box-shadow:0 0 10px #ff5b13}
+.timer-panel{background:radial-gradient(ellipse at 50% 0%,#48240d 0%,#120d08 70%);border:1px solid #ff9e303d;box-shadow:inset 0 0 28px #ff8c1b0c}
+.timer-label{color:#ffc16a}
+.timer strong{font-size:clamp(44px,12vw,60px);color:#fff0d1;text-shadow:0 0 20px #ff922d4d}
+.timer i{color:#ff9c2e}
+.progress{background:#382312}.progress div{background:linear-gradient(90deg,#d94714,#ff9b22,#ffe18a);box-shadow:0 0 12px #ff8b25}
+.reward-icon,.wallet-icon{background:linear-gradient(145deg,#ffb52d38,#e84a1525);color:#ffc75c;border:1px solid #ffb33c4a;box-shadow:0 0 18px #ff8c1b18}
+.reward-desc b{color:#fff0d4}.reward-desc span{color:#b5a184}
+.reward-value{color:#ffd16b;text-shadow:0 0 13px #ff8a2344}
+.primary-btn{position:relative;overflow:hidden;min-height:54px;border:1px solid #ffdb82;border-radius:12px;background:linear-gradient(105deg,#ff8a19,#ffc34c 48%,#ffdf8a);color:#211006;font-size:12px;letter-spacing:1.35px;box-shadow:0 7px 28px #ff841e38,inset 0 1px #fff8}
+.primary-btn:disabled{border-color:#70502a;background:linear-gradient(100deg,#4b3924,#2b2117);color:#b29a75;box-shadow:none}
+.notice-large{border-color:#ffad3944;background:linear-gradient(100deg,#28180c,#17110b);color:#c6ae87}
+.notice svg{color:#ffc15a}
+.bottom-nav{background:#0c0907f2;border-top:1px solid #ffad383b;box-shadow:0 -10px 35px #0008}
+.bottom-nav button.selected{color:#ffd06b;text-shadow:0 0 12px #ff922d66}
+.bottom-nav button.selected svg{filter:drop-shadow(0 0 7px #ff8b27)}
+.demo-tag{color:#92734b}
+.inner-page{padding-top:35px}
+.inner-page h1{margin-top:18px}
+.feature-panel,.wallet-connect-card{border-color:#ffad395e;background:radial-gradient(ellipse at 0% 0%,#48280f77,transparent 65%),linear-gradient(145deg,#24180d,#110e0a);box-shadow:0 12px 35px #0007}
+.feature-icon{background:#ff9c2b20;color:#ffc35c;border:1px solid #ffad3940}
+.empty-state{border:1px dashed #b9782c;background:radial-gradient(ellipse at 50% 0%,#48250d55,transparent 75%);color:#ffc15a}
+.empty-state b{color:#fff0d5}.empty-state span{color:#b7a487}
+.market-preview{border-color:#ffad3944;background:linear-gradient(120deg,#27190d,#120f0b)}
+.market-coin{background:linear-gradient(145deg,#ffb52d38,#e84a1525);color:#ffc75c;border:1px solid #ffb33c4a}
+.p2p-emblem{border-color:#ffbd5899;background:linear-gradient(145deg,#5b300f,#1b1109);color:#ffc65b;box-shadow:0 0 35px #ff8c1b2b}
+.coming-soon{border-color:#ffb347;background:linear-gradient(100deg,#5a2c0c,#2a170a);color:#ffd16b;box-shadow:0 0 22px #ff8c1b20}
+.profile-row{border-bottom-color:#ffb23a25}.profile-row b{color:#ffd06b}
+@keyframes arnoldPulse{0%,100%{box-shadow:0 0 18px #ff8c1b14,inset 0 1px #fff2}50%{box-shadow:0 0 34px #ff8c1b32,inset 0 1px #fff3}}
+.mining-card{animation:arnoldPulse 4s ease-in-out infinite}
+@media(prefers-reduced-motion:reduce){.mining-card{animation:none}}
