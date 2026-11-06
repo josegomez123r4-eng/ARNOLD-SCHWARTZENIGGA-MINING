@@ -56,7 +56,7 @@ function playShotSound() {
 
 function startBackgroundMusic() {
   const AudioClass = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
-  if (!AudioClass) return { resume: () => {}, stop: () => {} }
+  if (!AudioClass) return { resume: () => {}, stop: () => {}, isRunning: () => false }
   const audio = new AudioClass()
   const master = audio.createGain()
   master.gain.value = 0.12
