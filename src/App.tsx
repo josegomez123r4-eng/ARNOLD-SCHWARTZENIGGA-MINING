@@ -78,10 +78,11 @@ function startBackgroundMusic() {
     osc.start(at); osc.stop(at + length + 0.02)
   }
   let step = 0
+  let nextBarTime = audio.currentTime
   const schedule = () => {
     const limit = audio.currentTime + 1
-    while (audio.currentTime + step * bar < limit) {
-      const at = audio.currentTime + step * bar
+    while (nextBarTime < limit) {
+      const at = nextBarTime
       const root = roots[step % roots.length]
       play(root, at, bar * 0.95, 'sawtooth', 0.035)
       play(root * 1.5, at, bar * 0.9, 'triangle', 0.035)
@@ -94,6 +95,7 @@ function startBackgroundMusic() {
         else play(190, hit, 0.09, 'triangle', 0.07)
       }
       step++
+      nextBarTime += bar
     }
   }
   void audio.resume()
