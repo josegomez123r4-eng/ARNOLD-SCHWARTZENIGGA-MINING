@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react'
 import WebApp from '@twa-dev/sdk'
 import {
-  Activity, ArrowDownToLine, ArrowUpRight, CheckCircle2, CircleHelp, Clock3,
-  Coins, Copy, Flame, Gift, Handshake, ListChecks, LockKeyhole, Pickaxe,
-  ShoppingBag, ShieldCheck, Wallet, Zap
+  CircleHelp, Clock3, Coins, Flame, Gift, Handshake, ListChecks, LockKeyhole,
+  Pickaxe, ShoppingBag, ShieldCheck, Wallet, Zap
 } from 'lucide-react'
 
 type Tab = 'mining' | 'tasks' | 'referrals' | 'wallet' | 'market' | 'p2p'
