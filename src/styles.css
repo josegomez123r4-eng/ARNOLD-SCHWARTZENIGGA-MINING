@@ -133,3 +133,13 @@ body{background:#050505}
 .fee-example>b{color:#ffc15a;font-size:9px;letter-spacing:1.2px}
 .fee-example strong{padding-top:8px;border-top:1px solid #ffad392e;color:#ffcf70;font-size:12px}
 .withdraw-disabled{margin-top:16px}
+
+/* Withdraw is a subsection inside Wallet, not a bottom navigation tab */
+.wallet-withdraw-section{margin-top:24px;padding:16px 14px;border:1px solid #ffad395e;border-radius:15px;background:radial-gradient(ellipse at 0% 0%,#48280f66,transparent 65%),linear-gradient(145deg,#24180d,#110e0a);box-shadow:0 12px 32px #0007}
+.wallet-withdraw-heading{display:flex;align-items:center;gap:10px;padding-bottom:12px;border-bottom:1px solid #ffb23a25;color:#ffd06b}
+.wallet-withdraw-heading>div{display:flex;flex-direction:column;gap:3px}
+.wallet-withdraw-heading b{font:800 16px 'Barlow Condensed',sans-serif;letter-spacing:1.4px}
+.wallet-withdraw-heading span{font-size:9px;color:#b5a184}
+.wallet-withdraw-section .profile-row{font-size:10px;gap:8px}
+.wallet-withdraw-section .profile-row b{white-space:nowrap;font-size:10px}
+.wallet-withdraw-section .withdraw-disabled{margin-top:14px;min-height:46px;font-size:9px}
