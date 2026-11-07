@@ -17,14 +17,13 @@ import {
   Pickaxe, ShoppingBag, ShieldCheck, Wallet, Zap, Volume2, VolumeX, ArrowDownToLine
 } from 'lucide-react'
 
-type Tab = 'mining' | 'tasks' | 'referrals' | 'wallet' | 'withdraw' | 'market' | 'p2p'
+type Tab = 'mining' | 'tasks' | 'referrals' | 'wallet' | 'market' | 'p2p'
 
 const tabs = [
   { id: 'mining', label: 'MINING', icon: Pickaxe },
   { id: 'tasks', label: 'TASKS', icon: ListChecks },
   { id: 'referrals', label: 'REFERRALS', icon: Gift },
   { id: 'wallet', label: 'WALLET', icon: Wallet },
-  { id: 'withdraw', label: 'WITHDRAW', icon: ArrowDownToLine },
   { id: 'market', label: 'MARKET', icon: ShoppingBag },
   { id: 'p2p', label: 'P2P', icon: Handshake },
 ] satisfies { id: Tab; label: string; icon: typeof Pickaxe }[]
@@ -173,23 +172,15 @@ function WalletPage({ t, walletAddress, walletReady, onConnect, onDisconnect }: 
     <div className="kicker">{t('YOUR TON ACCOUNT')}</div><h1>{t('YOUR')}<br /><span>{t('WALLET.')}</span></h1>
     <div className="wallet-connect-card"><div className="wallet-icon"><Wallet size={23} /></div><b>{t('TON WALLET')}</b><span>{t('Connect your TON wallet to verify $ARNOLD holdings and access eligible features.')}</span><button className="primary-btn wallet-connect-action" type="button" disabled={!walletReady} onClick={walletAddress ? onDisconnect : onConnect}>{walletAddress ? <Wallet size={17} /> : <LockKeyhole size={17} />} {walletAddress ? t("DISCONNECT WALLET") : walletReady ? t("CONNECT TON WALLET") : t("LOADING WALLET CONNECT")}</button>{walletAddress && <div className="connected-address"><span>{t("CONNECTED ADDRESS")}</span><b>{walletAddress.slice(0, 7)}…{walletAddress.slice(-6)}</b></div>}</div>
     <div className="profile-row"><span>{t('One-time verification')}</span><b>0.10 GRAM</b></div>
-    <p className="helper helper-left">{t('The verification payment and withdrawals are not enabled until on-chain transaction validation is implemented.')}</p>
-  </section>
-}
-
-function WithdrawPage({ t }: { t: (phrase: string) => string }) {
-  return <section className="inner-page">
-    <div className="kicker">{t('WITHDRAW YOUR REWARDS')}</div><h1>{t('WITH')}<br /><span>{t('DRAW.')}</span></h1>
-    <div className="feature-panel"><div className="feature-icon"><ArrowDownToLine size={22} /></div><div><b>{t('WITHDRAWAL REQUIREMENTS')}</b><span>{t('Meet the wallet balance and minimum withdrawal requirements before requesting a withdrawal.')}</span></div></div>
-    <div className="withdraw-card">
+    <p className="helper helper-left">{t('The verification payment is not enabled until on-chain transaction validation is implemented.')}</p>
+    <div className="wallet-withdraw-section">
+      <div className="wallet-withdraw-heading"><ArrowDownToLine size={19} /><div><b>{t('WITHDRAW')}</b><span>{t('Withdrawal requirements')}</span></div></div>
       <div className="profile-row"><span>{t('Minimum balance in connected wallet')}</span><b>1,000 $ARNOLD</b></div>
       <div className="profile-row"><span>{t('Minimum withdrawal amount')}</span><b>2,500 $ARNOLD</b></div>
       <div className="profile-row"><span>{t('Withdrawal fee')}</span><b>5%</b></div>
-      <p className="helper helper-left">{t('The 1,000 $ARNOLD wallet balance is an eligibility requirement and is not deducted from your withdrawal.')}</p>
-      <div className="fee-example"><b>{t('EXAMPLE')}</b><span>10,000 $ARNOLD</span><span>{t('Fee (5%)')}: 500 $ARNOLD</span><strong>{t('You receive')}: 9,500 $ARNOLD</strong></div>
+      <p className="helper helper-left">{t('Keep at least 1,000 $ARNOLD in your connected wallet to qualify. This balance is not deducted from your withdrawal.')}</p>
+      <button className="primary-btn withdraw-disabled" type="button" disabled><LockKeyhole size={17} /> {t('WITHDRAWALS COMING SOON')}</button>
     </div>
-    <button className="primary-btn withdraw-disabled" type="button" disabled><LockKeyhole size={17} /> {t('WITHDRAWALS COMING SOON')}</button>
-    <p className="helper">{t('Withdrawals will remain disabled until secure on-chain transaction validation is implemented.')}</p>
   </section>
 }
 
@@ -260,7 +251,6 @@ export default function App() {
       {tab === 'tasks' && <TasksPage t={t} />}
       {tab === 'referrals' && <ReferralsPage t={t} />}
       {tab === 'wallet' && <WalletPage t={t} walletAddress={walletAddress} walletReady={walletReady} onConnect={connectWallet} onDisconnect={disconnectWallet} />}
-      {tab === 'withdraw' && <WithdrawPage t={t} />}
       {tab === 'market' && <MarketPage t={t} />}
       {tab === 'p2p' && <P2PPage t={t} />}
     </div>
