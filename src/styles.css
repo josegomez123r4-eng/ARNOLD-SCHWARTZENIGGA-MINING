@@ -151,3 +151,10 @@ body{background:#050505}
 .balance-symbol{margin-top:5px;color:#a99470;font-size:11px;font-weight:800;letter-spacing:2px}
 .balance-error,.balance-hint{margin:10px 0 0;color:#b8a78c;font-size:10px;line-height:1.5}
 .balance-error{color:#ffb28e}
+
+
+.verification-payment-card{margin:18px 0;padding:16px 14px;border:1px solid #ffb43d66;border-radius:15px;background:radial-gradient(ellipse at 0 0,#69400c44,transparent 70%),linear-gradient(145deg,#21170d,#100d09);box-shadow:0 12px 30px #0006}
+.verification-payment-card .primary-btn{margin-top:12px;width:100%;min-height:48px}
+.payment-destination{display:flex;flex-direction:column;gap:6px;margin:13px 0 0;padding-top:11px;border-top:1px solid #ffb23a25}
+.payment-destination span{color:#b5a184;font-size:9px;letter-spacing:1px;font-weight:800}
+.payment-destination b{color:#d8bb85;font-size:9px;line-height:1.5;overflow-wrap:anywhere;font-weight:600}
