@@ -120,3 +120,16 @@ body{background:#050505}
 /* Quiet music toggle and connected TON wallet details */
 .header-actions{gap:6px}.music-toggle{height:32px;display:flex;align-items:center;gap:5px;padding:0 8px;border:1px solid #ffffff24;border-radius:9px;background:#17140f;color:#d8c39a;font-size:8px;font-weight:800;letter-spacing:.35px;white-space:nowrap}.music-toggle svg{color:#e8b34f}.wallet-connect-action{margin-top:6px}.connected-address{width:100%;display:flex;justify-content:space-between;gap:8px;padding:11px 2px 0;color:#9c9382;font-size:9px}.connected-address b{color:#f2c66f;font-size:10px;letter-spacing:.3px}
 @media(max-width:370px){.music-toggle{padding:0 6px;font-size:7px}.music-toggle svg{width:14px;height:14px}}
+
+
+/* Withdrawal and referral eligibility panels */
+.eligibility-panel,.withdraw-card{margin-top:16px;padding:15px;border:1px solid #ffad395e;border-radius:14px;background:linear-gradient(145deg,#24180d,#110e0a);box-shadow:0 10px 28px #0006}
+.eligibility-title{display:flex;align-items:center;gap:8px;color:#ffd06b;font-size:11px;letter-spacing:.8px}
+.eligibility-panel p{margin:11px 0 0;color:#c5b392;font-size:10px;line-height:1.6}
+.eligibility-panel small{display:block;margin-top:11px;color:#91836c;font-size:9px;line-height:1.55}
+.withdraw-card{margin-top:16px}
+.withdraw-card .profile-row:first-child{padding-top:2px}
+.fee-example{display:flex;flex-direction:column;gap:8px;margin-top:14px;padding:13px;border:1px solid #ffad3940;border-radius:11px;background:#090806;color:#bca985;font-size:10px}
+.fee-example>b{color:#ffc15a;font-size:9px;letter-spacing:1.2px}
+.fee-example strong{padding-top:8px;border-top:1px solid #ffad392e;color:#ffcf70;font-size:12px}
+.withdraw-disabled{margin-top:16px}
