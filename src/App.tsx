@@ -208,10 +208,10 @@ function WalletPage({ t, walletAddress, walletReady, onConnect, onDisconnect, on
     </div>
     <div className="verification-payment-card">
       <div className="wallet-withdraw-heading"><Coins size={19} /><div><b>{t('WALLET VERIFICATION')}</b><span>{t('One-time payment')}</span></div></div>
-      <div className="profile-row"><span>{t('Verification fee')}</span><b>0.10 TON</b></div>
-      <p className="helper helper-left">{t('Pay 0.10 TON from your connected wallet to complete the verification request.')}</p>
+      <div className="profile-row"><span>{t('Verification fee')}</span><b>0.10 GRAM</b></div>
+      <p className="helper helper-left">{t('Pay 0.10 GRAM from your connected wallet to complete the verification request.')}</p>
       <button className="primary-btn" type="button" disabled={!walletAddress || paymentState === 'sending'} onClick={onVerifyPayment}>
-        <LockKeyhole size={17} /> {paymentState === 'sending' ? t('WAITING FOR WALLET') : t('PAY 0.10 TON')}
+        <LockKeyhole size={17} /> {paymentState === 'sending' ? t('WAITING FOR WALLET') : t('PAY 0.10 GRAM')}
       </button>
       {paymentState === 'sent' && <p className="balance-hint">{t('Payment submitted. Verification will be completed after on-chain confirmation.')}</p>}
       {paymentState === 'cancelled' && <p className="balance-hint">{t('Payment was cancelled in your wallet.')}</p>}
