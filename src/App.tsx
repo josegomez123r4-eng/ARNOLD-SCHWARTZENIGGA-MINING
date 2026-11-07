@@ -8,6 +8,15 @@ import {
 
 type Tab = 'mining' | 'tasks' | 'referrals' | 'wallet' | 'market' | 'p2p'
 
+const tabs = [
+  { id: 'mining', label: 'MINING', icon: Pickaxe },
+  { id: 'tasks', label: 'TASKS', icon: ListChecks },
+  { id: 'referrals', label: 'REFERRALS', icon: Gift },
+  { id: 'wallet', label: 'WALLET', icon: Wallet },
+  { id: 'market', label: 'MARKET', icon: ShoppingBag },
+  { id: 'p2p', label: 'P2P', icon: Handshake },
+] satisfies { id: Tab; label: string; icon: typeof Pickaxe }[]
+
 function startBackgroundMusic() {
   const AudioClass = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
   if (!AudioClass) return { resume: () => {}, stop: () => {}, isRunning: () => false }
@@ -26,7 +35,6 @@ function startBackgroundMusic() {
   // Original retro arcade soundtrack: bright 8-bit lead, pulsing bass and game-like percussion.
   const bpm = 112
   const beat = 60 / bpm
-  const bar = beat * 4
   const melody = [659.25, 783.99, 987.77, 783.99, 587.33, 659.25, 783.99, 523.25,
     659.25, 783.99, 1046.5, 987.77, 783.99, 659.25, 587.33, 523.25]
   const bassline = [130.81, 130.81, 196, 196, 174.61, 174.61, 146.83, 146.83]
