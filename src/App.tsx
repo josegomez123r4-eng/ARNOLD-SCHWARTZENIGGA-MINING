@@ -17,6 +17,29 @@ import {
   Pickaxe, ShoppingBag, ShieldCheck, Wallet, Zap, Volume2, VolumeX, ArrowDownToLine
 } from 'lucide-react'
 
+
+const ARNOLD_JETTON_MASTER = 'EQAx1gPnzQHLRWULxJJL0mSb-iB88JEcZCc0f8BA8Kk_pa9w'
+
+function normalizeTonAddress(address: string): string | null {
+  const raw = address.trim()
+  if (/^-?\d+:[0-9a-fA-F]{64}$/.test(raw)) {
+    const [wc, hash] = raw.split(':')
+    return wc + ':' + hash.toLowerCase()
+  }
+  try {
+    const binary = atob(raw.replace(/-/g, '+').replace(/_/g, '/'))
+    if (binary.length !== 36) return null
+    const bytes = Uint8Array.from(binary, c => c.charCodeAt(0))
+    const workchain = new DataView(bytes.buffer).getInt8(1)
+    const hash = Array.from(bytes.slice(2, 34), b => b.toString(16).padStart(2, '0')).join('')
+    return workchain + ':' + hash
+  } catch { return null }
+}
+
+type JettonBalanceResponse = {
+  balances?: Array<{ balance: string; jetton: { address: string; decimals?: number | string } }>
+}
+
 type Tab = 'mining' | 'tasks' | 'referrals' | 'wallet' | 'market' | 'p2p'
 
 const tabs = [
@@ -167,10 +190,17 @@ function ReferralsPage({ t }: { t: (phrase: string) => string }) {
   </section>
 }
 
-function WalletPage({ t, walletAddress, walletReady, onConnect, onDisconnect }: { t: (phrase: string) => string; walletAddress: string | null; walletReady: boolean; onConnect: () => void; onDisconnect: () => void }) {
+function WalletPage({ t, walletAddress, walletReady, onConnect, onDisconnect, arnoldBalance, balanceLoading, balanceError }: { t: (phrase: string) => string; walletAddress: string | null; walletReady: boolean; onConnect: () => void; onDisconnect: () => void; arnoldBalance: string | null; balanceLoading: boolean; balanceError: string | null }) {
   return <section className="inner-page">
     <div className="kicker">{t('YOUR TON ACCOUNT')}</div><h1>{t('YOUR')}<br /><span>{t('WALLET.')}</span></h1>
     <div className="wallet-connect-card"><div className="wallet-icon"><Wallet size={23} /></div><b>{t('TON WALLET')}</b><span>{t('Connect your TON wallet to verify $ARNOLD holdings and access eligible features.')}</span><button className="primary-btn wallet-connect-action" type="button" disabled={!walletReady} onClick={walletAddress ? onDisconnect : onConnect}>{walletAddress ? <Wallet size={17} /> : <LockKeyhole size={17} />} {walletAddress ? t("DISCONNECT WALLET") : walletReady ? t("CONNECT TON WALLET") : t("LOADING WALLET CONNECT")}</button>{walletAddress && <div className="connected-address"><span>{t("CONNECTED ADDRESS")}</span><b>{walletAddress.slice(0, 7)}…{walletAddress.slice(-6)}</b></div>}</div>
+    <div className="arnold-balance-card">
+      <div className="balance-caption"><Coins size={15} /> {t('ARNOLD TOKEN BALANCE')}</div>
+      <div className="balance-amount">{balanceLoading ? t('LOADING BALANCE') : arnoldBalance !== null ? arnoldBalance : '—'}</div>
+      <div className="balance-symbol">$ARNOLD</div>
+      {balanceError && <p className="balance-error">{balanceError}</p>}
+      {!walletAddress && <p className="balance-hint">{t('Connect your TON wallet to view your $ARNOLD balance.')}</p>}
+    </div>
     <div className="profile-row"><span>{t('One-time verification')}</span><b>0.10 GRAM</b></div>
     <p className="helper helper-left">{t('The verification payment is not enabled until on-chain transaction validation is implemented.')}</p>
     <div className="wallet-withdraw-section">
@@ -209,6 +239,9 @@ export default function App() {
   const [musicOn, setMusicOn] = useState(false)
   const [walletAddress, setWalletAddress] = useState<string | null>(null)
   const [walletReady, setWalletReady] = useState(false)
+  const [arnoldBalance, setArnoldBalance] = useState<string | null>(null)
+  const [balanceLoading, setBalanceLoading] = useState(false)
+  const [balanceError, setBalanceError] = useState<string | null>(null)
   const stopMusic = useRef<ReturnType<typeof startBackgroundMusic> | null>(null)
   const tonConnect = useRef<TonConnectInstance | null>(null)
   const t = (phrase: string) => translate(language, phrase)
@@ -221,6 +254,42 @@ export default function App() {
     setWalletReady(true)
     return () => { tonConnect.current = null }
   }, [])
+  useEffect(() => {
+    if (!walletAddress) {
+      setArnoldBalance(null)
+      setBalanceError(null)
+      setBalanceLoading(false)
+      return
+    }
+    let cancelled = false
+    const loadBalance = async () => {
+      setBalanceLoading(true)
+      setBalanceError(null)
+      try {
+        const response = await fetch('https://tonapi.io/v2/accounts/' + encodeURIComponent(walletAddress) + '/jettons')
+        if (!response.ok) throw new Error('TON API ' + response.status)
+        const data = await response.json() as JettonBalanceResponse
+        const expectedMaster = normalizeTonAddress(ARNOLD_JETTON_MASTER)
+        if (!expectedMaster) throw new Error('Invalid configured Jetton master address')
+        const token = (data.balances ?? []).find(item => normalizeTonAddress(item.jetton.address) === expectedMaster)
+        if (!cancelled) {
+          if (!token) setArnoldBalance('0')
+          else {
+            const decimals = Number(token.jetton.decimals ?? 9)
+            const amount = Number(token.balance) / Math.pow(10, decimals)
+            setArnoldBalance(amount.toLocaleString(undefined, { maximumFractionDigits: Math.min(decimals, 6) }))
+          }
+        }
+      } catch {
+        if (!cancelled) setBalanceError(t('Unable to load token balance. Please try again.'))
+      } finally {
+        if (!cancelled) setBalanceLoading(false)
+      }
+    }
+    void loadBalance()
+    const interval = window.setInterval(loadBalance, 30000)
+    return () => { cancelled = true; window.clearInterval(interval) }
+  }, [walletAddress, language])
   useEffect(() => () => { stopMusic.current?.stop(); stopMusic.current = null }, [])
   const toggleMusic = () => {
     if (musicOn) {
@@ -250,7 +319,7 @@ export default function App() {
       {tab === 'mining' && <MiningPage t={t} />}
       {tab === 'tasks' && <TasksPage t={t} />}
       {tab === 'referrals' && <ReferralsPage t={t} />}
-      {tab === 'wallet' && <WalletPage t={t} walletAddress={walletAddress} walletReady={walletReady} onConnect={connectWallet} onDisconnect={disconnectWallet} />}
+      {tab === 'wallet' && <WalletPage t={t} walletAddress={walletAddress} walletReady={walletReady} onConnect={connectWallet} onDisconnect={disconnectWallet} arnoldBalance={arnoldBalance} balanceLoading={balanceLoading} balanceError={balanceError} />}
       {tab === 'market' && <MarketPage t={t} />}
       {tab === 'p2p' && <P2PPage t={t} />}
     </div>
