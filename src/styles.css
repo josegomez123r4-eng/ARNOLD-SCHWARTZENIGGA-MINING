@@ -116,3 +116,7 @@ body{background:#050505}
 .music-toggle svg{flex:none}
 .music-toggle:active{transform:scale(.97)}
 @media(max-width:370px){.music-toggle{padding:0 6px;gap:3px;font-size:7px}.music-toggle svg{width:14px;height:14px}}
+
+/* Quiet music toggle and connected TON wallet details */
+.header-actions{gap:6px}.music-toggle{height:32px;display:flex;align-items:center;gap:5px;padding:0 8px;border:1px solid #ffffff24;border-radius:9px;background:#17140f;color:#d8c39a;font-size:8px;font-weight:800;letter-spacing:.35px;white-space:nowrap}.music-toggle svg{color:#e8b34f}.wallet-connect-action{margin-top:6px}.connected-address{width:100%;display:flex;justify-content:space-between;gap:8px;padding:11px 2px 0;color:#9c9382;font-size:9px}.connected-address b{color:#f2c66f;font-size:10px;letter-spacing:.3px}
+@media(max-width:370px){.music-toggle{padding:0 6px;font-size:7px}.music-toggle svg{width:14px;height:14px}}
