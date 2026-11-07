@@ -2,10 +2,15 @@ import { useEffect, useRef, useState } from 'react'
 import { detectLanguage, languages, translate, type LanguageCode } from './i18n'
 import WebApp from '@twa-dev/sdk'
 
+type TonConnectWallet = {
+  account: { address: string; chain?: string }
+  device?: { appName?: string; platform?: string }
+}
 type TonConnectInstance = {
   openModal: () => Promise<void>
   disconnect: () => Promise<void>
-  onStatusChange: (callback: (wallet: { account: { address: string } } | null) => void) => void
+  sendTransaction: (transaction: { validUntil: number; messages: Array<{ address: string; amount: string }> }) => Promise<{ boc: string }>
+  onStatusChange: (callback: (wallet: TonConnectWallet | null) => void) => void
 }
 declare global {
   interface Window {
@@ -190,7 +195,7 @@ function ReferralsPage({ t }: { t: (phrase: string) => string }) {
   </section>
 }
 
-function WalletPage({ t, walletAddress, walletReady, onConnect, onDisconnect, arnoldBalance, balanceLoading, balanceError }: { t: (phrase: string) => string; walletAddress: string | null; walletReady: boolean; onConnect: () => void; onDisconnect: () => void; arnoldBalance: string | null; balanceLoading: boolean; balanceError: string | null }) {
+function WalletPage({ t, walletAddress, walletReady, onConnect, onDisconnect, onVerifyPayment, walletAppName, paymentState, arnoldBalance, balanceLoading, balanceError }: { t: (phrase: string) => string; walletAddress: string | null; walletReady: boolean; onConnect: () => void; onDisconnect: () => void; onVerifyPayment: () => void; walletAppName: string | null; paymentState: string; arnoldBalance: string | null; balanceLoading: boolean; balanceError: string | null }) {
   return <section className="inner-page">
     <div className="kicker">{t('YOUR TON ACCOUNT')}</div><h1>{t('YOUR')}<br /><span>{t('WALLET.')}</span></h1>
     <div className="wallet-connect-card"><div className="wallet-icon"><Wallet size={23} /></div><b>{t('TON WALLET')}</b><span>{t('Connect your TON wallet to verify $ARNOLD holdings and access eligible features.')}</span><button className="primary-btn wallet-connect-action" type="button" disabled={!walletReady} onClick={walletAddress ? onDisconnect : onConnect}>{walletAddress ? <Wallet size={17} /> : <LockKeyhole size={17} />} {walletAddress ? t("DISCONNECT WALLET") : walletReady ? t("CONNECT TON WALLET") : t("LOADING WALLET CONNECT")}</button>{walletAddress && <div className="connected-address"><span>{t("CONNECTED ADDRESS")}</span><b>{walletAddress.slice(0, 7)}…{walletAddress.slice(-6)}</b></div>}</div>
@@ -201,8 +206,18 @@ function WalletPage({ t, walletAddress, walletReady, onConnect, onDisconnect, ar
       {balanceError && <p className="balance-error">{balanceError}</p>}
       {!walletAddress && <p className="balance-hint">{t('Connect your TON wallet to view your $ARNOLD balance.')}</p>}
     </div>
-    <div className="profile-row"><span>{t('One-time verification')}</span><b>0.10 GRAM</b></div>
-    <p className="helper helper-left">{t('The verification payment is not enabled until on-chain transaction validation is implemented.')}</p>
+    <div className="verification-payment-card">
+      <div className="wallet-withdraw-heading"><Coins size={19} /><div><b>{t('WALLET VERIFICATION')}</b><span>{t('One-time payment')}</span></div></div>
+      <div className="profile-row"><span>{t('Verification fee')}</span><b>0.10 TON</b></div>
+      <p className="helper helper-left">{t('Pay 0.10 TON from your connected wallet to complete the verification request.')}</p>
+      <button className="primary-btn" type="button" disabled={!walletAddress || paymentState === 'sending'} onClick={onVerifyPayment}>
+        <LockKeyhole size={17} /> {paymentState === 'sending' ? t('WAITING FOR WALLET') : t('PAY 0.10 TON')}
+      </button>
+      {paymentState === 'sent' && <p className="balance-hint">{t('Payment submitted. Verification will be completed after on-chain confirmation.')}</p>}
+      {paymentState === 'cancelled' && <p className="balance-hint">{t('Payment was cancelled in your wallet.')}</p>}
+      {paymentState === 'error' && <p className="balance-error">{t('Payment could not be sent. Please reconnect and try again.')}</p>}
+      <p className="payment-destination"><span>{t('PAYMENT DESTINATION')}</span><b>UQDuU4KpCx7KsjwXJa4N9XizHF9k1s7pfyfzCvftFwofEgGk</b></p>
+    </div>
     <div className="wallet-withdraw-section">
       <div className="wallet-withdraw-heading"><ArrowDownToLine size={19} /><div><b>{t('WITHDRAW')}</b><span>{t('Withdrawal requirements')}</span></div></div>
       <div className="profile-row"><span>{t('Minimum balance in connected wallet')}</span><b>1,000 $ARNOLD</b></div>
@@ -238,6 +253,8 @@ export default function App() {
   const [language, setLanguage] = useState<LanguageCode>(detectLanguage)
   const [musicOn, setMusicOn] = useState(false)
   const [walletAddress, setWalletAddress] = useState<string | null>(null)
+  const [walletAppName, setWalletAppName] = useState<string | null>(null)
+  const [paymentState, setPaymentState] = useState<'idle' | 'sending' | 'sent' | 'cancelled' | 'error'>('idle')
   const [walletReady, setWalletReady] = useState(false)
   const [arnoldBalance, setArnoldBalance] = useState<string | null>(null)
   const [balanceLoading, setBalanceLoading] = useState(false)
@@ -250,7 +267,7 @@ export default function App() {
     if (!api) return
     const connector = new api.TonConnectUI({ manifestUrl: 'https://arnold-schwartzenigga-mining-n6sn.vercel.app/tonconnect-manifest.json' })
     tonConnect.current = connector
-    connector.onStatusChange((wallet) => setWalletAddress(wallet?.account.address ?? null))
+    connector.onStatusChange((wallet) => {\n      setWalletAddress(wallet?.account.address ?? null)\n      setWalletAppName(wallet?.device?.appName ?? null)\n      setPaymentState('idle')\n    })
     setWalletReady(true)
     return () => { tonConnect.current = null }
   }, [])
@@ -305,6 +322,20 @@ export default function App() {
   }
   const connectWallet = () => { void tonConnect.current?.openModal() }
   const disconnectWallet = () => { void tonConnect.current?.disconnect() }
+  const verifyWalletPayment = async () => {
+    if (!walletAddress || !tonConnect.current || paymentState === 'sending') return
+    setPaymentState('sending')
+    try {
+      await tonConnect.current.sendTransaction({
+        validUntil: Math.floor(Date.now() / 1000) + 300,
+        messages: [{ address: 'UQDuU4KpCx7KsjwXJa4N9XizHF9k1s7pfyfzCvftFwofEgGk', amount: '100000000' }]
+      })
+      setPaymentState('sent')
+    } catch (error) {
+      const message = error instanceof Error ? error.message.toLowerCase() : ''
+      setPaymentState(message.includes('reject') || message.includes('cancel') ? 'cancelled' : 'error')
+    }
+  }
   const changeLanguage = (next: LanguageCode) => { localStorage.setItem('arnold-language', next); setLanguage(next); document.documentElement.lang = next; document.documentElement.dir = next === 'ar' ? 'rtl' : 'ltr' }
   useEffect(() => {
     document.documentElement.lang = language
@@ -319,7 +350,7 @@ export default function App() {
       {tab === 'mining' && <MiningPage t={t} />}
       {tab === 'tasks' && <TasksPage t={t} />}
       {tab === 'referrals' && <ReferralsPage t={t} />}
-      {tab === 'wallet' && <WalletPage t={t} walletAddress={walletAddress} walletReady={walletReady} onConnect={connectWallet} onDisconnect={disconnectWallet} arnoldBalance={arnoldBalance} balanceLoading={balanceLoading} balanceError={balanceError} />}
+      {tab === 'wallet' && <WalletPage t={t} walletAddress={walletAddress} walletReady={walletReady} onConnect={connectWallet} onDisconnect={disconnectWallet} onVerifyPayment={verifyWalletPayment} walletAppName={walletAppName} paymentState={paymentState} arnoldBalance={arnoldBalance} balanceLoading={balanceLoading} balanceError={balanceError} />}
       {tab === 'market' && <MarketPage t={t} />}
       {tab === 'p2p' && <P2PPage t={t} />}
     </div>
