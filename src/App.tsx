@@ -1,6 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
 import { detectLanguage, languages, translate, type LanguageCode } from './i18n'
 import WebApp from '@twa-dev/sdk'
+
+type TonConnectInstance = {
+  openModal: () => Promise<void>
+  disconnect: () => Promise<void>
+  onStatusChange: (callback: (wallet: { account: { address: string } } | null) => void) => void
+}
+declare global {
+  interface Window {
+    TON_CONNECT_UI?: { TonConnectUI: new (options: { manifestUrl: string }) => TonConnectInstance }
+  }
+}
 import {
   CircleHelp, Clock3, Coins, Flame, Gift, Handshake, ListChecks, LockKeyhole,
   Pickaxe, ShoppingBag, ShieldCheck, Wallet, Zap, Volume2, VolumeX
@@ -155,10 +166,10 @@ function ReferralsPage({ t }: { t: (phrase: string) => string }) {
   </section>
 }
 
-function WalletPage({ t }: { t: (phrase: string) => string }) {
+function WalletPage({ t, walletAddress, walletReady, onConnect, onDisconnect }: { t: (phrase: string) => string; walletAddress: string | null; walletReady: boolean; onConnect: () => void; onDisconnect: () => void }) {
   return <section className="inner-page">
     <div className="kicker">{t('YOUR TON ACCOUNT')}</div><h1>{t('YOUR')}<br /><span>{t('WALLET.')}</span></h1>
-    <div className="wallet-connect-card"><div className="wallet-icon"><Wallet size={23} /></div><b>{t('TON WALLET')}</b><span>{t('Connect your TON wallet to verify $ARNOLD holdings and access eligible features.')}</span><button className="primary-btn" disabled><LockKeyhole size={17} /> {t('WALLET CONNECT COMING SOON')}</button></div>
+    <div className="wallet-connect-card"><div className="wallet-icon"><Wallet size={23} /></div><b>{t('TON WALLET')}</b><span>{t('Connect your TON wallet to verify $ARNOLD holdings and access eligible features.')}</span><button className="primary-btn wallet-connect-action" type="button" disabled={!walletReady} onClick={walletAddress ? onDisconnect : onConnect}>{walletAddress ? <Wallet size={17} /> : <LockKeyhole size={17} />} {walletAddress ? t("DISCONNECT WALLET") : walletReady ? t("CONNECT TON WALLET") : t("LOADING WALLET CONNECT")}</button>{walletAddress && <div className="connected-address"><span>{t("CONNECTED ADDRESS")}</span><b>{walletAddress.slice(0, 7)}…{walletAddress.slice(-6)}</b></div>}</div>
     <div className="profile-row"><span>{t('Minimum balance for withdrawals')}</span><b>500 $ARNOLD</b></div>
     <div className="profile-row"><span>{t('Minimum withdrawal')}</span><b>2,500 $ARNOLD</b></div>
     <div className="profile-row"><span>{t('One-time verification')}</span><b>0.10 GRAM</b></div>
@@ -188,34 +199,27 @@ function P2PPage({ t }: { t: (phrase: string) => string }) {
 export default function App() {
   const [tab, setTab] = useState<Tab>('mining')
   const [language, setLanguage] = useState<LanguageCode>(detectLanguage)
-  const [musicOn, setMusicOn] = useState(true)
+  const [musicOn, setMusicOn] = useState(false)
+  const [walletAddress, setWalletAddress] = useState<string | null>(null)
+  const [walletReady, setWalletReady] = useState(false)
   const stopMusic = useRef<ReturnType<typeof startBackgroundMusic> | null>(null)
+  const tonConnect = useRef<TonConnectInstance | null>(null)
   const t = (phrase: string) => translate(language, phrase)
   useEffect(() => {
-    const player = startBackgroundMusic()
-    stopMusic.current = player
-    player.resume()
-    const unlockAudio = () => player.resume()
-    window.addEventListener('pointerdown', unlockAudio)
-    window.addEventListener('touchstart', unlockAudio)
-    window.addEventListener('keydown', unlockAudio)
-    return () => {
-      window.removeEventListener('pointerdown', unlockAudio)
-      window.removeEventListener('touchstart', unlockAudio)
-      window.removeEventListener('keydown', unlockAudio)
-      player.stop()
-      stopMusic.current = null
-    }
+    const api = window.TON_CONNECT_UI
+    if (!api) return
+    const connector = new api.TonConnectUI({ manifestUrl: 'https://arnold-schwartzenigga-mining-n6sn.vercel.app/tonconnect-manifest.json' })
+    tonConnect.current = connector
+    connector.onStatusChange((wallet) => setWalletAddress(wallet?.account.address ?? null))
+    setWalletReady(true)
+    return () => { tonConnect.current = null }
   }, [])
+  useEffect(() => () => { stopMusic.current?.stop(); stopMusic.current = null }, [])
   const toggleMusic = () => {
-    if (musicOn && stopMusic.current?.isRunning()) {
-      stopMusic.current.stop()
+    if (musicOn) {
+      stopMusic.current?.stop()
       stopMusic.current = null
       setMusicOn(false)
-      return
-    }
-    if (musicOn && stopMusic.current) {
-      void stopMusic.current.resume()
       return
     }
     const player = startBackgroundMusic()
@@ -223,6 +227,8 @@ export default function App() {
     void player.resume()
     setMusicOn(true)
   }
+  const connectWallet = () => { void tonConnect.current?.openModal() }
+  const disconnectWallet = () => { void tonConnect.current?.disconnect() }
   const changeLanguage = (next: LanguageCode) => { localStorage.setItem('arnold-language', next); setLanguage(next); document.documentElement.lang = next; document.documentElement.dir = next === 'ar' ? 'rtl' : 'ltr' }
   useEffect(() => {
     document.documentElement.lang = language
@@ -237,7 +243,7 @@ export default function App() {
       {tab === 'mining' && <MiningPage t={t} />}
       {tab === 'tasks' && <TasksPage t={t} />}
       {tab === 'referrals' && <ReferralsPage t={t} />}
-      {tab === 'wallet' && <WalletPage t={t} />}
+      {tab === 'wallet' && <WalletPage t={t} walletAddress={walletAddress} walletReady={walletReady} onConnect={connectWallet} onDisconnect={disconnectWallet} />}
       {tab === 'market' && <MarketPage t={t} />}
       {tab === 'p2p' && <P2PPage t={t} />}
     </div>
