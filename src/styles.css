@@ -143,3 +143,11 @@ body{background:#050505}
 .wallet-withdraw-section .profile-row{font-size:10px;gap:8px}
 .wallet-withdraw-section .profile-row b{white-space:nowrap;font-size:10px}
 .wallet-withdraw-section .withdraw-disabled{margin-top:14px;min-height:46px;font-size:9px}
+
+
+.arnold-balance-card{margin:18px 0;padding:17px 16px;border:1px solid #ffb43d66;border-radius:15px;background:radial-gradient(ellipse at 0 0,#69400c55,transparent 70%),linear-gradient(145deg,#21170d,#100d09);box-shadow:0 12px 30px #0006}
+.balance-caption{display:flex;align-items:center;gap:7px;color:#d6ad67;font-size:10px;font-weight:800;letter-spacing:1.2px}
+.balance-amount{margin-top:12px;color:#ffe0a0;font-size:clamp(28px,8vw,38px);font-weight:900;line-height:1.05;overflow-wrap:anywhere}
+.balance-symbol{margin-top:5px;color:#a99470;font-size:11px;font-weight:800;letter-spacing:2px}
+.balance-error,.balance-hint{margin:10px 0 0;color:#b8a78c;font-size:10px;line-height:1.5}
+.balance-error{color:#ffb28e}
