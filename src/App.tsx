@@ -195,6 +195,21 @@ function ReferralsPage({ t }: { t: (phrase: string) => string }) {
   </section>
 }
 
+function ArnoldMarketChart({ t }: { t: (phrase: string) => string }) {
+  const candles = [[30,74,66,82,58],[48,66,72,78,58],[66,72,61,77,55],[84,61,57,68,49],[102,57,64,70,51],[120,64,52,68,45],[138,52,48,59,41],[156,48,56,62,43],[174,56,44,61,38],[192,44,49,55,35],[210,49,38,53,31],[228,38,42,48,28],[246,42,33,47,25],[264,33,39,44,27],[282,39,29,46,21],[300,29,34,40,18],[318,34,25,39,15],[336,25,30,36,12],[354,30,21,35,10],[372,21,25,31,8]] as const
+  return <section className="arnold-market-panel">
+    <div className="market-panel-head"><div><div className="kicker">{t('ARNOLD MARKET')}</div><h2>$ARNOLD / USD</h2></div><span className="chart-preview-tag">{t('CHART PREVIEW')}</span></div>
+    <div className="chart-price">$0.000030 <small>{t('INITIAL PRICE')}</small></div>
+    <div className="chart-change">↗ {t('Illustrative upward trend with pullbacks')}</div>
+    <svg className="candle-chart" viewBox="0 0 410 100" role="img" aria-label="Illustrative candlestick chart starting at 0.00003 US dollars">
+      {[20,45,70,95].map(y => <line key={y} x1="0" y1={y} x2="410" y2={y} className="chart-gridline" />)}
+      {candles.map(([x,o,c,h,l],i) => { const up=c<o; const top=Math.min(o,c); const height=Math.max(4,Math.abs(o-c)); return <g key={i} className={up?'candle-up':'candle-down'}><line x1={x} y1={h} x2={x} y2={l} /><rect x={x-4} y={top} width="8" height={height} rx="1" /></g> })}
+    </svg>
+    <div className="chart-axis"><span>{t('START')}</span><span>{t('PRICE MOVEMENT PREVIEW')}</span><span>{t('LATEST')}</span></div>
+    <div className="market-metrics"><div><span>{t('MARKET CAP')}</span><b>$1,000,000</b></div><div><span>{t('LIQUIDITY')}</span><b>$250,000 USDT</b></div></div>
+    <p className="chart-disclaimer">{t('Illustrative chart only. Candles and market figures are not connected to a live exchange or verified on-chain liquidity yet.')}</p>
+  </section>
+}
 function WalletPage({ t, walletAddress, walletReady, onConnect, onDisconnect, onVerifyPayment, walletAppName, paymentState, arnoldBalance, balanceLoading, balanceError }: { t: (phrase: string) => string; walletAddress: string | null; walletReady: boolean; onConnect: () => void; onDisconnect: () => void; onVerifyPayment: () => void; walletAppName: string | null; paymentState: string; arnoldBalance: string | null; balanceLoading: boolean; balanceError: string | null }) {
   return <section className="inner-page">
     <div className="kicker">{t('YOUR TON ACCOUNT')}</div><h1>{t('YOUR')}<br /><span>{t('WALLET.')}</span></h1>
@@ -218,6 +233,17 @@ function WalletPage({ t, walletAddress, walletReady, onConnect, onDisconnect, on
       {paymentState === 'error' && <p className="balance-error">{t('Payment could not be sent. Please reconnect and try again.')}</p>}
       <p className="payment-destination"><span>{t('PAYMENT DESTINATION')}</span><b>UQDuU4KpCx7KsjwXJa4N9XizHF9k1s7pfyfzCvftFwofEgGk</b></p>
     </div>
+    <section className="staking-coming-card">
+      <div className="wallet-withdraw-heading"><Coins size={19} /><div><b>{t('STAKING')}</b><span>{t('Earn rewards by staking $ARNOLD')}</span></div></div>
+      <div className="staking-coming-label">{t('COMING SOON')}</div>
+      <p className="helper helper-left">{t('Staking pools, lock periods and reward rates will be announced before launch.')}</p>
+    </section>
+    <ArnoldMarketChart t={t} />
+    <section className="positions-panel">
+      <div className="wallet-withdraw-heading"><ListChecks size={19} /><div><b>{t('USER POSITIONS')}</b><span>{t('Wallet ranking')}</span></div></div>
+      <div className="positions-table-wrap"><table className="positions-table"><thead><tr><th>{t('RANK')}</th><th>{t('WALLET')}</th><th>$ARNOLD</th></tr></thead><tbody><tr><td>—</td><td>{walletAddress ? walletAddress.slice(0,7)+'…'+walletAddress.slice(-5) : t('NOT CONNECTED')}</td><td>{arnoldBalance ?? '—'}</td></tr></tbody></table></div>
+      <p className="chart-disclaimer">{t('Global user rankings will be enabled when the shared user database is connected.')}</p>
+    </section>
     <div className="wallet-withdraw-section">
       <div className="wallet-withdraw-heading"><ArrowDownToLine size={19} /><div><b>{t('WITHDRAW')}</b><span>{t('Withdrawal requirements')}</span></div></div>
       <div className="profile-row"><span>{t('Minimum balance in connected wallet')}</span><b>1,000 $ARNOLD</b></div>
@@ -267,7 +293,11 @@ export default function App() {
     if (!api) return
     const connector = new api.TonConnectUI({ manifestUrl: 'https://arnold-schwartzenigga-mining-n6sn.vercel.app/tonconnect-manifest.json' })
     tonConnect.current = connector
-    connector.onStatusChange((wallet) => {\n      setWalletAddress(wallet?.account.address ?? null)\n      setWalletAppName(wallet?.device?.appName ?? null)\n      setPaymentState('idle')\n    })
+    connector.onStatusChange((wallet) => {
+      setWalletAddress(wallet?.account.address ?? null)
+      setWalletAppName(wallet?.device?.appName ?? null)
+      setPaymentState('idle')
+    })
     setWalletReady(true)
     return () => { tonConnect.current = null }
   }, [])
