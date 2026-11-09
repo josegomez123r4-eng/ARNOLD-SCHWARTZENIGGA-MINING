@@ -158,6 +158,7 @@ function MiningPage({ t }: { t: (phrase: string) => string }) {
       <h1>{t('MAKE YOUR')}<br /><em>{t('HOLDINGS')}</em><br />{t('WORK.')}</h1>
       <p>{t('Mine $ARNOLD every 24 hours. Stay active, stack rewards.')}</p>
     </div>
+    <div className="community-counter"><span className="community-dot" /><div><b>10,200+</b><span>{t('COMMUNITY USERS · INITIAL BASELINE')}</span></div></div>
     <div className="notice notice-large"><ShieldCheck size={17} /><span>{t('Mining is not active yet. Your rewards and wallet eligibility will be verified securely before the first cycle begins.')}</span></div>
     <section className="stats">
       <article className="stat-card featured"><div className="stat-label"><Coins size={14} /> {t('BASE REWARD')}</div><div className="stat-number">5 <small>$ARNOLD</small></div><div className="stat-caption">{t('Per completed 24-hour cycle')}</div></article>
