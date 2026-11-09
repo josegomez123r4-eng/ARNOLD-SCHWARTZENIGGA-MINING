@@ -189,3 +189,6 @@ body{background:#050505}
 .positions-table th{padding:10px 7px;color:#b5a184;font-size:8px;letter-spacing:.8px;border-bottom:1px solid #ffad3930}
 .positions-table td{padding:13px 7px;color:#f0d39b;font-size:10px;border-bottom:1px solid #ffffff12}
 .positions-table td:last-child{text-align:right;color:#ffd06b;font-weight:800}
+
+.wallet-switch-btn{width:100%;margin-top:10px;padding:10px 12px;border:1px solid #b88a3b66;border-radius:9px;background:#d6a13a12;color:#e9b34f;font-size:10px;font-weight:800;letter-spacing:1px;cursor:pointer}
+.wallet-switch-btn:disabled{opacity:.5;cursor:not-allowed}
