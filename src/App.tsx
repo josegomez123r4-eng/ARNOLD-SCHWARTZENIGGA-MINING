@@ -11,6 +11,7 @@ type TonConnectInstance = {
   disconnect: () => Promise<void>
   sendTransaction: (transaction: { validUntil: number; messages: Array<{ address: string; amount: string }> }) => Promise<{ boc: string }>
   onStatusChange: (callback: (wallet: TonConnectWallet | null) => void) => void
+  wallet?: TonConnectWallet | null
 }
 declare global {
   interface Window {
@@ -158,12 +159,6 @@ function MiningPage({ t }: { t: (phrase: string) => string }) {
       <h1>{t('MAKE YOUR')}<br /><em>{t('HOLDINGS')}</em><br />{t('WORK.')}</h1>
       <p>{t('Mine $ARNOLD every 24 hours. Stay active, stack rewards.')}</p>
     </div>
-    <div className="community-counter"><span className="community-dot" /><div><b>10,200+</b><span>{t('COMMUNITY USERS · INITIAL BASELINE')}</span></div></div>
-    <div className="notice notice-large"><ShieldCheck size={17} /><span>{t('Mining is not active yet. Your rewards and wallet eligibility will be verified securely before the first cycle begins.')}</span></div>
-    <section className="stats">
-      <article className="stat-card featured"><div className="stat-label"><Coins size={14} /> {t('BASE REWARD')}</div><div className="stat-number">5 <small>$ARNOLD</small></div><div className="stat-caption">{t('Per completed 24-hour cycle')}</div></article>
-      <article className="stat-card"><div className="stat-label"><Clock3 size={14} /> {t('CYCLE')}</div><div className="stat-number">24 <small>{t('HOURS')}</small></div><div className="stat-caption">{t('One manual cycle at a time')}</div></article>
-    </section>
     <section className="mining-card">
       <div className="card-head"><div><div className="kicker">{t('MINING STATION')}</div><h2><Pickaxe size={20} /> {t('MINING SESSION')}</h2></div><div className="status"><span /> {t('NOT ACTIVE')}</div></div>
       <div className="timer-panel"><div className="timer-label">{t('MINING WILL OPEN SOON')}</div>
@@ -174,6 +169,12 @@ function MiningPage({ t }: { t: (phrase: string) => string }) {
       <button className="primary-btn" disabled><LockKeyhole size={17} /> {t('MINING COMING SOON')}</button>
       <p className="helper">{t('Mining remains disabled until all security checks are completed.')}</p>
     </section>
+    <section className="stats">
+      <article className="stat-card featured"><div className="stat-label"><Coins size={14} /> {t('BASE REWARD')}</div><div className="stat-number">5 <small>$ARNOLD</small></div><div className="stat-caption">{t('Per completed 24-hour cycle')}</div></article>
+      <article className="stat-card"><div className="stat-label"><Clock3 size={14} /> {t('CYCLE')}</div><div className="stat-number">24 <small>{t('HOURS')}</small></div><div className="stat-caption">{t('One manual cycle at a time')}</div></article>
+    </section>
+    <div className="community-counter"><span className="community-dot" /><div><b>10,200+</b><span>{t('COMMUNITY USERS · INITIAL BASELINE')}</span></div></div>
+    <div className="notice notice-large"><ShieldCheck size={17} /><span>{t('Mining is not active yet. Your rewards and wallet eligibility will be verified securely before the first cycle begins.')}</span></div>
     <div className="section-footnote">{t('Total supply: 1,000,000 $ARNOLD · Mining allocation: 500,000 $ARNOLD')}</div>
   </section>
 }
@@ -211,15 +212,15 @@ function ArnoldMarketChart({ t }: { t: (phrase: string) => string }) {
     <p className="chart-disclaimer">{t('Illustrative chart only. Candles and market figures are not connected to a live exchange or verified on-chain liquidity yet.')}</p>
   </section>
 }
-function WalletPage({ t, walletAddress, walletReady, onConnect, onDisconnect, onVerifyPayment, walletAppName, paymentState, arnoldBalance, balanceLoading, balanceError }: { t: (phrase: string) => string; walletAddress: string | null; walletReady: boolean; onConnect: () => void; onDisconnect: () => void; onVerifyPayment: () => void; walletAppName: string | null; paymentState: string; arnoldBalance: string | null; balanceLoading: boolean; balanceError: string | null }) {
+function WalletPage({ t, walletAddress, walletReady, onConnect, onDisconnect, onReconnect, onRefreshBalance, onVerifyPayment, walletAppName, paymentState, arnoldBalance, balanceLoading, balanceError }: { t: (phrase: string) => string; walletAddress: string | null; walletReady: boolean; onConnect: () => void; onDisconnect: () => void; onVerifyPayment: () => void; walletAppName: string | null; paymentState: string; arnoldBalance: string | null; balanceLoading: boolean; balanceError: string | null }) {
   return <section className="inner-page">
     <div className="kicker">{t('YOUR TON ACCOUNT')}</div><h1>{t('YOUR')}<br /><span>{t('WALLET.')}</span></h1>
-    <div className="wallet-connect-card"><div className="wallet-icon"><Wallet size={23} /></div><b>{t('TON WALLET')}</b><span>{t('Connect your TON wallet to verify $ARNOLD holdings and access eligible features.')}</span><button className="primary-btn wallet-connect-action" type="button" disabled={!walletReady} onClick={walletAddress ? onDisconnect : onConnect}>{walletAddress ? <Wallet size={17} /> : <LockKeyhole size={17} />} {walletAddress ? t("DISCONNECT WALLET") : walletReady ? t("CONNECT TON WALLET") : t("LOADING WALLET CONNECT")}</button>{walletAddress && <div className="connected-address"><span>{t("CONNECTED ADDRESS")}{walletAppName ? ` · ${walletAppName}` : ''}</span><b title={walletAddress}>{walletAddress.slice(0, 10)}…{walletAddress.slice(-8)}</b></div>}</div>
+    <div className="wallet-connect-card"><div className="wallet-icon"><Wallet size={23} /></div><b>{t('TON WALLET')}</b><span>{t('Connect your TON wallet to verify $ARNOLD holdings and access eligible features.')}</span><button className="primary-btn wallet-connect-action" type="button" disabled={!walletReady} onClick={walletAddress ? onDisconnect : onConnect}>{walletAddress ? <Wallet size={17} /> : <LockKeyhole size={17} />} {walletAddress ? t("DISCONNECT WALLET") : walletReady ? t("CONNECT TON WALLET") : t("LOADING WALLET CONNECT")}</button>{walletAddress && <><div className="connected-address"><span>{t("CONNECTED ADDRESS")}{walletAppName ? ` · ${walletAppName}` : ''}</span><b title={walletAddress}>{walletAddress.slice(0, 10)}…{walletAddress.slice(-8)}</b></div><button className="wallet-switch-btn" type="button" onClick={onReconnect}>{t('CHANGE WALLET')}</button></>}</div>
     <div className="arnold-balance-card">
       <div className="balance-caption"><Coins size={15} /> {t('ARNOLD TOKEN BALANCE')}</div>
       <div className="balance-amount">{balanceLoading ? t('LOADING BALANCE') : arnoldBalance !== null ? arnoldBalance : '—'}</div>
       <div className="balance-symbol">$ARNOLD</div>
-      {balanceError && <p className="balance-error">{balanceError}</p>}
+      {balanceError && <><p className="balance-error">{balanceError}</p><button className="wallet-switch-btn" type="button" onClick={onRefreshBalance}>{t('RETRY BALANCE')}</button></>}
       {!walletAddress && <p className="balance-hint">{t('Connect your TON wallet to view your $ARNOLD balance.')}</p>}
     </div>
     <div className="verification-payment-card">
@@ -232,7 +233,6 @@ function WalletPage({ t, walletAddress, walletReady, onConnect, onDisconnect, on
       {paymentState === 'sent' && <p className="balance-hint">{t('Payment submitted. Verification will be completed after on-chain confirmation.')}</p>}
       {paymentState === 'cancelled' && <p className="balance-hint">{t('Payment was cancelled in your wallet.')}</p>}
       {paymentState === 'error' && <p className="balance-error">{t('Payment could not be sent. Please reconnect and try again.')}</p>}
-      <p className="payment-destination"><span>{t('PAYMENT DESTINATION')}</span><b>UQDuU4KpCx7KsjwXJa4N9XizHF9k1s7pfyfzCvftFwofEgGk</b></p>
     </div>
     <section className="staking-coming-card">
       <div className="wallet-withdraw-heading"><Coins size={19} /><div><b>{t('STAKING')}</b><span>{t('Earn rewards by staking $ARNOLD')}</span></div></div>
@@ -286,21 +286,37 @@ export default function App() {
   const [arnoldBalance, setArnoldBalance] = useState<string | null>(null)
   const [balanceLoading, setBalanceLoading] = useState(false)
   const [balanceError, setBalanceError] = useState<string | null>(null)
+  const [balanceRefresh, setBalanceRefresh] = useState(0)
   const stopMusic = useRef<ReturnType<typeof startBackgroundMusic> | null>(null)
   const tonConnect = useRef<TonConnectInstance | null>(null)
   const t = (phrase: string) => translate(language, phrase)
   useEffect(() => {
-    const api = window.TON_CONNECT_UI
-    if (!api) return
-    const connector = new api.TonConnectUI({ manifestUrl: 'https://arnold-schwartzenigga-mining-6hqr.vercel.app/tonconnect-manifest.json' })
-    tonConnect.current = connector
-    connector.onStatusChange((wallet) => {
-      setWalletAddress(wallet?.account.address ?? null)
-      setWalletAppName(wallet?.device?.appName ?? null)
-      setPaymentState('idle')
-    })
-    setWalletReady(true)
-    return () => { tonConnect.current = null }
+    let cancelled = false
+    let retryTimer: number | undefined
+    const initialize = () => {
+      const api = window.TON_CONNECT_UI
+      if (!api) {
+        retryTimer = window.setTimeout(initialize, 200)
+        return
+      }
+      const connector = new api.TonConnectUI({ manifestUrl: 'https://arnold-schwartzenigga-mining-qfoe.vercel.app/tonconnect-manifest.json' })
+      tonConnect.current = connector
+      const syncWallet = (wallet: TonConnectWallet | null) => {
+        if (cancelled) return
+        setWalletAddress(wallet?.account.address ?? null)
+        setWalletAppName(wallet?.device?.appName ?? null)
+        setPaymentState('idle')
+      }
+      connector.onStatusChange(syncWallet)
+      syncWallet(connector.wallet ?? null)
+      setWalletReady(true)
+    }
+    initialize()
+    return () => {
+      cancelled = true
+      if (retryTimer !== undefined) window.clearTimeout(retryTimer)
+      tonConnect.current = null
+    }
   }, [])
   useEffect(() => {
     if (!walletAddress) {
@@ -337,7 +353,7 @@ export default function App() {
     void loadBalance()
     const interval = window.setInterval(loadBalance, 30000)
     return () => { cancelled = true; window.clearInterval(interval) }
-  }, [walletAddress, language])
+  }, [walletAddress, language, balanceRefresh])
   useEffect(() => () => { stopMusic.current?.stop(); stopMusic.current = null }, [])
   const toggleMusic = () => {
     if (musicOn) {
@@ -353,6 +369,12 @@ export default function App() {
   }
   const connectWallet = () => { void tonConnect.current?.openModal() }
   const disconnectWallet = () => { void tonConnect.current?.disconnect() }
+  const reconnectWallet = async () => {
+    if (!tonConnect.current) return
+    await tonConnect.current.disconnect()
+    await tonConnect.current.openModal()
+  }
+  const refreshBalance = () => setBalanceRefresh((value) => value + 1)
   const verifyWalletPayment = async () => {
     if (!walletAddress || !tonConnect.current || paymentState === 'sending') return
     setPaymentState('sending')
@@ -381,7 +403,7 @@ export default function App() {
       {tab === 'mining' && <MiningPage t={t} />}
       {tab === 'tasks' && <TasksPage t={t} />}
       {tab === 'referrals' && <ReferralsPage t={t} />}
-      {tab === 'wallet' && <WalletPage t={t} walletAddress={walletAddress} walletReady={walletReady} onConnect={connectWallet} onDisconnect={disconnectWallet} onVerifyPayment={verifyWalletPayment} walletAppName={walletAppName} paymentState={paymentState} arnoldBalance={arnoldBalance} balanceLoading={balanceLoading} balanceError={balanceError} />}
+      {tab === 'wallet' && <WalletPage t={t} walletAddress={walletAddress} walletReady={walletReady} onConnect={connectWallet} onDisconnect={disconnectWallet} onReconnect={() => { void reconnectWallet() }} onRefreshBalance={refreshBalance} onVerifyPayment={verifyWalletPayment} walletAppName={walletAppName} paymentState={paymentState} arnoldBalance={arnoldBalance} balanceLoading={balanceLoading} balanceError={balanceError} />}
       {tab === 'market' && <MarketPage t={t} />}
       {tab === 'p2p' && <P2PPage t={t} />}
     </div>
