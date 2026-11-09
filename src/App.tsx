@@ -292,7 +292,7 @@ export default function App() {
   useEffect(() => {
     const api = window.TON_CONNECT_UI
     if (!api) return
-    const connector = new api.TonConnectUI({ manifestUrl: 'https://arnold-schwartzenigga-mining-n6sn.vercel.app/tonconnect-manifest.json' })
+    const connector = new api.TonConnectUI({ manifestUrl: 'https://arnold-schwartzenigga-mining-6hqr.vercel.app/tonconnect-manifest.json' })
     tonConnect.current = connector
     connector.onStatusChange((wallet) => {
       setWalletAddress(wallet?.account.address ?? null)
