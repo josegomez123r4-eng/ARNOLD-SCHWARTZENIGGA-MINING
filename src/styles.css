@@ -158,3 +158,34 @@ body{background:#050505}
 .payment-destination{display:flex;flex-direction:column;gap:6px;margin:13px 0 0;padding-top:11px;border-top:1px solid #ffb23a25}
 .payment-destination span{color:#b5a184;font-size:9px;letter-spacing:1px;font-weight:800}
 .payment-destination b{color:#d8bb85;font-size:9px;line-height:1.5;overflow-wrap:anywhere;font-weight:600}
+
+
+/* Wallet market, staking, positions and community counter */
+.community-counter{display:flex;align-items:center;gap:11px;margin:0 2px 15px;padding:12px 14px;border:1px solid #ffad3955;border-radius:12px;background:linear-gradient(110deg,#26180c,#100d09);box-shadow:0 8px 22px #0006}
+.community-dot{width:9px;height:9px;flex:none;border-radius:50%;background:#ff9d2e;box-shadow:0 0 12px #ff8a20}
+.community-counter>div{display:flex;flex-direction:column;gap:2px}
+.community-counter b{font:800 22px 'Barlow Condensed',sans-serif;color:#ffcf70}
+.community-counter span{font-size:8px;letter-spacing:1px;color:#b5a184}
+.staking-coming-card,.positions-panel,.arnold-market-panel{margin-top:18px;padding:16px 14px;border:1px solid #ffad395e;border-radius:15px;background:radial-gradient(ellipse at 0 0,#48280f66,transparent 65%),linear-gradient(145deg,#24180d,#110e0a);box-shadow:0 12px 32px #0007}
+.staking-coming-label{display:inline-flex;margin-top:14px;padding:8px 14px;border:1px solid #ffb347;border-radius:30px;background:linear-gradient(100deg,#5a2c0c,#2a170a);color:#ffd16b;font-size:10px;font-weight:900;letter-spacing:1.7px}
+.market-panel-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.market-panel-head h2{margin:4px 0 0;color:#fff0d5;font:800 20px 'Barlow Condensed',sans-serif;letter-spacing:1px}
+.chart-preview-tag{padding:6px 8px;border:1px solid #ffad3940;border-radius:20px;color:#d5a75d;font-size:7px;letter-spacing:.8px}
+.chart-price{margin-top:16px;color:#ffe0a0;font-size:29px;font-weight:900}
+.chart-price small{display:block;margin-top:3px;color:#b5a184;font-size:8px;letter-spacing:1px}
+.chart-change{margin:6px 0 10px;color:#75d69a;font-size:9px}
+.candle-chart{display:block;width:100%;height:auto;overflow:visible}
+.chart-gridline{stroke:#ffffff12;stroke-width:1;stroke-dasharray:3 4}
+.candle-up{stroke:#62d995;fill:#62d995;stroke-width:1.5}
+.candle-down{stroke:#e66d55;fill:#e66d55;stroke-width:1.5}
+.chart-axis{display:flex;justify-content:space-between;margin-top:7px;color:#8f826b;font-size:7px;letter-spacing:.5px}
+.market-metrics{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:15px}
+.market-metrics>div{display:flex;flex-direction:column;gap:6px;padding:12px;border:1px solid #ffad3930;border-radius:10px;background:#090806}
+.market-metrics span{color:#b5a184;font-size:8px;font-weight:800;letter-spacing:.8px}
+.market-metrics b{color:#ffd06b;font-size:15px}
+.chart-disclaimer{margin:12px 0 0;color:#91836c;font-size:8px;line-height:1.55}
+.positions-table-wrap{overflow-x:auto;margin-top:12px}
+.positions-table{width:100%;border-collapse:collapse;text-align:left;white-space:nowrap}
+.positions-table th{padding:10px 7px;color:#b5a184;font-size:8px;letter-spacing:.8px;border-bottom:1px solid #ffad3930}
+.positions-table td{padding:13px 7px;color:#f0d39b;font-size:10px;border-bottom:1px solid #ffffff12}
+.positions-table td:last-child{text-align:right;color:#ffd06b;font-weight:800}
