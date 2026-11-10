@@ -200,12 +200,14 @@ function TasksPage({ t }: { t: (phrase: string) => string }) {
 
 function ReferralsPage({ t }: { t: (phrase: string) => string }) {
   const telegramId = WebApp.initDataUnsafe?.user?.id
+  const startParam = WebApp.initDataUnsafe?.start_param
   const [copied, setCopied] = useState(false)
+  const [copyError, setCopyError] = useState('')
   const [stats, setStats] = useState({ total: 0, eligible: 0, ineligible: 0 })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const inviteUrl = telegramId
-    ? (() => { const url = new URL(window.location.href); url.searchParams.set('ref', String(telegramId)); return url.toString() })()
+    ? 'https://t.me/ArnoldMiningOfficialBot?startapp=' + encodeURIComponent('ref_' + String(telegramId))
     : ''
   const shareUrl = inviteUrl
     ? 'https://t.me/share/url?url=' + encodeURIComponent(inviteUrl) + '&text=' + encodeURIComponent(t('Join ARNOLD and start earning $ARNOLD.'))
@@ -219,14 +221,32 @@ function ReferralsPage({ t }: { t: (phrase: string) => string }) {
       setError('')
       try {
         const endpoint = 'https://vnslzfivilgdqqgdyoxd.supabase.co/functions/v1/referral-service'
-        const referrer = new URLSearchParams(window.location.search).get('ref')
+        const queryRef = new URLSearchParams(window.location.search).get('ref')
+        const rawReferrer = startParam?.startsWith('ref_') ? startParam.slice(4) : queryRef
+        const referrer = rawReferrer && /^\\d{1,20}$/.test(rawReferrer) ? rawReferrer : null
         if (referrer && referrer !== String(telegramId)) {
-          await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'sync', initData, referrerTelegramId: referrer }) })
+          const syncResponse = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'sync', initData, referrerTelegramId: referrer })
+          })
+          if (!syncResponse.ok) {
+            const syncData = await syncResponse.json().catch(() => ({}))
+            throw new Error(syncData?.error || 'No se pudo registrar la invitación')
+          }
         }
-        const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'stats', initData }) })
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'stats', initData })
+        })
         const data = await response.json()
         if (!response.ok) throw new Error(data?.error || 'No se pudieron cargar los referidos')
-        if (!cancelled) setStats({ total: Number(data.total || 0), eligible: Number(data.eligible || 0), ineligible: Number(data.ineligible || 0) })
+        if (!cancelled) setStats({
+          total: Number(data.total || 0),
+          eligible: Number(data.eligible || 0),
+          ineligible: Number(data.ineligible || 0)
+        })
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'No se pudieron cargar los referidos')
       } finally {
@@ -235,27 +255,54 @@ function ReferralsPage({ t }: { t: (phrase: string) => string }) {
     }
     void load()
     return () => { cancelled = true }
-  }, [telegramId])
+  }, [telegramId, startParam])
   const copyInvite = async () => {
     if (!inviteUrl) return
-    try { await navigator.clipboard.writeText(inviteUrl); setCopied(true) }
-    catch { setCopied(false) }
+    setCopyError('')
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(inviteUrl)
+      } else {
+        const input = document.createElement('textarea')
+        input.value = inviteUrl
+        input.setAttribute('readonly', '')
+        input.style.position = 'fixed'
+        input.style.opacity = '0'
+        document.body.appendChild(input)
+        input.select()
+        const copiedSuccessfully = document.execCommand('copy')
+        document.body.removeChild(input)
+        if (!copiedSuccessfully) throw new Error('COPY_NOT_SUPPORTED')
+      }
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 2500)
+    } catch {
+      setCopied(false)
+      setCopyError('No se pudo copiar automáticamente. Mantén pulsado el enlace para copiarlo.')
+    }
   }
   return <section className="inner-page">
     <div className="kicker">{t('GROW THE COMMUNITY')}</div><h1>{t('INVITE.')}<br /><span>{t('EARN.')}</span></h1>
     <div className="feature-panel"><div className="feature-icon"><Gift size={22} /></div><div><b>{t('INVITE FRIENDS')}</b><span>{t('Share your personal invite link and help grow the ARNOLD community.')}</span></div></div>
     <div className="referral-invite-card">
-      <b>{t('YOUR INVITE LINK')}</b>
-      {inviteUrl
-        ? <><input className="referral-link-input" readOnly value={inviteUrl} aria-label={t('YOUR INVITE LINK')} /><button className="primary-btn" type="button" onClick={() => { void copyInvite() }}>{copied ? t('LINK COPIED') : t('COPY INVITE LINK')}</button><a className="wallet-switch-btn" href={shareUrl}>{t('SHARE ON TELEGRAM')}</a></>
-        : <p>Abre ARNOLD desde Telegram para generar tu enlace personal.</p>}
+      <div className="referral-invite-heading"><Gift size={18} /><b>{t('YOUR INVITE LINK')}</b></div>
+      {inviteUrl ? <>
+        <input className="referral-link-input" readOnly value={inviteUrl} onFocus={event => event.currentTarget.select()} aria-label={t('YOUR INVITE LINK')} />
+        <button className="primary-btn" type="button" onClick={() => { void copyInvite() }}>{copied ? '✓ ENLACE COPIADO' : 'COPIAR ENLACE'}</button>
+        <a className="referral-share-btn" href={shareUrl} target="_blank" rel="noreferrer"><Gift size={16} /> COMPARTIR POR TELEGRAM</a>
+        {copyError && <p className="balance-error" role="alert">{copyError}</p>}
+        <p className="referral-link-help">Cada amigo que abra este enlace desde Telegram quedará asociado a tu invitación.</p>
+      </> : <>
+        <p className="referral-link-help">Abre la Mini App desde Telegram para generar tu enlace personal de invitación.</p>
+        <a className="referral-share-btn" href="https://t.me/ArnoldMiningOfficialBot" target="_blank" rel="noreferrer">ABRIR @ArnoldMiningOfficialBot</a>
+      </>}
     </div>
     <div className="stats referral-stats">
       <article className="stat-card"><div className="stat-label">TOTAL DE INVITADOS</div><div className="stat-number">{loading ? '…' : stats.total}</div><div className="stat-caption">Personas que se registraron con tu enlace</div></article>
       <article className="stat-card"><div className="stat-label">ELEGIBLES</div><div className="stat-number">{loading ? '…' : stats.eligible}</div><div className="stat-caption">Billetera confirmada y tarifa verificada</div></article>
       <article className="stat-card"><div className="stat-label">AÚN NO ELEGIBLES</div><div className="stat-number">{loading ? '…' : stats.ineligible}</div><div className="stat-caption">Pendientes de completar la verificación</div></article>
     </div>
-    {error && <p className="balance-error">{error}</p>}
+    {error && <p className="balance-error" role="alert">{error}</p>}
     <div className="eligibility-panel"><div className="eligibility-title"><ShieldCheck size={18} /> <b>REQUISITOS DE ELEGIBILIDAD</b></div><p>Un invitado cuenta como elegible únicamente después de confirmar su billetera y completar el pago único de 0.10 GRAM, verificado de forma segura en la blockchain.</p></div>
   </section>
 }
