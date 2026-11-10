@@ -159,6 +159,18 @@ function MiningPage({ t, onOpenReferrals, onOpenWallet }: { t: (phrase: string) 
       <h1>{t('MAKE YOUR')}<br /><em>{t('HOLDINGS')}</em><br />{t('WORK.')}</h1>
       <p>{t('Mine $ARNOLD every 24 hours. Stay active, stack rewards.')}</p>
     </div>
+    <section className="earnings-summary" aria-label="Resumen de ganancias">
+      <div className="earnings-summary-head">
+        <div><div className="kicker">{t('YOUR REWARDS')}</div><h2><Coins size={19} /> {t('EARNINGS SUMMARY')}</h2></div>
+        <span className="earnings-live-label">{t('CONFIRMED')}</span>
+      </div>
+      <div className="earnings-total"><span>{t('TOTAL EARNED')}</span><strong>— <small>$ARNOLD</small></strong></div>
+      <div className="earnings-sources">
+        <div className="earnings-source"><span><ListChecks size={15} /> {t('TASK REWARDS')}</span><b>— <small>$ARNOLD</small></b></div>
+        <div className="earnings-source"><span><Pickaxe size={15} /> {t('MINING REWARDS')}</span><b>— <small>$ARNOLD</small></b></div>
+      </div>
+      <p className="earnings-note">{t('Only confirmed rewards will appear here. Earnings history is not connected yet.')}</p>
+    </section>
     <section className="mining-card">
       <div className="card-head"><div><div className="kicker">{t('MINING STATION')}</div><h2><Pickaxe size={20} /> {t('MINING SESSION')}</h2></div><div className="status"><span /> {t('NOT ACTIVE')}</div></div>
       <div className="timer-panel"><div className="timer-label">{t('MINING WILL OPEN SOON')}</div>
@@ -514,7 +526,7 @@ export default function App() {
       {tab === 'p2p' && <P2PPage t={t} />}
     </div>
     <nav className="bottom-nav" aria-label="Main navigation">
-      {tabs.map(({ id, label, icon: Icon }) => <button key={id} className={tab === id ? (id === 'referrals' ? 'selected referral-nav-item' : 'selected') : (id === 'referrals' ? 'referral-nav-item' : '')} aria-current={tab === id ? 'page' : undefined} onClick={() => { setTab(id) }}>
+      {tabs.map(({ id, label, icon: Icon }) => <button key={id} className={tab === id ? 'selected' : ''} aria-current={tab === id ? 'page' : undefined} onClick={() => { setTab(id) }}>
         <Icon size={18} strokeWidth={tab === id ? 2.4 : 1.8} /><span>{t(label)}</span>
       </button>)}
     </nav>
