@@ -201,3 +201,18 @@ body{background:#050505}
 .referral-invite-card .primary-btn{width:100%;margin-top:11px;min-height:45px}
 .referral-share-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:45px;margin-top:9px;padding:11px 12px;border:1px solid #ffbd5b;border-radius:9px;background:linear-gradient(100deg,#71400f,#3c230d);color:#ffe0a0;text-align:center;text-decoration:none;font-size:10px;font-weight:900;letter-spacing:1px}
 .referral-link-help{margin:11px 0 0;color:#b8a78c;font-size:10px;line-height:1.55}
+
+
+/* Make the referral program discoverable from the home screen and bottom navigation */
+.home-referral-cta{width:100%;display:flex;align-items:center;gap:11px;margin:0 0 15px;padding:13px 12px;border:1px solid #ffbd5b99;border-radius:13px;background:linear-gradient(105deg,#42250d,#1b120a);color:#ffe0a0;text-align:left;box-shadow:0 8px 24px #ff8c1b20;cursor:pointer}
+.home-referral-icon{width:39px;height:39px;display:grid;place-items:center;flex:none;border:1px solid #ffbd5b66;border-radius:11px;background:#ff9c2b20;color:#ffd06b}
+.home-referral-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:4px}
+.home-referral-copy b{color:#ffe0a0;font-size:10px;letter-spacing:.8px}
+.home-referral-copy small{color:#c5ad86;font-size:9px;line-height:1.35}
+.home-referral-arrow{display:flex;align-items:center;gap:4px;color:#ffd06b;font-size:8px;font-weight:900;letter-spacing:.8px;white-space:nowrap}
+.home-referral-arrow span{font-size:20px;line-height:12px}
+.bottom-nav button.referral-nav-item{color:#ffd06b;background:linear-gradient(180deg,#ff9c2b18,#ff9c2b08);border:1px solid #ffbd5b35;border-radius:9px}
+.bottom-nav button.referral-nav-item.selected{background:linear-gradient(180deg,#ffbd5b30,#ff9c2b18);border-color:#ffbd5b99;color:#fff0bd;box-shadow:0 0 18px #ff922d24}
+.referral-stats .stat-card{min-height:104px}
+.referral-stats .stat-card:nth-child(2){border-color:#62d99566;background:linear-gradient(145deg,#14301f,#101810)}
+.referral-stats .stat-card:nth-child(3){border-color:#e6a34c66;background:linear-gradient(145deg,#35220f,#17110a)}
