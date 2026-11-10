@@ -153,7 +153,7 @@ function Header({ language, onLanguageChange, musicOn, onMusicToggle }: { langua
   </header>
 }
 
-function MiningPage({ t }: { t: (phrase: string) => string }) {
+function MiningPage({ t, onOpenReferrals }: { t: (phrase: string) => string; onOpenReferrals: () => void }) {
   return <section className="page-section">
     <div className="hero"><div className="overline"><span /> THE DAILY GRIND <span /></div>
       <h1>{t('MAKE YOUR')}<br /><em>{t('HOLDINGS')}</em><br />{t('WORK.')}</h1>
@@ -174,6 +174,11 @@ function MiningPage({ t }: { t: (phrase: string) => string }) {
       <article className="stat-card"><div className="stat-label"><Clock3 size={14} /> {t('CYCLE')}</div><div className="stat-number">24 <small>{t('HOURS')}</small></div><div className="stat-caption">{t('One manual cycle at a time')}</div></article>
     </section>
     <div className="community-counter"><span className="community-dot" /><div><b>10,200+</b><span>{t('COMMUNITY USERS · INITIAL BASELINE')}</span></div></div>
+    <button className="home-referral-cta" type="button" onClick={onOpenReferrals}>
+      <span className="home-referral-icon"><Gift size={19} /></span>
+      <span className="home-referral-copy"><b>PROGRAMA DE REFERIDOS</b><small>Invita amigos · Consulta elegibles y pendientes</small></span>
+      <span className="home-referral-arrow">VER <span>›</span></span>
+    </button>
     <div className="notice notice-large"><ShieldCheck size={17} /><span>{t('Mining is not active yet. Your rewards and wallet eligibility will be verified securely before the first cycle begins.')}</span></div>
     <div className="section-footnote">{t('Total supply: 1,000,000 $ARNOLD · Mining allocation: 500,000 $ARNOLD')}</div>
   </section>
@@ -498,7 +503,7 @@ export default function App() {
     <div className="glow glow-a" /><div className="glow glow-b" />
     <Header language={language} onLanguageChange={changeLanguage} musicOn={musicOn} onMusicToggle={toggleMusic} />
     <div className="content">
-      {tab === 'mining' && <MiningPage t={t} />}
+      {tab === 'mining' && <MiningPage t={t} onOpenReferrals={() => setTab('referrals')} />}
       {tab === 'tasks' && <TasksPage t={t} />}
       {tab === 'referrals' && <ReferralsPage t={t} />}
       {tab === 'wallet' && <WalletPage t={t} walletAddress={walletAddress} walletReady={walletReady} onConnect={connectWallet} onDisconnect={disconnectWallet} onReconnect={() => { void reconnectWallet() }} onRefreshBalance={refreshBalance} onVerifyPayment={verifyWalletPayment} walletAppName={walletAppName} paymentState={paymentState} arnoldBalance={arnoldBalance} balanceLoading={balanceLoading} balanceError={balanceError} />}
@@ -506,7 +511,7 @@ export default function App() {
       {tab === 'p2p' && <P2PPage t={t} />}
     </div>
     <nav className="bottom-nav" aria-label="Main navigation">
-      {tabs.map(({ id, label, icon: Icon }) => <button key={id} className={tab === id ? 'selected' : ''} aria-current={tab === id ? 'page' : undefined} onClick={() => { setTab(id) }}>
+      {tabs.map(({ id, label, icon: Icon }) => <button key={id} className={tab === id ? (id === 'referrals' ? 'selected referral-nav-item' : 'selected') : (id === 'referrals' ? 'referral-nav-item' : '')} aria-current={tab === id ? 'page' : undefined} onClick={() => { setTab(id) }}>
         <Icon size={18} strokeWidth={tab === id ? 2.4 : 1.8} /><span>{t(label)}</span>
       </button>)}
     </nav>
