@@ -43,7 +43,18 @@ function normalizeTonAddress(address: string): string | null {
 }
 
 type JettonBalanceResponse = {
-  balances?: Array<{ balance: string; jetton: { address: string; decimals?: number | string } }>
+  balances?: Array<{ balance: string; jetton: { address: string; decimals?: number | string; symbol?: string; name?: string } }>
+}
+
+function formatJettonAmount(rawBalance: string, decimalsValue: number | string | undefined): string {
+  if (!/^\d+$/.test(rawBalance)) throw new Error('Invalid token balance returned by TONAPI')
+  const decimals = Number(decimalsValue ?? 9)
+  if (!Number.isInteger(decimals) || decimals < 0 || decimals > 30) throw new Error('Invalid token decimals returned by TONAPI')
+  const units = BigInt(rawBalance)
+  const scale = 10n ** BigInt(decimals)
+  const whole = units / scale
+  const fraction = (units % scale).toString().padStart(decimals, '0').replace(/0+$/, '').slice(0, 6)
+  return fraction ? whole.toString() + '.' + fraction : whole.toString()
 }
 
 type Tab = 'mining' | 'tasks' | 'referrals' | 'wallet' | 'market' | 'p2p'
@@ -330,22 +341,33 @@ export default function App() {
       setBalanceLoading(true)
       setBalanceError(null)
       try {
-        const response = await fetch('https://tonapi.io/v2/accounts/' + encodeURIComponent(walletAddress) + '/jettons')
-        if (!response.ok) throw new Error('TON API ' + response.status)
-        const data = await response.json() as JettonBalanceResponse
+        const normalizedWallet = normalizeTonAddress(walletAddress)
+        if (!normalizedWallet) throw new Error('The connected wallet address is not valid TON format')
         const expectedMaster = normalizeTonAddress(ARNOLD_JETTON_MASTER)
-        if (!expectedMaster) throw new Error('Invalid configured Jetton master address')
-        const token = (data.balances ?? []).find(item => normalizeTonAddress(item.jetton.address) === expectedMaster)
+        if (!expectedMaster) throw new Error('The configured $ARNOLD Jetton master address is invalid')
+
+        const response = await fetch('https://tonapi.io/v2/accounts/' + encodeURIComponent(normalizedWallet) + '/jettons', {
+          headers: { accept: 'application/json' }
+        })
+        if (!response.ok) {
+          const responseText = await response.text().catch(() => '')
+          throw new Error('TONAPI returned HTTP ' + response.status + (responseText ? ': ' + responseText.slice(0, 180) : ''))
+        }
+
+        const data = await response.json() as JettonBalanceResponse
+        if (!data || !Array.isArray(data.balances)) throw new Error('TONAPI returned an unexpected jetton balances response')
+        const token = data.balances.find(item => item?.jetton?.address && normalizeTonAddress(item.jetton.address) === expectedMaster)
+
         if (!cancelled) {
           if (!token) setArnoldBalance('0')
-          else {
-            const decimals = Number(token.jetton.decimals ?? 9)
-            const amount = Number(token.balance) / Math.pow(10, decimals)
-            setArnoldBalance(amount.toLocaleString(undefined, { maximumFractionDigits: Math.min(decimals, 6) }))
-          }
+          else setArnoldBalance(formatJettonAmount(token.balance, token.jetton.decimals))
         }
-      } catch {
-        if (!cancelled) setBalanceError(t('Unable to load token balance. Please try again.'))
+      } catch (error) {
+        console.error('[ARNOLD] Could not load Jetton balance:', error)
+        if (!cancelled) {
+          setArnoldBalance(null)
+          setBalanceError(t('Unable to load token balance. Please try again.'))
+        }
       } finally {
         if (!cancelled) setBalanceLoading(false)
       }
