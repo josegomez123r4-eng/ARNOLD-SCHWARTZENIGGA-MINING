@@ -225,3 +225,24 @@ body{background:#050505}
 .claim-btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:12px;border:1px solid #ffbd5b66;border-radius:10px;background:linear-gradient(100deg,#35230f,#1d150c);color:#e8c78b;font-size:10px;font-weight:900;letter-spacing:1px;cursor:not-allowed;opacity:.72}
 .claim-btn:disabled{opacity:.72;cursor:not-allowed}
 @media(max-width:340px){.mining-action-buttons{grid-template-columns:1fr}}
+
+
+/* Earnings summary: separate confirmed mining and task rewards */
+.earnings-summary{margin:0 0 15px;padding:16px 14px;border:1px solid #ffad395e;border-radius:15px;background:radial-gradient(ellipse at 0 0,#48280f55,transparent 68%),linear-gradient(145deg,#21170d,#100d09);box-shadow:0 10px 28px #0006}
+.earnings-summary-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.earnings-summary-head h2{display:flex;align-items:center;gap:8px;margin:5px 0 0;color:#fff0d5;font:800 18px 'Barlow Condensed',sans-serif;letter-spacing:.7px}
+.earnings-summary-head h2 svg{color:#ffc35c}
+.earnings-live-label{padding:5px 8px;border:1px solid #ffffff24;border-radius:20px;color:#b8a78c;font-size:7px;font-weight:800;letter-spacing:.8px}
+.earnings-total{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:15px;padding:13px;border:1px solid #ffbd5b40;border-radius:11px;background:#090806}
+.earnings-total>span{color:#c5b392;font-size:9px;font-weight:800;letter-spacing:1px}
+.earnings-total>strong{color:#ffe0a0;font:800 27px 'Barlow Condensed',sans-serif}
+.earnings-total small,.earnings-source small{color:#d5a75d;font:800 8px 'DM Sans',sans-serif;letter-spacing:.6px}
+.earnings-sources{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:9px}
+.earnings-source{display:flex;flex-direction:column;gap:10px;min-width:0;padding:11px;border:1px solid #ffffff19;border-radius:10px;background:#17120c}
+.earnings-source>span{display:flex;align-items:center;gap:6px;color:#bca985;font-size:8px;font-weight:800;letter-spacing:.5px}
+.earnings-source>span svg{color:#ffc35c;flex:none}
+.earnings-source>b{color:#f5d49b;font:800 19px 'Barlow Condensed',sans-serif}
+.earnings-note{margin:10px 1px 0;color:#91836c;font-size:8px;line-height:1.5}
+/* Referral tab uses the same neutral inactive and selected states as every other tab */
+.bottom-nav button.referral-nav-item{color:#777164;background:none;border:0;border-radius:0;box-shadow:none}
+.bottom-nav button.referral-nav-item.selected{color:#e8b34f;background:none;border:0;border-radius:0;box-shadow:none}
