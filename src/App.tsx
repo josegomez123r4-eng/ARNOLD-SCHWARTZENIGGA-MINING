@@ -223,7 +223,7 @@ function ReferralsPage({ t }: { t: (phrase: string) => string }) {
         const endpoint = 'https://vnslzfivilgdqqgdyoxd.supabase.co/functions/v1/referral-service'
         const queryRef = new URLSearchParams(window.location.search).get('ref')
         const rawReferrer = startParam?.startsWith('ref_') ? startParam.slice(4) : queryRef
-        const referrer = rawReferrer && /^\\d{1,20}$/.test(rawReferrer) ? rawReferrer : null
+        const referrer = rawReferrer && /^\d{1,20}$/.test(rawReferrer) ? rawReferrer : null
         if (referrer && referrer !== String(telegramId)) {
           const syncResponse = await fetch(endpoint, {
             method: 'POST',
