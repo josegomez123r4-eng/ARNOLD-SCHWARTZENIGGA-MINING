@@ -201,20 +201,45 @@ function TasksPage({ t }: { t: (phrase: string) => string }) {
 function ReferralsPage({ t }: { t: (phrase: string) => string }) {
   const telegramId = WebApp.initDataUnsafe?.user?.id
   const [copied, setCopied] = useState(false)
+  const [stats, setStats] = useState({ total: 0, eligible: 0, ineligible: 0 })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   const inviteUrl = telegramId
     ? (() => { const url = new URL(window.location.href); url.searchParams.set('ref', String(telegramId)); return url.toString() })()
     : ''
   const shareUrl = inviteUrl
     ? 'https://t.me/share/url?url=' + encodeURIComponent(inviteUrl) + '&text=' + encodeURIComponent(t('Join ARNOLD and start earning $ARNOLD.'))
     : ''
+  useEffect(() => {
+    const initData = WebApp.initData
+    if (!initData || !telegramId) return
+    let cancelled = false
+    const load = async () => {
+      setLoading(true)
+      setError('')
+      try {
+        const endpoint = 'https://vnslzfivilgdqqgdyoxd.supabase.co/functions/v1/referral-service'
+        const referrer = new URLSearchParams(window.location.search).get('ref')
+        if (referrer && referrer !== String(telegramId)) {
+          await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'sync', initData, referrerTelegramId: referrer }) })
+        }
+        const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'stats', initData }) })
+        const data = await response.json()
+        if (!response.ok) throw new Error(data?.error || 'No se pudieron cargar los referidos')
+        if (!cancelled) setStats({ total: Number(data.total || 0), eligible: Number(data.eligible || 0), ineligible: Number(data.ineligible || 0) })
+      } catch (e) {
+        if (!cancelled) setError(e instanceof Error ? e.message : 'No se pudieron cargar los referidos')
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    void load()
+    return () => { cancelled = true }
+  }, [telegramId])
   const copyInvite = async () => {
     if (!inviteUrl) return
-    try {
-      await navigator.clipboard.writeText(inviteUrl)
-      setCopied(true)
-    } catch {
-      setCopied(false)
-    }
+    try { await navigator.clipboard.writeText(inviteUrl); setCopied(true) }
+    catch { setCopied(false) }
   }
   return <section className="inner-page">
     <div className="kicker">{t('GROW THE COMMUNITY')}</div><h1>{t('INVITE.')}<br /><span>{t('EARN.')}</span></h1>
@@ -223,10 +248,15 @@ function ReferralsPage({ t }: { t: (phrase: string) => string }) {
       <b>{t('YOUR INVITE LINK')}</b>
       {inviteUrl
         ? <><input className="referral-link-input" readOnly value={inviteUrl} aria-label={t('YOUR INVITE LINK')} /><button className="primary-btn" type="button" onClick={() => { void copyInvite() }}>{copied ? t('LINK COPIED') : t('COPY INVITE LINK')}</button><a className="wallet-switch-btn" href={shareUrl}>{t('SHARE ON TELEGRAM')}</a></>
-        : <p>{t('Open ARNOLD inside Telegram to generate your personal invite link.')}</p>}
+        : <p>Abre ARNOLD desde Telegram para generar tu enlace personal.</p>}
     </div>
-    <div className="stats referral-stats"><article className="stat-card"><div className="stat-label">{t('YOUR REFERRALS')}</div><div className="stat-number">—</div><div className="stat-caption">{t('Referral tracking will appear when the account service is connected.')}</div></article><article className="stat-card"><div className="stat-label">{t('PENDING REWARDS')}</div><div className="stat-number">—</div><div className="stat-caption">$ARNOLD</div></article></div>
-    <div className="eligibility-panel"><div className="eligibility-title"><ShieldCheck size={18} /> <b>{t('REFERRAL ELIGIBILITY')}</b></div><p>{t('Invites can be shared now. Referral attribution and rewards will be confirmed by the secure account service when it is connected.')}</p></div>
+    <div className="stats referral-stats">
+      <article className="stat-card"><div className="stat-label">TOTAL DE INVITADOS</div><div className="stat-number">{loading ? '…' : stats.total}</div><div className="stat-caption">Personas que se registraron con tu enlace</div></article>
+      <article className="stat-card"><div className="stat-label">ELEGIBLES</div><div className="stat-number">{loading ? '…' : stats.eligible}</div><div className="stat-caption">Billetera confirmada y tarifa verificada</div></article>
+      <article className="stat-card"><div className="stat-label">AÚN NO ELEGIBLES</div><div className="stat-number">{loading ? '…' : stats.ineligible}</div><div className="stat-caption">Pendientes de completar la verificación</div></article>
+    </div>
+    {error && <p className="balance-error">{error}</p>}
+    <div className="eligibility-panel"><div className="eligibility-title"><ShieldCheck size={18} /> <b>REQUISITOS DE ELEGIBILIDAD</b></div><p>Un invitado cuenta como elegible únicamente después de confirmar su billetera y completar el pago único de 0.10 GRAM, verificado de forma segura en la blockchain.</p></div>
   </section>
 }
 function ArnoldMarketChart({ t }: { t: (phrase: string) => string }) {
@@ -259,10 +289,10 @@ function WalletPage({ t, walletAddress, walletReady, onConnect, onDisconnect, on
       <div className="wallet-withdraw-heading"><Coins size={19} /><div><b>{t('WALLET VERIFICATION')}</b><span>{t('One-time payment')}</span></div></div>
       <div className="profile-row"><span>{t('Verification fee')}</span><b>0.10 GRAM</b></div>
       <p className="helper helper-left">{t('Pay 0.10 GRAM from your connected wallet to complete the verification request.')}</p>
-      <button className="primary-btn" type="button" disabled={!walletAddress || paymentState === 'sending'} onClick={onVerifyPayment}>
-        <LockKeyhole size={17} /> {paymentState === 'sending' ? t('WAITING FOR WALLET') : t('PAY 0.10 GRAM')}
+      <button className="primary-btn" type="button" disabled>
+        <LockKeyhole size={17} /> PAGO DESACTIVADO TEMPORALMENTE
       </button>
-      {paymentState === 'sent' && <p className="balance-hint">{t('Payment submitted. Verification will be completed after on-chain confirmation.')}</p>}
+      <p className="balance-hint">El cobro se habilitará cuando la verificación de propiedad de billetera y la confirmación única del pago estén probadas en la blockchain. No envíes fondos todavía.</p>
       {paymentState === 'cancelled' && <p className="balance-hint">{t('Payment was cancelled in your wallet.')}</p>}
       {paymentState === 'error' && <p className="balance-error">{t('Payment could not be sent. Please reconnect and try again.')}</p>}
     </div>
