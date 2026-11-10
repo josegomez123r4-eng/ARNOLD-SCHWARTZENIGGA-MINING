@@ -216,3 +216,12 @@ body{background:#050505}
 .referral-stats .stat-card{min-height:104px}
 .referral-stats .stat-card:nth-child(2){border-color:#62d99566;background:linear-gradient(145deg,#14301f,#101810)}
 .referral-stats .stat-card:nth-child(3){border-color:#e6a34c66;background:linear-gradient(145deg,#35220f,#17110a)}
+
+
+/* Mining and claim actions */
+.mining-action-buttons{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.mining-action-buttons .primary-btn{width:100%;margin:0;min-height:48px}
+.mining-start-btn{display:flex;align-items:center;justify-content:center;gap:8px}
+.claim-btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:12px;border:1px solid #ffbd5b66;border-radius:10px;background:linear-gradient(100deg,#35230f,#1d150c);color:#e8c78b;font-size:10px;font-weight:900;letter-spacing:1px;cursor:not-allowed;opacity:.72}
+.claim-btn:disabled{opacity:.72;cursor:not-allowed}
+@media(max-width:340px){.mining-action-buttons{grid-template-columns:1fr}}
