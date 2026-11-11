@@ -1,7 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { Address, beginCell, internal, SendMode, toNano } from "npm:@ton/core@0.63.0";
-import { TonClient, WalletContractV4, JettonMaster } from "npm:@ton/ton@15.1.0";
+import { TonClient, WalletContractV5R1, JettonMaster } from "npm:@ton/ton@15.1.0";
 import { mnemonicToPrivateKey } from "npm:@ton/crypto@3.3.0";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
@@ -75,7 +75,12 @@ async function deriveTreasuryWallet() {
   const words = MNEMONIC.trim().split(/\s+/);
   if (words.length !== 24) throw new Error("ARNOLD_TREASURY_SIGNER_MUST_BE_24_WORDS");
   const keyPair = await mnemonicToPrivateKey(words);
-  const wallet = WalletContractV4.create({ workchain: 0, publicKey: keyPair.publicKey });
+  const wallet = WalletContractV5R1.create({
+    workchain: 0,
+    publicKey: keyPair.publicKey,
+    // TON mainnet default Wallet V5R1 ID (subwallet number 0).
+    walletId: { networkGlobalId: -239 },
+  });
   if (!sameAddress(wallet.address, Address.parse(TREASURY))) {
     throw new Error("SIGNER_DERIVED_ADDRESS_DOES_NOT_MATCH_TREASURY");
   }
