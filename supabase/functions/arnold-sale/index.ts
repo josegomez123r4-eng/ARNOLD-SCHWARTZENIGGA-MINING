@@ -41,7 +41,9 @@ async function verifyTelegram(initData: string): Promise<string> {
     .map(([key, value]) => key + "=" + value).join("\n");
   const encoder = new TextEncoder();
   const hmac = async (key: Uint8Array, message: string) => {
-    const cryptoKey = await crypto.subtle.importKey("raw", key, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+    const keyBuffer = new Uint8Array(key.byteLength);
+  keyBuffer.set(key);
+  const cryptoKey = await crypto.subtle.importKey("raw", keyBuffer.buffer, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
     return new Uint8Array(await crypto.subtle.sign("HMAC", cryptoKey, encoder.encode(message)));
   };
   const secret = await hmac(encoder.encode("WebAppData"), BOT_TOKEN);
