@@ -150,11 +150,12 @@ Deno.serve(async (req: Request) => {
       bounce: true,
       body: bodyCell,
     });
-    await admin.from("arnold_sale_orders").update({
+    const { error: intentError } = await admin.from("arnold_sale_orders").update({
       payout_query_id: queryId.toString(),
       payout_wallet_seqno: seqno,
       payout_attempted_at: new Date().toISOString(),
-    }).eq("id", order.id);
+    }).eq("id", order.id).eq("payout_status", "processing");
+    if (intentError) throw intentError;
 
     broadcastAttempted = true;
     await openedWallet.sendTransfer({
