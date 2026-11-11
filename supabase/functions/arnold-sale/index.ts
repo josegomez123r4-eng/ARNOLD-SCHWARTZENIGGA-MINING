@@ -1,10 +1,12 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { Address, Cell } from "npm:@ton/core@0.63.0";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SECRET_KEYS = JSON.parse(Deno.env.get("SUPABASE_SECRET_KEYS") ?? "{}");
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? SECRET_KEYS.default ?? "";
 const BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN") ?? "";
+const TONCENTER_API_KEY = Deno.env.get("TONCENTER_API_KEY") ?? "";
 const TREASURY = "UQDuU4KpCx7KsjwXJa4N9XizHF9k1s7pfyfzCvftFwofEgGk";
 const PRICE_SOURCE = "coingecko:the-open-network";
 const QUOTE_MAX_AGE_MS = 60_000;
@@ -69,6 +71,57 @@ async function getTonUsd(): Promise<{ price: string; timestamp: string }> {
   }
   return { price: price.toString(), timestamp: new Date().toISOString() };
 }
+
+function rawAddress(value: unknown): string | null {
+  if (typeof value !== "string" || !value) return null;
+  try { return Address.parse(value).toRawString(); } catch { return null; }
+}
+function decodeNativeComment(message: any): string | null {
+  const decoded = message?.message_content?.decoded ?? message?.decoded ?? {};
+  if (typeof decoded?.comment === "string") return decoded.comment;
+  if (typeof message?.message === "string" && message.message.length) return message.message;
+  const body = message?.message_content?.body ?? message?.msg_data?.body;
+  if (typeof body !== "string" || !body) return null;
+  try {
+    const slice = Cell.fromBase64(body).beginParse();
+    if (slice.remainingBits < 32 || slice.loadUint(32) !== 0) return null;
+    return slice.loadStringTail();
+  } catch { return null; }
+}
+async function verifyIncomingNativePayment(order: any): Promise<string | null> {
+  const treasuryRaw = rawAddress(TREASURY);
+  const buyerRaw = rawAddress(order.buyer_wallet_address);
+  if (!treasuryRaw || !buyerRaw) throw new Error("SALE_WALLET_ADDRESS_INVALID");
+  const url = new URL("https://toncenter.com/api/v3/transactions");
+  url.searchParams.set("account", treasuryRaw);
+  url.searchParams.set("limit", "100");
+  url.searchParams.set("sort", "desc");
+  const headers: Record<string, string> = { accept: "application/json" };
+  if (TONCENTER_API_KEY) headers["X-API-Key"] = TONCENTER_API_KEY;
+  const response = await fetch(url, { headers, signal: AbortSignal.timeout(8000) });
+  if (!response.ok) throw new Error("TON_TRANSACTION_LOOKUP_UNAVAILABLE");
+  const payload = await response.json();
+  const expectedMemo = "ARNOLD:" + order.id;
+  const expectedValue = BigInt(order.gram_nano);
+  const createdAt = Math.floor(new Date(order.created_at).getTime() / 1000);
+  const expiresAt = Math.floor(new Date(order.expires_at).getTime() / 1000);
+  for (const tx of (payload?.transactions ?? [])) {
+    const msg = tx?.in_msg;
+    if (!msg || msg.bounced === true) continue;
+    if (rawAddress(msg.destination) !== treasuryRaw || rawAddress(msg.source) !== buyerRaw) continue;
+    if (BigInt(String(msg.value ?? "0")) !== expectedValue) continue;
+    if (decodeNativeComment(msg) !== expectedMemo) continue;
+    if (Number(tx.mc_block_seqno ?? 0) <= 0) continue;
+    if (!tx.description || tx.description.aborted !== false) continue;
+    if (tx.description.compute_ph?.success === false || tx.description.action?.success === false) continue;
+    const txTime = Number(tx.now ?? msg.created_at ?? 0);
+    if (!txTime || txTime < createdAt || txTime > expiresAt) continue;
+    if (typeof tx.hash !== "string" || tx.hash.length < 20) continue;
+    return tx.hash;
+  }
+  return null;
+}
+
 async function getActiveArnoldPrice() {
   const { data, error } = await admin.from("arnold_sale_phases")
     .select("phase_number,price_usd,token_allocation,tokens_reserved,tokens_sold")
@@ -152,9 +205,35 @@ Deno.serve(async (req: Request) => {
     }
 
     if (action === "verify_payment") {
-      return json(503, {
-        error: "PAYMENT_VERIFICATION_NOT_ENABLED",
-        detail: "No se acepta ningún pago hasta integrar y probar la verificación transaccional de TON en el backend.",
+      const orderId = String(body.orderId ?? "");
+      if (!/^[0-9a-f-]{36}$/i.test(orderId)) return json(400, { error: "INVALID_ORDER_ID" });
+      const { data: order, error: orderError } = await admin.from("arnold_sale_orders")
+        .select("id,telegram_user_id,buyer_wallet_address,gram_nano,created_at,expires_at,payment_status")
+        .eq("id", orderId).eq("telegram_user_id", telegramId).maybeSingle();
+      if (orderError) throw orderError;
+      if (!order) return json(404, { error: "SALE_ORDER_NOT_FOUND" });
+      if (order.payment_status === "paid") return json(200, { payment_status: "paid", message: "Pago ya confirmado." });
+      if (order.payment_status !== "pending" || new Date(order.expires_at).getTime() <= Date.now()) {
+        return json(409, { error: "SALE_ORDER_NOT_PAYABLE" });
+      }
+      const txHash = await verifyIncomingNativePayment(order);
+      if (!txHash) return json(202, {
+        payment_status: "pending",
+        message: "Aún no encontramos una transferencia finalizada que coincida con esta orden.",
+      });
+      const { data: confirmed, error: confirmError } = await admin.rpc("confirm_arnold_sale_payment", {
+        p_order_id: order.id,
+        p_payment_tx_hash: txHash,
+      });
+      if (confirmError) {
+        if (confirmError.message?.includes("duplicate key")) return json(409, { error: "PAYMENT_TRANSACTION_ALREADY_USED" });
+        throw confirmError;
+      }
+      return json(200, {
+        payment_status: confirmed.payment_status,
+        payout_status: confirmed.payout_status,
+        payment_tx_hash: confirmed.payment_tx_hash,
+        next_step: "JETTON_PAYOUT_NOT_IMPLEMENTED",
       });
     }
     if (action === "sale_status") {
