@@ -246,3 +246,39 @@ body{background:#050505}
 /* Referral tab uses the same neutral inactive and selected states as every other tab */
 .bottom-nav button.referral-nav-item{color:#777164;background:none;border:0;border-radius:0;box-shadow:none}
 .bottom-nav button.referral-nav-item.selected{color:#e8b34f;background:none;border:0;border-radius:0;box-shadow:none}
+
+
+/* Four-phase ARNOLD token sale presentation */
+.market-sale-page{padding-bottom:24px}
+.market-sale-status{display:flex;align-items:center;gap:11px;margin-top:16px;padding:14px;border:1px solid #ffad3955;border-radius:14px;background:linear-gradient(120deg,#28190c,#110e0a)}
+.market-sale-coin{width:46px;height:46px;display:grid;place-items:center;flex:none;border:1px solid #ffb33c55;border-radius:13px;background:#ff9c2b20;color:#ffc75c}
+.market-sale-status-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:5px}
+.market-sale-status-copy b{color:#fff0d5;font:800 19px 'Barlow Condensed',sans-serif;letter-spacing:1px}
+.market-sale-status-copy span{color:#b5a184;font-size:8px;font-weight:800;letter-spacing:1px}
+.market-preparation-pill{padding:6px 8px;border:1px solid #ffffff25;border-radius:20px;color:#b9aa8d;font-size:7px;font-weight:800;letter-spacing:.5px;white-space:nowrap}
+.sale-inventory{display:grid;grid-template-columns:1fr auto;gap:10px;margin-top:11px;padding:14px;border:1px solid #ffad3935;border-radius:12px;background:#100d09}
+.sale-inventory>div{display:flex;flex-direction:column;gap:6px}
+.sale-inventory span,.sale-phase-allocation span{color:#b5a184;font-size:8px;font-weight:800;letter-spacing:.8px}
+.sale-inventory b{color:#ffe0a0;font:800 25px 'Barlow Condensed',sans-serif}
+.sale-inventory b small{color:#d5a75d;font:800 8px 'DM Sans',sans-serif}
+.sale-phase-list{display:grid;gap:10px;margin-top:13px}
+.sale-phase-card{padding:14px;border:1px solid #ffffff22;border-radius:13px;background:linear-gradient(145deg,#1c160e,#100d09)}
+.sale-phase-first{border-color:#ffbd5b99;background:linear-gradient(145deg,#3a260f,#171009);box-shadow:0 0 20px #ff922d12}
+.sale-phase-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.sale-phase-top>span{color:#ffd06b;font-size:10px;font-weight:900;letter-spacing:1px}
+.sale-phase-top small{color:#a99a7d;font-size:7px;font-weight:800;letter-spacing:.5px;text-align:right}
+.sale-phase-price{display:flex;align-items:baseline;gap:8px;margin:12px 0;color:#ffe0a0;font:900 32px 'Barlow Condensed',sans-serif}
+.sale-phase-price span{color:#b5a184;font:800 8px 'DM Sans',sans-serif;letter-spacing:.7px}
+.sale-phase-allocation{display:flex;justify-content:space-between;align-items:center;gap:8px;padding-top:10px;border-top:1px solid #ffffff15}
+.sale-phase-allocation b{color:#f1d29a;font-size:10px}
+.listing-estimate{margin-top:14px;padding:16px;border:1px solid #ffbd5b75;border-radius:14px;background:radial-gradient(ellipse at 0 0,#633b0d55,transparent 70%),linear-gradient(145deg,#291b0d,#100d09)}
+.listing-estimate-label{color:#d5b57c;font-size:8px;font-weight:900;letter-spacing:1.2px}
+.listing-estimate>strong{display:block;margin-top:7px;color:#ffdc8c;font:900 36px 'Barlow Condensed',sans-serif}
+.listing-estimate>strong small{font:800 10px 'DM Sans',sans-serif}
+.listing-estimate>b{display:inline-block;margin-top:4px;color:#fff0d5;font-size:11px;letter-spacing:.7px}
+.listing-estimate p{margin:9px 0 0;color:#aa9878;font-size:9px;line-height:1.5}
+.sale-automation-note{display:flex;align-items:flex-start;gap:9px;margin-top:13px;padding:13px;border:1px solid #ffad3940;border-radius:12px;background:#171109}
+.sale-automation-note svg{flex:none;color:#ffc15a;margin-top:1px}
+.sale-automation-note p{margin:0;color:#c7b28c;font-size:9px;line-height:1.6}
+.sale-security-note{display:flex;align-items:flex-start;gap:8px;margin:12px 3px 0;color:#9d9078;font-size:9px;line-height:1.55}
+.sale-security-note svg{flex:none;color:#d7aa5b;margin-top:1px}
