@@ -11,7 +11,7 @@ This work lives on `feature/arnold-four-phase-sale`. It is not merged or deploye
 - Accepted native TON amounts: 1, 3, 5, 10 and 50 TON (historically called GRAM in the product discussion).
 - Quote source currently configured in code: CoinGecko `the-open-network` USD spot quote.
 - Treasury recipient currently configured from the user's public address confirmation:
-  `UQDuU4KpCx7KsjwXJa4N9XizHF9k1s7pfyfzCvftFwofEgGk`.
+  `UQCSeF2dCiBsO367d32y2OKPRCgbgSkTc5am-MU5K8EAlCWm`.
 - ARNOLD Jetton master supplied and confirmed by the user:
   `EQAx1gPnzQHLRWULxJJL0mSb-iB88JEcZCc0f8BA8Kk_pa9w`.
 
