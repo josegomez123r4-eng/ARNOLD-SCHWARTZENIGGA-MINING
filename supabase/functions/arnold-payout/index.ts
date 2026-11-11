@@ -10,7 +10,7 @@ const WORKER_TOKEN = Deno.env.get("ARNOLD_PAYOUT_WORKER_TOKEN") ?? "";
 const MNEMONIC = Deno.env.get("ARNOLD_TREASURY_MNEMONIC") ?? "";
 const TONCENTER_KEY = Deno.env.get("TONCENTER_API_KEY") ?? "";
 const TONAPI_KEY = Deno.env.get("TONAPI_KEY") ?? "";
-const TREASURY = "UQDuU4KpCx7KsjwXJa4N9XizHF9k1s7pfyfzCvftFwofEgGk";
+const TREASURY = "UQCSeF2dCiBsO367d32y2OKPRCgbgSkTc5am-MU5K8EAlCWm";
 const MASTER = "EQAx1gPnzQHLRWULxJJL0mSb-iB88JEcZCc0f8BA8Kk_pa9w";
 const cors = {
   "Access-Control-Allow-Origin": "https://arnold-schwartzenigga-mining.vercel.app",
