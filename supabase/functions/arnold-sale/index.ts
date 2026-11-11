@@ -113,7 +113,8 @@ async function verifyIncomingNativePayment(order: any): Promise<string | null> {
     if (rawAddress(msg.destination) !== treasuryRaw || rawAddress(msg.source) !== buyerRaw) continue;
     if (BigInt(String(msg.value ?? "0")) !== expectedValue) continue;
     if (decodeNativeComment(msg) !== expectedMemo) continue;
-    if (Number(tx.finality ?? 0) <= 0 || Number(tx.mc_block_seqno ?? 0) <= 0) continue;
+    // API v3 exposes mc_block_seqno only once the shard transaction is referenced by masterchain.
+    if (Number(tx.mc_block_seqno ?? 0) <= 0) continue;
     if (!tx.description || tx.description.aborted !== false) continue;
     if (tx.description.compute_ph?.success === false || tx.description.action?.success === false) continue;
     const txTime = Number(tx.now ?? msg.created_at ?? 0);
