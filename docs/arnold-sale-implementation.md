@@ -26,12 +26,12 @@ This work lives on `feature/arnold-four-phase-sale`. It is not merged or deploye
 - `ARNOLD_SALE_ENABLED` must remain false. The purchase path is closed.
 - The payout worker and reconciler are not deployed and cannot run until backend secrets are configured.
 - The payout worker requires `ARNOLD_TREASURY_MNEMONIC`, `ARNOLD_PAYOUT_WORKER_TOKEN`, `ARNOLD_DECIMALS`, `SUPABASE_SERVICE_ROLE_KEY`, `TONCENTER_API_KEY`; `TONAPI_KEY` is recommended.
-- The mnemonic secret must derive the exact treasury address using Wallet V4R2. If the wallet is a different contract version or derivation, the worker fails closed. Never send the mnemonic in chat or store it in GitHub/Vercel frontend variables.
+- The mnemonic secret must derive the exact treasury address using Wallet V5R1 with the TON mainnet default wallet ID (subwallet number 0). If the wallet is a different contract version or derivation, the worker fails closed. Never send the mnemonic in chat or store it in GitHub/Vercel frontend variables.
 - The worker does not automatically retry uncertain broadcasts; those require on-chain reconciliation to prevent duplicate transfers.
 - Added `supabase/migrations/202611110002_arnold_payout_worker.sql` for payout claim, seqno, query id and reconciliation fields.
 - Added `supabase/migrations/202611110003_arnold_payout_reconciliation.sql` with a restricted, idempotent service-role RPC that marks an order fulfilled only after verified on-chain evidence.
 - Added `supabase/functions/arnold-payout-reconcile/index.ts`, a private worker that inspects recipient Jetton-wallet transactions and calls the finalization RPC only after all notification fields match.
-- Added `supabase/functions/arnold-payout/index.ts`: authenticated server-only worker; derives a standard Wallet V4R2 key from a backend-only 24-word mnemonic secret; refuses to sign unless the derived address exactly matches the configured treasury; checks the configured master, the treasury Jetton wallet owner/master and token balance; creates a TEP-74 transfer with a unique order query id and a notification payload.
+- Added `supabase/functions/arnold-payout/index.ts`: authenticated server-only worker; derives a standard Wallet V5R1 key from a backend-only 24-word mnemonic secret; refuses to sign unless the derived address exactly matches the configured treasury; checks the configured master, the treasury Jetton wallet owner/master and token balance; creates a TEP-74 transfer with a unique order query id and a notification payload.
 - The worker does not mark a payout fulfilled. It leaves the order in `processing` until `arnold-payout-reconcile` verifies the buyer Jetton wallet's on-chain `transfer_notification#7362d09c`, exact amount, query id, treasury Jetton wallet sender, original treasury owner, order payload, and successful transaction.
 - No private key or mnemonic is stored in this repository.
 - Payment verification code is committed but has not been compiled, deployed, or exercised against a real testnet payment. It must not be treated as production-ready.
@@ -42,7 +42,7 @@ This work lives on `feature/arnold-four-phase-sale`. It is not merged or deploye
 ## Latest public-chain observation (2026-11-11)
 
 - TonAPI reports the new treasury owner address as uninitialized with 0.1 TON native balance. Its associated Jetton account reports 200,000,000,000,000 base units of ARNOLD (200,000 ARNOLD at 9 decimals) for the supplied master address. The user independently confirmed the wallet in Tonviewer; this API check is an additional observation, not a signing test.
-- Because the owner account is uninitialized and exposes no deployed wallet code yet, the wallet contract version/signing derivation is not proven. The current payout worker is hard-coded to Wallet V4R2 and will fail closed unless a backend-only signer derives the exact treasury address. Do not transfer more funds or configure a mnemonic until the wallet contract derivation is confirmed safely.
+- Because the owner account is uninitialized and exposes no deployed wallet code yet, the wallet contract version/signing derivation is not proven. The current payout worker was initially hard-coded to Wallet V4R2; it is now configured for Wallet V5R1 and will fail closed unless a backend-only signer derives the exact treasury address. Do not transfer more funds or configure a mnemonic until the wallet contract derivation is confirmed safely.
 
 ## Remaining blockers before any real sale
 
