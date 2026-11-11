@@ -71,7 +71,7 @@ async function getTonUsd(): Promise<{ price: string; timestamp: string }> {
 async function getActiveArnoldPrice() {
   const { data, error } = await admin.from("arnold_sale_phases")
     .select("phase_number,price_usd,token_allocation,tokens_reserved,tokens_sold")
-    .lt("tokens_sold", 50000).order("phase_number").limit(4);
+    .order("phase_number").limit(4);
   if (error) throw error;
   const phase = (data ?? []).find((item: any) =>
     Number(item.tokens_sold) < Number(item.token_allocation));
