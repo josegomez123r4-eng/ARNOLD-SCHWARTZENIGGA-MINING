@@ -96,6 +96,8 @@ async function verifyIncomingNativePayment(order: any): Promise<string | null> {
   url.searchParams.set("account", treasuryRaw);
   url.searchParams.set("limit", "100");
   url.searchParams.set("sort", "desc");
+  url.searchParams.set("start_utime", String(Math.max(0, Math.floor(new Date(order.created_at).getTime() / 1000))));
+  url.searchParams.set("end_utime", String(Math.floor(Date.now() / 1000)));
   const headers: Record<string, string> = { accept: "application/json" };
   if (TONCENTER_API_KEY) headers["X-API-Key"] = TONCENTER_API_KEY;
   const response = await fetch(url, { headers, signal: AbortSignal.timeout(8000) });
@@ -111,7 +113,7 @@ async function verifyIncomingNativePayment(order: any): Promise<string | null> {
     if (rawAddress(msg.destination) !== treasuryRaw || rawAddress(msg.source) !== buyerRaw) continue;
     if (BigInt(String(msg.value ?? "0")) !== expectedValue) continue;
     if (decodeNativeComment(msg) !== expectedMemo) continue;
-    if (Number(tx.mc_block_seqno ?? 0) <= 0) continue;
+    if (Number(tx.finality ?? 0) <= 0 || Number(tx.mc_block_seqno ?? 0) <= 0) continue;
     if (!tx.description || tx.description.aborted !== false) continue;
     if (tx.description.compute_ph?.success === false || tx.description.action?.success === false) continue;
     const txTime = Number(tx.now ?? msg.created_at ?? 0);
@@ -213,7 +215,7 @@ Deno.serve(async (req: Request) => {
       if (orderError) throw orderError;
       if (!order) return json(404, { error: "SALE_ORDER_NOT_FOUND" });
       if (order.payment_status === "paid") return json(200, { payment_status: "paid", message: "Pago ya confirmado." });
-      if (order.payment_status !== "pending" || new Date(order.expires_at).getTime() <= Date.now()) {
+      if (order.payment_status !== "pending") {
         return json(409, { error: "SALE_ORDER_NOT_PAYABLE" });
       }
       const txHash = await verifyIncomingNativePayment(order);
