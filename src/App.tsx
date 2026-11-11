@@ -375,11 +375,39 @@ function WalletPage({ t, walletAddress, walletReady, onConnect, onDisconnect, on
 }
 
 function MarketPage({ t }: { t: (phrase: string) => string }) {
-  return <section className="inner-page">
-    <div className="kicker">{t('OFFICIAL ARNOLD STORE')}</div><h1><span>{t('MARKET.')}</span></h1>
-    <div className="feature-panel"><div className="feature-icon"><ShoppingBag size={22} /></div><div><b>{t('BUY $ARNOLD DIRECTLY')}</b><span>{t('Official token listings, purchase amounts and prices will be displayed here.')}</span></div></div>
-    <div className="market-preview"><div className="market-coin"><Flame size={30} fill="currentColor" /></div><div className="market-token"><b>$ARNOLD</b><span>{t('Official token · TON')}</span></div><div className="market-state">{t('NOT LISTED')}</div></div>
-    <div className="empty-state"><ShoppingBag size={34} /><b>{t('OFFICIAL MARKET COMING SOON')}</b><span>{t('The administrator will publish token quantities and prices here. Purchases will open only after the TON sale contract is deployed and tested.')}</span></div>
+  const phases = [
+    { number: 1, amount: '50,000', price: '$0.003', status: 'CURRENT CONFIGURATION' },
+    { number: 2, amount: '50,000', price: '$0.0045', status: 'NEXT PHASE' },
+    { number: 3, amount: '50,000', price: '$0.0065', status: 'NEXT PHASE' },
+    { number: 4, amount: '50,000', price: '$0.008', status: 'FINAL PHASE' },
+  ]
+  return <section className="inner-page market-sale-page">
+    <div className="kicker">{t('OFFICIAL ARNOLD TOKEN SALE')}</div><h1><span>{t('MARKET.')}</span></h1>
+    <div className="feature-panel"><div className="feature-icon"><ShoppingBag size={22} /></div><div><b>{t('BUY $ARNOLD IN FOUR PHASES')}</b><span>{t('Four sale phases with automatic price progression after each phase is sold out.')}</span></div></div>
+    <div className="market-sale-status">
+      <div className="market-sale-coin"><Flame size={27} fill="currentColor" /></div>
+      <div className="market-sale-status-copy"><b>$ARNOLD · TON</b><span>{t('SALE PREPARATION')}</span></div>
+      <span className="market-preparation-pill">{t('NOT OPEN YET')}</span>
+    </div>
+    <div className="sale-inventory">
+      <div><span>{t('TOTAL SALE ALLOCATION')}</span><b>200,000 <small>$ARNOLD</small></b></div>
+      <div><span>{t('PHASES')}</span><b>4</b></div>
+    </div>
+    <div className="sale-phase-list">
+      {phases.map((phase) => <article className={phase.number === 1 ? 'sale-phase-card sale-phase-first' : 'sale-phase-card'} key={phase.number}>
+        <div className="sale-phase-top"><span>{t('PHASE')} {phase.number}</span><small>{t(phase.status)}</small></div>
+        <div className="sale-phase-price">{phase.price}<span>USD / ARNOLD</span></div>
+        <div className="sale-phase-allocation"><span>{t('AVAILABLE TOKENS')}</span><b>{phase.amount} $ARNOLD</b></div>
+      </article>)}
+    </div>
+    <div className="listing-estimate">
+      <div className="listing-estimate-label">{t('ESTIMATED LISTING PRICE')}</div>
+      <strong>$0.01 <small>USD</small></strong>
+      <b>{t('STON.fi')}</b>
+      <p>{t('Estimated reference only. This is not a guaranteed listing or future market price.')}</p>
+    </div>
+    <div className="sale-automation-note"><ShieldCheck size={17} /><p>{t('The next phase will activate automatically only after all 50,000 tokens in the current phase have been sold and confirmed on-chain.')}</p></div>
+    <div className="sale-security-note"><LockKeyhole size={15} /><span>{t('Purchases are not enabled yet. The payment verification and automatic token delivery system must be tested before the sale opens.')}</span></div>
   </section>
 }
 
