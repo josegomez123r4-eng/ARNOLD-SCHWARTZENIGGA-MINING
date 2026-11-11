@@ -67,7 +67,7 @@ create or replace function public.reserve_arnold_sale_order(
   p_expires_at timestamptz
 ) returns public.arnold_sale_orders
 language plpgsql
-security definer
+security invoker
 set search_path = ''
 as $$
 declare
@@ -124,7 +124,7 @@ create or replace function public.confirm_arnold_sale_payment(
   p_payment_tx_hash text
 ) returns public.arnold_sale_orders
 language plpgsql
-security definer
+security invoker
 set search_path = ''
 as $$
 declare
@@ -169,7 +169,7 @@ $$;
 create or replace function public.expire_arnold_sale_orders()
 returns integer
 language plpgsql
-security definer
+security invoker
 set search_path = ''
 as $$
 declare
