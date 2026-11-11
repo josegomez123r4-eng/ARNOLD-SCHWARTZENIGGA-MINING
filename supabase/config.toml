@@ -1,0 +1,8 @@
+[functions.arnold-sale]
+verify_jwt = false
+
+[functions.arnold-payout]
+verify_jwt = false
+
+[functions.arnold-payout-reconcile]
+verify_jwt = false
