@@ -2,7 +2,10 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { Address, beginCell, internal, SendMode, toNano } from "npm:@ton/core@0.63.0";
 import { TonClient, WalletContractV5R1, JettonMaster } from "npm:@ton/ton@15.1.0";
-import { mnemonicToPrivateKey } from "npm:@ton/crypto@3.3.0";
+import { deriveEd25519Path, keyPairFromSeed, mnemonicToPrivateKey } from "npm:@ton/crypto@3.3.0";
+import { mnemonicToSeedSync, validateMnemonic } from "npm:@scure/bip39@1.5.4";
+import { wordlist as bip39English } from "npm:@scure/bip39@1.5.4/wordlists/english.js";
+import { Buffer } from "node:buffer";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -72,19 +75,51 @@ async function verifyMasterAndTreasury(owner: Address) {
 }
 async function deriveTreasuryWallet() {
   if (!MNEMONIC) throw new Error("ARNOLD_TREASURY_SIGNER_NOT_CONFIGURED");
-  const words = MNEMONIC.trim().split(/\s+/);
-  if (words.length !== 24) throw new Error("ARNOLD_TREASURY_SIGNER_MUST_BE_24_WORDS");
-  const keyPair = await mnemonicToPrivateKey(words);
-  const wallet = WalletContractV5R1.create({
-    workchain: 0,
-    publicKey: keyPair.publicKey,
-    // TON mainnet default Wallet V5R1 ID (subwallet number 0).
-    walletId: { networkGlobalId: -239 },
-  });
-  if (!sameAddress(wallet.address, Address.parse(TREASURY))) {
+  const words = MNEMONIC.trim().toLowerCase().split(/\\s+/);
+  const treasuryAddress = Address.parse(TREASURY);
+
+  // OKX 12-word recovery phrases are BIP39 multichain mnemonics.
+  // TON derives the account key with BIP44 + SLIP-0010 Ed25519:
+  // m/44'/607'/{accountIndex}'. Search a bounded account range because
+  // OKX can expose multiple derived TON accounts under one recovery phrase.
+  if (words.length === 12) {
+    const phrase = words.join(" ");
+    if (!validateMnemonic(phrase, bip39English)) {
+      throw new Error("ARNOLD_TREASURY_BIP39_MNEMONIC_INVALID");
+    }
+    const bip39Seed = Buffer.from(mnemonicToSeedSync(phrase, ""));
+    for (let accountIndex = 0; accountIndex <= 50; accountIndex++) {
+      const derivedSeed = await deriveEd25519Path(bip39Seed, [44, 607, accountIndex]);
+      const keyPair = keyPairFromSeed(Buffer.from(derivedSeed));
+      const wallet = WalletContractV5R1.create({
+        workchain: 0,
+        publicKey: keyPair.publicKey,
+        // TON mainnet default Wallet V5R1 ID (subwallet number 0).
+        walletId: { networkGlobalId: -239 },
+      });
+      if (sameAddress(wallet.address, treasuryAddress)) {
+        return { keyPair, wallet };
+      }
+    }
     throw new Error("SIGNER_DERIVED_ADDRESS_DOES_NOT_MATCH_TREASURY");
   }
-  return { keyPair, wallet };
+
+  // Preserve the project's earlier 24-word TON-native mnemonic support.
+  // Do not silently reinterpret a 24-word phrase as a BIP39 multichain phrase.
+  if (words.length === 24) {
+    const keyPair = await mnemonicToPrivateKey(words);
+    const wallet = WalletContractV5R1.create({
+      workchain: 0,
+      publicKey: keyPair.publicKey,
+      walletId: { networkGlobalId: -239 },
+    });
+    if (sameAddress(wallet.address, treasuryAddress)) {
+      return { keyPair, wallet };
+    }
+    throw new Error("SIGNER_DERIVED_ADDRESS_DOES_NOT_MATCH_TREASURY");
+  }
+
+  throw new Error("ARNOLD_TREASURY_MNEMONIC_MUST_BE_12_OR_24_WORDS");
 }
 function queryIdFromUuid(id: string): bigint {
   const hex = id.replaceAll("-", "");
