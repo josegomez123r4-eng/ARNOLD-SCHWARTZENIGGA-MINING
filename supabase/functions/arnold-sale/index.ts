@@ -242,9 +242,9 @@ Deno.serve(async (req: Request) => {
       if (orderError) throw orderError;
       if (!order) return json(404, { error: "SALE_ORDER_NOT_FOUND" });
       if (order.payment_status === "paid") {
-        const payout = order.payout_status === "pending"
+        const payout: { status: string; error?: string } = order.payout_status === "pending"
           ? await triggerArnoldPayout(order.id)
-          : { status: order.payout_status };
+          : { status: String(order.payout_status) };
         return json(200, {
           payment_status: "paid",
           payout_status: payout.status,
