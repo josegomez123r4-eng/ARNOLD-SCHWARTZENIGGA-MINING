@@ -7,6 +7,7 @@ const SECRET_KEYS = JSON.parse(Deno.env.get("SUPABASE_SECRET_KEYS") ?? "{}");
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? SECRET_KEYS.default ?? "";
 const BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN") ?? "";
 const TONCENTER_API_KEY = Deno.env.get("TONCENTER_API_KEY") ?? "";
+const PAYOUT_WORKER_TOKEN = Deno.env.get("ARNOLD_PAYOUT_WORKER_TOKEN") ?? "";
 const TREASURY = "UQCSeF2dCiBsO367d32y2OKPRCgbgSkTc5am-MU5K8EAlCWm";
 const PRICE_SOURCE = "coingecko:the-open-network";
 const QUOTE_MAX_AGE_MS = 60_000;
@@ -127,6 +128,29 @@ async function verifyIncomingNativePayment(order: any): Promise<string | null> {
   return null;
 }
 
+async function triggerArnoldPayout(orderId: string): Promise<{ status: string; error?: string }> {
+  if (!PAYOUT_WORKER_TOKEN) return { status: "pending", error: "PAYOUT_WORKER_NOT_CONFIGURED" };
+  try {
+    const response = await fetch(SUPABASE_URL + "/functions/v1/arnold-payout", {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer " + PAYOUT_WORKER_TOKEN,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ order_id: orderId }),
+      signal: AbortSignal.timeout(12000),
+    });
+    const result = await response.json().catch(() => ({}));
+    if (response.status === 202) return { status: "processing" };
+    if (response.status === 409) return { status: String(result.payout_status ?? "processing") };
+    return { status: String(result.payout_status ?? "pending"), error: String(result.error ?? "PAYOUT_WORKER_REQUEST_FAILED") };
+  } catch {
+    // The payment remains recorded. A later verification request may safely retry
+    // the worker claim while the payout is still pending.
+    return { status: "pending", error: "PAYOUT_WORKER_TEMPORARILY_UNAVAILABLE" };
+  }
+}
+
 async function getActiveArnoldPrice() {
   const { data, error } = await admin.from("arnold_sale_phases")
     .select("phase_number,price_usd,token_allocation,tokens_reserved,tokens_sold")
@@ -213,11 +237,25 @@ Deno.serve(async (req: Request) => {
       const orderId = String(body.orderId ?? "");
       if (!/^[0-9a-f-]{36}$/i.test(orderId)) return json(400, { error: "INVALID_ORDER_ID" });
       const { data: order, error: orderError } = await admin.from("arnold_sale_orders")
-        .select("id,telegram_user_id,buyer_wallet_address,gram_nano,created_at,expires_at,payment_status")
+        .select("id,telegram_user_id,buyer_wallet_address,gram_nano,created_at,expires_at,payment_status,payout_status")
         .eq("id", orderId).eq("telegram_user_id", telegramId).maybeSingle();
       if (orderError) throw orderError;
       if (!order) return json(404, { error: "SALE_ORDER_NOT_FOUND" });
-      if (order.payment_status === "paid") return json(200, { payment_status: "paid", message: "Pago ya confirmado." });
+      if (order.payment_status === "paid") {
+        const payout = order.payout_status === "pending"
+          ? await triggerArnoldPayout(order.id)
+          : { status: order.payout_status };
+        return json(200, {
+          payment_status: "paid",
+          payout_status: payout.status,
+          ...(payout.error ? { payout_error: payout.error } : {}),
+          message: payout.status === "fulfilled"
+            ? "Pago confirmado y entrega verificada."
+            : payout.status === "processing"
+              ? "Pago confirmado; entrega enviada y pendiente de verificación en TON."
+              : "Pago confirmado; la entrega requiere procesamiento o revisión.",
+        });
+      }
       if (order.payment_status !== "pending") {
         return json(409, { error: "SALE_ORDER_NOT_PAYABLE" });
       }
@@ -234,11 +272,17 @@ Deno.serve(async (req: Request) => {
         if (confirmError.message?.includes("duplicate key")) return json(409, { error: "PAYMENT_TRANSACTION_ALREADY_USED" });
         throw confirmError;
       }
+      const payout = confirmed.payout_status === "pending"
+        ? await triggerArnoldPayout(order.id)
+        : { status: String(confirmed.payout_status) };
       return json(200, {
         payment_status: confirmed.payment_status,
-        payout_status: confirmed.payout_status,
+        payout_status: payout.status,
         payment_tx_hash: confirmed.payment_tx_hash,
-        next_step: "JETTON_PAYOUT_NOT_IMPLEMENTED",
+        ...(payout.error ? { payout_error: payout.error } : {}),
+        next_step: payout.status === "processing" || payout.status === "fulfilled"
+          ? "JETTON_PAYOUT_SUBMITTED"
+          : "PAYOUT_REQUIRES_RETRY_OR_REVIEW",
       });
     }
     if (action === "sale_status") {
