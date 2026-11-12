@@ -16,33 +16,41 @@ function json(status: number, body: unknown) {
     headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
   });
 }
+
 function sameAddress(a: Address, b: Address) {
   return a.workChain === b.workChain && a.hash.equals(b.hash);
 }
 
 Deno.serve(async (req: Request) => {
   if (req.method !== "POST") return json(405, { error: "METHOD_NOT_ALLOWED" });
+
   const authorization = req.headers.get("authorization") ?? "";
   if (!CHECK_TOKEN || authorization !== "Bearer " + CHECK_TOKEN) {
     return json(401, { error: "UNAUTHORIZED" });
   }
-  if (!MNEMONIC) return json(503, { error: "TREASURY_MNEMONIC_SECRET_NOT_CONFIGURED" });
+  if (!MNEMONIC) {
+    return json(503, { error: "TREASURY_MNEMONIC_SECRET_NOT_CONFIGURED" });
+  }
 
   try {
-    const words = MNEMONIC.trim().toLowerCase().split(/\\s+/);
+    // Normalize spaces before validating the BIP39 phrase.
+    const words = MNEMONIC.trim().toLowerCase().split(/\s+/);
     if (words.length !== 12) {
       return json(400, { error: "EXPECTED_12_WORD_BIP39_PHRASE" });
     }
+
     const phrase = words.join(" ");
     if (!validateMnemonic(phrase, bip39English)) {
       return json(400, { error: "BIP39_CHECKSUM_INVALID" });
     }
 
-    // TEP-3 multichain derivation: BIP39 seed + SLIP-0010 Ed25519
-    // m/44'/607'/{accountIndex}'. This endpoint derives addresses only;
-    // it never signs, sends messages, or accesses sale orders.
+    // TON TEP-3 multichain scheme: BIP39 -> BIP44 -> SLIP-0010 Ed25519.
+    // Standard account path: m/44'/607'/{accountIndex}'.
+    // The V5R1 mainnet wallet ID is derived by the TON SDK from networkGlobalId -239.
+    // This endpoint only derives public addresses; it never signs or sends transactions.
     const seed = Buffer.from(mnemonicToSeedSync(phrase, ""));
     const expected = Address.parse(EXPECTED_TREASURY);
+
     for (let accountIndex = 0; accountIndex <= 50; accountIndex++) {
       const childSeed = await deriveEd25519Path(seed, [44, 607, accountIndex]);
       const keyPair = keyPairFromSeed(Buffer.from(childSeed));
@@ -51,6 +59,7 @@ Deno.serve(async (req: Request) => {
         publicKey: keyPair.publicKey,
         walletId: { networkGlobalId: -239 },
       });
+
       if (sameAddress(wallet.address, expected)) {
         return json(200, {
           match: true,
@@ -65,6 +74,7 @@ Deno.serve(async (req: Request) => {
         });
       }
     }
+
     return json(200, {
       match: false,
       checked_account_indexes: "0-50",
@@ -73,7 +83,7 @@ Deno.serve(async (req: Request) => {
       expected_address: EXPECTED_TREASURY,
       signing_performed: false,
       transaction_sent: false,
-      next_step: "Verify the OKX account derivation path and selected account; do not change or move funds.",
+      next_step: "Verify the wallet app's derivation path and selected account; do not change or move funds.",
     });
   } catch {
     // Never return or log mnemonic material or derived private keys.
