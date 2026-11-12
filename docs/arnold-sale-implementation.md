@@ -26,18 +26,24 @@ This work lives on `feature/arnold-four-phase-sale`. It is not merged or deploye
 - `ARNOLD_SALE_ENABLED` must remain false. The purchase path is closed.
 - The payout worker and reconciler are not deployed and cannot run until backend secrets are configured.
 - The payout worker requires `ARNOLD_TREASURY_MNEMONIC`, `ARNOLD_PAYOUT_WORKER_TOKEN`, `ARNOLD_DECIMALS`, `SUPABASE_SERVICE_ROLE_KEY`, `TONCENTER_API_KEY`; `TONAPI_KEY` is recommended.
-- The mnemonic secret must derive the exact treasury address using Wallet V5R1 with the TON mainnet default wallet ID (subwallet number 0). If the wallet is a different contract version or derivation, the worker fails closed. Never send the mnemonic in chat or store it in GitHub/Vercel frontend variables.
+- The payout worker now accepts either a 12-word BIP39 multichain phrase or the previous 24-word TON-native phrase. For 12 words it derives TON keys with BIP44/SLIP-0010 Ed25519 at `m/44'/607'/{accountIndex}'`, testing account indexes 0–50, then compares the resulting Wallet V5R1 mainnet address to the configured treasury. For 24 words it retains TON-native mnemonic derivation. Any mismatch fails closed. This derivation has not yet been compiled or tested against the user's OKX wallet; do not configure the secret or enable payouts until the exact account derivation is independently verified. Never send the mnemonic in chat or store it in GitHub/Vercel frontend variables.
 - The worker does not automatically retry uncertain broadcasts; those require on-chain reconciliation to prevent duplicate transfers.
 - Added `supabase/migrations/202611110002_arnold_payout_worker.sql` for payout claim, seqno, query id and reconciliation fields.
 - Added `supabase/migrations/202611110003_arnold_payout_reconciliation.sql` with a restricted, idempotent service-role RPC that marks an order fulfilled only after verified on-chain evidence.
 - Added `supabase/functions/arnold-payout-reconcile/index.ts`, a private worker that inspects recipient Jetton-wallet transactions and calls the finalization RPC only after all notification fields match.
-- Added `supabase/functions/arnold-payout/index.ts`: authenticated server-only worker; derives a standard Wallet V5R1 key from a backend-only 24-word mnemonic secret; refuses to sign unless the derived address exactly matches the configured treasury; checks the configured master, the treasury Jetton wallet owner/master and token balance; creates a TEP-74 transfer with a unique order query id and a notification payload.
+- Added `supabase/functions/arnold-payout/index.ts`: authenticated server-only worker; derives a Wallet V5R1 key from a backend-only 12-word BIP39 multichain or 24-word TON-native mnemonic secret; refuses to sign unless the derived address exactly matches the configured treasury; checks the configured master, the treasury Jetton wallet owner/master and token balance; creates a TEP-74 transfer with a unique order query id and a notification payload.
 - The worker does not mark a payout fulfilled. It leaves the order in `processing` until `arnold-payout-reconcile` verifies the buyer Jetton wallet's on-chain `transfer_notification#7362d09c`, exact amount, query id, treasury Jetton wallet sender, original treasury owner, order payload, and successful transaction.
 - No private key or mnemonic is stored in this repository.
 - Payment verification code is committed but has not been compiled, deployed, or exercised against a real testnet payment. It must not be treated as production-ready.
 - The migrations have not been applied to any Supabase project yet; the reconciliation migration is new and requires isolated development testing first.
 - The Edge Function has not been deployed.
 - The sale has not been enabled and no production deployment has been made.
+
+## OKX 12-word mnemonic compatibility change (2026-11-12)
+
+- Updated `arnold-payout` to recognize 12-word BIP39 multichain mnemonics and derive candidate TON keys using SLIP-0010 Ed25519 path `m/44'/607'/{accountIndex}'` for account indexes 0–50. The derived V5R1 mainnet address must match the configured treasury exactly before signing is possible.
+- The 24-word TON-native path remains supported for backward compatibility.
+- This code change is not yet type-checked or tested against the exact OKX account. OKX account naming alone does not prove which BIP44 account index was used. Do not configure a secret or run the worker until verification is complete.
 
 ## Latest public-chain observation (2026-11-11)
 
