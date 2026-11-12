@@ -75,7 +75,7 @@ async function verifyMasterAndTreasury(owner: Address) {
 }
 async function deriveTreasuryWallet() {
   if (!MNEMONIC) throw new Error("ARNOLD_TREASURY_SIGNER_NOT_CONFIGURED");
-  const words = MNEMONIC.trim().toLowerCase().split(/\\s+/);
+  const words = MNEMONIC.trim().toLowerCase().split(/\s+/);
   const treasuryAddress = Address.parse(TREASURY);
 
   // OKX 12-word recovery phrases are BIP39 multichain mnemonics.
