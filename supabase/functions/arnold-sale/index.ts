@@ -188,6 +188,9 @@ Deno.serve(async (req: Request) => {
       if (Deno.env.get("ARNOLD_SALE_ENABLED") !== "true") {
         return json(503, { error: "ARNOLD_SALE_NOT_OPEN", message: "La venta permanece cerrada mientras se completa la verificación de pagos y la entrega segura." });
       }
+      // Release expired reservations before calculating available phase capacity.
+      const { error: expiryError } = await admin.rpc("expire_arnold_sale_orders");
+      if (expiryError) throw new Error("SALE_ORDER_EXPIRY_CLEANUP_FAILED");
       const grams = Number(body.grams);
       const wallet = String(body.walletAddress ?? "").trim();
       if (!GRAM_OPTIONS.has(grams) || wallet.length < 40 || wallet.length > 80) {
