@@ -374,43 +374,100 @@ function WalletPage({ t, walletAddress, walletReady, onConnect, onDisconnect, on
   </section>
 }
 
-function MarketPage({ t }: { t: (phrase: string) => string }) {
+function MarketPage({ t, walletAddress, onConnect }: { t: (phrase: string) => string; walletAddress: string | null; onConnect: () => void }) {
   const phases = [
-    { number: 1, amount: '50,000', price: '$0.003', status: 'CURRENT CONFIGURATION' },
-    { number: 2, amount: '50,000', price: '$0.0045', status: 'NEXT PHASE' },
-    { number: 3, amount: '50,000', price: '$0.0065', status: 'NEXT PHASE' },
-    { number: 4, amount: '50,000', price: '$0.008', status: 'FINAL PHASE' },
+    { number: 1, amount: '50,000', price: 0.003 },
+    { number: 2, amount: '50,000', price: 0.0045 },
+    { number: 3, amount: '50,000', price: 0.0065 },
+    { number: 4, amount: '50,000', price: 0.008 },
   ]
+  const [grams, setGrams] = useState(1)
+  const [quote, setQuote] = useState<{ ton_usd: string; arnold_usd: string; active_phase: number; purchases_enabled: boolean; timestamp: string } | null>(null)
+  const [quoteError, setQuoteError] = useState('')
+  const [quoteLoading, setQuoteLoading] = useState(true)
+  useEffect(() => {
+    let cancelled = false
+    const loadQuote = async () => {
+      try {
+        const response = await fetch('https://vnslzfivilgdqqgdyoxd.supabase.co/functions/v1/arnold-sale', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'quote' })
+        })
+        const data = await response.json()
+        if (!response.ok) throw new Error(data?.error || 'No se pudo obtener la cotización')
+        if (!cancelled) {
+          setQuote({
+            ton_usd: String(data.ton_usd),
+            arnold_usd: String(data.arnold_usd),
+            active_phase: Number(data.active_phase),
+            purchases_enabled: data.purchases_enabled === true,
+            timestamp: String(data.ton_quote_timestamp || '')
+          })
+          setQuoteError('')
+        }
+      } catch {
+        if (!cancelled) setQuoteError('Cotización en vivo no disponible. Inténtalo de nuevo más tarde.')
+      } finally {
+        if (!cancelled) setQuoteLoading(false)
+      }
+    }
+    void loadQuote()
+    const interval = window.setInterval(loadQuote, 30000)
+    return () => { cancelled = true; window.clearInterval(interval) }
+  }, [])
+  const activePhase = quote?.active_phase ?? 1
+  const phasePrice = Number(quote?.arnold_usd ?? phases[activePhase - 1]?.price ?? phases[0].price)
+  const tonUsd = Number(quote?.ton_usd ?? 0)
+  const estimatedTokens = tonUsd > 0 && phasePrice > 0 ? grams * tonUsd / phasePrice : 0
+  const quoteTime = quote?.timestamp ? new Date(quote.timestamp).toLocaleTimeString() : ''
   return <section className="inner-page market-sale-page">
-    <div className="kicker">{t('OFFICIAL ARNOLD TOKEN SALE')}</div><h1><span>{t('MARKET.')}</span></h1>
-    <div className="feature-panel"><div className="feature-icon"><ShoppingBag size={22} /></div><div><b>{t('BUY $ARNOLD IN FOUR PHASES')}</b><span>{t('Four sale phases with automatic price progression after each phase is sold out.')}</span></div></div>
-    <div className="market-sale-status">
-      <div className="market-sale-coin"><Flame size={27} fill="currentColor" /></div>
-      <div className="market-sale-status-copy"><b>$ARNOLD · TON</b><span>{t('SALE PREPARATION')}</span></div>
-      <span className="market-preparation-pill">{t('NOT OPEN YET')}</span>
+    <div className="market-buy-header">
+      <div className="market-buy-brand"><div className="market-buy-logo"><Flame size={25} fill="currentColor" /></div><div><b>ARNOLD</b><span>OFFICIAL TOKEN SALE</span></div></div>
+      <div className="market-live-price"><span className={quote ? 'market-live-dot' : 'market-live-dot market-live-dot-off'} />{quote ? '$' + phasePrice.toFixed(quote.active_phase === 1 ? 3 : 4) : '—'}<small>USD / ARNOLD</small></div>
     </div>
-    <div className="sale-inventory">
-      <div><span>{t('TOTAL SALE ALLOCATION')}</span><b>200,000 <small>$ARNOLD</small></b></div>
-      <div><span>{t('PHASES')}</span><b>4</b></div>
+    <section className="market-buy-card">
+      <div className="market-buy-title"><span>COMPRA $ARNOLD</span><small>{quote ? 'FASE ' + activePhase + ' ACTIVA' : 'VENTA EN PREPARACIÓN'}</small></div>
+      <label className="market-amount-label" htmlFor="arnold-gram-amount">Cantidad en GRAM · Elige un paquete</label>
+      <div className="market-amount-input"><input id="arnold-gram-amount" type="number" min="1" max="50" step="1" value={grams} onChange={event => setGrams(Math.max(1, Math.min(50, Number(event.target.value) || 1)))} /><span>GRAM</span></div>
+      <div className="market-quick-amounts">{[1,3,5,10,50].map(amount => <button type="button" key={amount} className={grams === amount ? 'active' : ''} onClick={() => setGrams(amount)}>{amount}</button>)}</div>
+      <div className="market-quote-rows">
+        <div><span>Pagas</span><b>{grams} GRAM</b></div>
+        <div><span>Precio de GRAM</span><b>{quote ? '$' + tonUsd.toFixed(4) + ' USD' : '—'}</b></div>
+        <div><span>Precio de ARNOLD</span><b>{quote ? '$' + phasePrice.toFixed(4) + ' USD' : '—'}</b></div>
+        <div className="market-receive-row"><span>Recibirías aproximadamente</span><b>{quote ? Math.floor(estimatedTokens).toLocaleString() + ' $ARNOLD' : '—'}</b></div>
+      </div>
+      <p className="market-quote-note">{quoteLoading ? 'Consultando cotización…' : quote ? 'Cotización actualizada ' + quoteTime + '. El importe final se confirma al crear la orden.' : quoteError}</p>
+      <button className="market-connect-btn" type="button" onClick={onConnect} disabled={!!walletAddress}>
+        <Wallet size={18} /> {walletAddress ? 'BILLETERA CONECTADA' : 'CONECTAR BILLETERA'}
+      </button>
+      <button className="market-buy-disabled" type="button" disabled>
+        <LockKeyhole size={17} /> {quote?.purchases_enabled ? 'COMPRA EN VALIDACIÓN FINAL' : 'COMPRAS TODAVÍA CERRADAS'}
+      </button>
+      <p className="market-buy-footnote">{walletAddress ? 'Billetera conectada. No se realizará ningún cobro mientras la venta permanezca cerrada.' : 'Conecta tu billetera TON. No se solicitará ningún pago mientras la venta permanezca cerrada.'}</p>
+    </section>
+    <div className="sale-inventory market-sale-inventory">
+      <div><span>ASIGNACIÓN TOTAL DE VENTA</span><b>200,000 <small>$ARNOLD</small></b></div>
+      <div><span>FASES</span><b>4</b></div>
     </div>
+    <div className="market-phases-heading"><b>FASES DE LA VENTA</b><span>PROGRESIÓN AUTOMÁTICA</span></div>
     <div className="sale-phase-list">
-      {phases.map((phase) => <article className={phase.number === 1 ? 'sale-phase-card sale-phase-first' : 'sale-phase-card'} key={phase.number}>
-        <div className="sale-phase-top"><span>{t('PHASE')} {phase.number}</span><small>{t(phase.status)}</small></div>
-        <div className="sale-phase-price">{phase.price}<span>USD / ARNOLD</span></div>
-        <div className="sale-phase-allocation"><span>{t('AVAILABLE TOKENS')}</span><b>{phase.amount} $ARNOLD</b></div>
+      {phases.map((phase) => <article className={phase.number === activePhase ? 'sale-phase-card sale-phase-first' : 'sale-phase-card'} key={phase.number}>
+        <div className="sale-phase-top"><span>FASE {phase.number}</span><small>{phase.number === activePhase ? 'FASE ACTUAL' : phase.number < activePhase ? 'FASE ANTERIOR' : phase.number === 4 ? 'FASE FINAL' : 'SIGUIENTE FASE'}</small></div>
+        <div className="sale-phase-price">{'$' + phase.price}<span>USD / ARNOLD</span></div>
+        <div className="sale-phase-allocation"><span>ASIGNACIÓN DE FASE</span><b>{phase.amount} $ARNOLD</b></div>
       </article>)}
     </div>
     <div className="listing-estimate">
-      <div className="listing-estimate-label">{t('ESTIMATED LISTING PRICE')}</div>
+      <div className="listing-estimate-label">PRECIO ESTIMADO DE LISTADO</div>
       <strong>$0.01 <small>USD</small></strong>
-      <b>{t('STON.fi')}</b>
-      <p>{t('Estimated reference only. This is not a guaranteed listing or future market price.')}</p>
+      <b>STON.fi</b>
+      <p>Referencia estimada, no representa un precio garantizado ni una promesa de listado.</p>
     </div>
-    <div className="sale-automation-note"><ShieldCheck size={17} /><p>{t('The next phase will activate automatically only after all 50,000 tokens in the current phase have been sold and confirmed on-chain.')}</p></div>
-    <div className="sale-security-note"><LockKeyhole size={15} /><span>{t('Purchases are not enabled yet. The payment verification and automatic token delivery system must be tested before the sale opens.')}</span></div>
+    <div className="sale-automation-note"><ShieldCheck size={17} /><p>La siguiente fase se activará automáticamente cuando se vendan y confirmen los 50,000 tokens de la fase actual.</p></div>
+    <div className="sale-security-note"><LockKeyhole size={15} /><span>La interfaz de compra está preparada, pero los pagos siguen deshabilitados hasta completar y validar todas las pruebas de extremo a extremo.</span></div>
   </section>
 }
-
 function P2PPage({ t }: { t: (phrase: string) => string }) {
   return <section className="inner-page p2p-page">
     <div className="p2p-emblem"><Handshake size={38} /></div><div className="kicker">{t('PEER-TO-PEER TRADING')}</div>
