@@ -282,3 +282,44 @@ body{background:#050505}
 .sale-automation-note p{margin:0;color:#c7b28c;font-size:9px;line-height:1.6}
 .sale-security-note{display:flex;align-items:flex-start;gap:8px;margin:12px 3px 0;color:#9d9078;font-size:9px;line-height:1.55}
 .sale-security-note svg{flex:none;color:#d7aa5b;margin-top:1px}
+
+
+/* UTYA-inspired compact ARNOLD purchase experience */
+.market-buy-header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:2px 0 14px;padding:12px;border:1px solid #ffbd5b35;border-radius:15px;background:linear-gradient(120deg,#28190c,#100d09)}
+.market-buy-brand{display:flex;align-items:center;gap:10px;min-width:0}
+.market-buy-logo{width:45px;height:45px;display:grid;place-items:center;border:1px solid #ffbd5b77;border-radius:14px;background:#ff9c2b20;color:#ffc75c}
+.market-buy-brand>div:last-child{display:flex;flex-direction:column;gap:3px}
+.market-buy-brand b{color:#fff0d5;font:900 20px 'Barlow Condensed',sans-serif;letter-spacing:1.5px}
+.market-buy-brand span{color:#b5a184;font-size:7px;font-weight:900;letter-spacing:1px}
+.market-live-price{display:flex;align-items:center;gap:6px;padding:9px 10px;border:1px solid #ffffff20;border-radius:12px;background:#090806;color:#ffe0a0;font-size:13px;font-weight:900;white-space:nowrap}
+.market-live-price small{display:block;color:#aa9878;font-size:7px;letter-spacing:.5px}
+.market-live-dot{width:7px;height:7px;border-radius:50%;background:#56d994;box-shadow:0 0 9px #56d994}
+.market-live-dot-off{background:#9b8a6c;box-shadow:none}
+.market-buy-card{padding:16px 14px;border:1px solid #c58c45aa;border-radius:20px;background:radial-gradient(ellipse at 0 0,#633b0d44,transparent 65%),linear-gradient(145deg,#1d160e,#0b0907);box-shadow:0 12px 30px #0007}
+.market-buy-title{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:13px}
+.market-buy-title>span{color:#ffe0a0;font-size:15px;font-weight:900}
+.market-buy-title small{padding:5px 7px;border:1px solid #ffbd5b55;border-radius:20px;color:#d9b875;font-size:7px;font-weight:900;letter-spacing:.5px}
+.market-amount-label{display:block;margin-bottom:8px;color:#b5a184;font-size:10px;font-weight:700}
+.market-amount-input{display:flex;align-items:center;gap:10px;padding:10px 13px;border:1px solid #a88755aa;border-radius:14px;background:#080705}
+.market-amount-input input{width:100%;min-width:0;border:0;outline:0;background:transparent;color:#fff0d5;font:900 30px 'Barlow Condensed',sans-serif}
+.market-amount-input input::-webkit-inner-spin-button{opacity:1}
+.market-amount-input span{color:#d8bd8a;font-size:12px;font-weight:900}
+.market-quick-amounts{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-top:9px}
+.market-quick-amounts button{min-height:42px;border:1px solid #ffffff20;border-radius:10px;background:#21190f;color:#e8d1a4;font-size:12px;font-weight:900}
+.market-quick-amounts button.active{border-color:#ffcf73;background:linear-gradient(110deg,#80511a,#c47c28);color:#fff5dc;box-shadow:0 5px 15px #ff9c2b22}
+.market-quote-rows{margin-top:14px}
+.market-quote-rows>div{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 0;border-bottom:1px solid #ffffff16;color:#b9a98e;font-size:11px}
+.market-quote-rows b{color:#f3dfb8;font-size:11px;text-align:right}
+.market-quote-rows .market-receive-row{padding:14px 0;border-bottom:0}
+.market-receive-row b{color:#ffd06b;font-size:17px}
+.market-quote-note{min-height:26px;margin:0 0 10px;color:#9f8d70;font-size:9px;line-height:1.5}
+.market-connect-btn,.market-buy-disabled{width:100%;min-height:50px;display:flex;align-items:center;justify-content:center;gap:8px;border-radius:13px;font-size:11px;font-weight:900;letter-spacing:.5px}
+.market-connect-btn{border:1px solid #ffcf73;background:linear-gradient(100deg,#b87325,#f5c66c);color:#201306}
+.market-connect-btn:disabled{opacity:.7}
+.market-buy-disabled{margin-top:9px;border:1px solid #ffffff22;background:#15110b;color:#b9a98e;opacity:.8}
+.market-buy-disabled:disabled{cursor:not-allowed}
+.market-buy-footnote{margin:10px 2px 0;color:#9f9078;font-size:9px;line-height:1.55;text-align:center}
+.market-sale-inventory{margin-top:14px}
+.market-phases-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:20px 2px 10px}
+.market-phases-heading b{color:#ffe0a0;font-size:12px;letter-spacing:1px}
+.market-phases-heading span{color:#a99470;font-size:7px;font-weight:900;letter-spacing:.7px}
