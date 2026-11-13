@@ -374,7 +374,7 @@ function WalletPage({ t, walletAddress, walletReady, onConnect, onDisconnect, on
   </section>
 }
 
-function MarketPage({ t, walletAddress, onConnect }: { t: (phrase: string) => string; walletAddress: string | null; onConnect: () => void }) {
+function MarketPage({ walletAddress, onConnect }: { walletAddress: string | null; onConnect: () => void }) {
   const phases = [
     { number: 1, amount: '50,000', price: 0.003 },
     { number: 2, amount: '50,000', price: 0.0045 },
@@ -607,7 +607,7 @@ export default function App() {
       {tab === 'tasks' && <TasksPage t={t} />}
       {tab === 'referrals' && <ReferralsPage t={t} />}
       {tab === 'wallet' && <WalletPage t={t} walletAddress={walletAddress} walletReady={walletReady} onConnect={connectWallet} onDisconnect={disconnectWallet} onReconnect={() => { void reconnectWallet() }} onRefreshBalance={refreshBalance} onVerifyPayment={verifyWalletPayment} walletAppName={walletAppName} paymentState={paymentState} arnoldBalance={arnoldBalance} balanceLoading={balanceLoading} balanceError={balanceError} />}
-      {tab === 'market' && <MarketPage t={t} walletAddress={walletAddress} onConnect={connectWallet} />}
+      {tab === 'market' && <MarketPage walletAddress={walletAddress} onConnect={connectWallet} />}
       {tab === 'p2p' && <P2PPage t={t} />}
     </div>
     <nav className="bottom-nav" aria-label="Main navigation">
