@@ -607,7 +607,7 @@ export default function App() {
       {tab === 'tasks' && <TasksPage t={t} />}
       {tab === 'referrals' && <ReferralsPage t={t} />}
       {tab === 'wallet' && <WalletPage t={t} walletAddress={walletAddress} walletReady={walletReady} onConnect={connectWallet} onDisconnect={disconnectWallet} onReconnect={() => { void reconnectWallet() }} onRefreshBalance={refreshBalance} onVerifyPayment={verifyWalletPayment} walletAppName={walletAppName} paymentState={paymentState} arnoldBalance={arnoldBalance} balanceLoading={balanceLoading} balanceError={balanceError} />}
-      {tab === 'market' && <MarketPage t={t} />}
+      {tab === 'market' && <MarketPage t={t} walletAddress={walletAddress} onConnect={connectWallet} />}
       {tab === 'p2p' && <P2PPage t={t} />}
     </div>
     <nav className="bottom-nav" aria-label="Main navigation">
