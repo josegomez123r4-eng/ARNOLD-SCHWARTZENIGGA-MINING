@@ -117,7 +117,8 @@ async function findVerifiedNotification(order: any, decimals: number): Promise<s
     if (!incoming || incoming.info?.type !== "internal") continue;
     if (incoming.info.bounced || !sameAddress(incoming.info.src, treasuryJettonWallet)) continue;
     if (!sameAddress(incoming.info.dest, buyerJettonWallet)) continue;
-    if (tx.outMessages?.size !== 0) continue;
+    // A valid Jetton transfer notification may be accompanied by an excesses
+    // message, so outgoing messages must not invalidate the incoming notification.
 
     const parsed = parseNotification(incoming.body);
     if (!parsed) continue;
