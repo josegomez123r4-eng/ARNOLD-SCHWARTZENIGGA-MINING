@@ -4,7 +4,7 @@ import { Address, beginCell, internal, SendMode, toNano } from "npm:@ton/core@0.
 import { TonClient, WalletContractV5R1, JettonMaster } from "npm:@ton/ton@15.1.0";
 import { deriveEd25519Path, keyPairFromSeed, mnemonicToPrivateKey } from "npm:@ton/crypto@3.3.0";
 import { mnemonicToSeedSync, validateMnemonic } from "npm:@scure/bip39@1.5.4";
-import { wordlist as bip39English } from "npm:@scure/bip39@1.5.4/wordlists/english.js";
+import { wordlist as bip39English } from "npm:@scure/bip39@1.5.4/wordlists/english";
 import { Buffer } from "node:buffer";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
