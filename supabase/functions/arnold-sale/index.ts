@@ -12,7 +12,7 @@ const TREASURY = "UQCSeF2dCiBsO367d32y2OKPRCgbgSkTc5am-MU5K8EAlCWm";
 const PRICE_SOURCE = "coingecko:the-open-network";
 const QUOTE_MAX_AGE_MS = 60_000;
 const ORDER_TTL_MS = 10 * 60_000;
-const GRAM_OPTIONS = new Set([1, 3, 5, 10, 50]);
+const GRAM_OPTIONS_NANO = new Set(["100000000", "1000000000", "3000000000", "5000000000", "10000000000", "50000000000"]);
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -178,7 +178,7 @@ Deno.serve(async (req: Request) => {
         quote_source: PRICE_SOURCE,
         active_phase: active.phase,
         arnold_usd: active.price,
-        supported_amounts_gram: [1, 3, 5, 10, 50],
+        supported_amounts_gram: [0.1, 1, 3, 5, 10, 50],
         purchases_enabled: Deno.env.get("ARNOLD_SALE_ENABLED") === "true",
       });
     }
@@ -191,9 +191,12 @@ Deno.serve(async (req: Request) => {
       // Release expired reservations before calculating available phase capacity.
       const { error: expiryError } = await admin.rpc("expire_arnold_sale_orders");
       if (expiryError) throw new Error("SALE_ORDER_EXPIRY_CLEANUP_FAILED");
-      const grams = Number(body.grams);
+      const gramsText = String(body.grams ?? "");
+      if (!/^\d+(\.\d{1,9})?$/.test(gramsText)) return json(400, { error: "INVALID_ORDER_INPUT" });
+      const [gramsWhole, gramsFraction = ""] = gramsText.split(".");
+      const gramNano = BigInt(gramsWhole) * 1_000_000_000n + BigInt((gramsFraction + "000000000").slice(0, 9));
       const wallet = String(body.walletAddress ?? "").trim();
-      if (!GRAM_OPTIONS.has(grams) || wallet.length < 40 || wallet.length > 80) {
+      if (!GRAM_OPTIONS_NANO.has(gramNano.toString()) || wallet.length < 40 || wallet.length > 80) {
         return json(400, { error: "INVALID_ORDER_INPUT" });
       }
       const [ton, active] = await Promise.all([getTonUsd(), getActiveArnoldPrice()]);
@@ -204,7 +207,6 @@ Deno.serve(async (req: Request) => {
       }
       const tonScaled = decimalToScaled(ton.price, 10);
       const arnoldScaled = decimalToScaled(active.price, 10);
-      const gramNano = BigInt(grams) * 1_000_000_000n;
       const arnoldAmountScaled = (gramNano * tonScaled * 10n ** 18n) / (1_000_000_000n * arnoldScaled);
       const arnoldAmount = (arnoldAmountScaled / 10n ** 18n).toString() + "." +
         (arnoldAmountScaled % 10n ** 18n).toString().padStart(18, "0");
