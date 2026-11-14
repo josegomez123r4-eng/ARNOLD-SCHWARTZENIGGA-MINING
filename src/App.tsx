@@ -573,7 +573,7 @@ export default function App() {
         retryTimer = window.setTimeout(initialize, 200)
         return
       }
-      const connector = new api.TonConnectUI({ manifestUrl: 'https://arnold-schwartzenigga-mining-vofi.vercel.app/tonconnect-manifest.json' })
+      const connector = new api.TonConnectUI({ manifestUrl: 'https://arnold-schwartzenigga-mining.vercel.app/tonconnect-manifest.json' })
       tonConnect.current = connector
       const syncWallet = (wallet: TonConnectWallet | null) => {
         if (cancelled) return
