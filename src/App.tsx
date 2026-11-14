@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { detectLanguage, languages, translate, type LanguageCode } from './i18n'
 import WebApp from '@twa-dev/sdk'
+import { beginCell } from '@ton/core'
 
 type TonConnectWallet = {
   account: { address: string; chain?: string }
@@ -9,7 +10,7 @@ type TonConnectWallet = {
 type TonConnectInstance = {
   openModal: () => Promise<void>
   disconnect: () => Promise<void>
-  sendTransaction: (transaction: { validUntil: number; messages: Array<{ address: string; amount: string }> }) => Promise<{ boc: string }>
+  sendTransaction: (transaction: { validUntil: number; messages: Array<{ address: string; amount: string; payload?: string }> }) => Promise<{ boc: string }>
   onStatusChange: (callback: (wallet: TonConnectWallet | null) => void) => void
   wallet?: TonConnectWallet | null
 }
@@ -374,15 +375,170 @@ function WalletPage({ t, walletAddress, walletReady, onConnect, onDisconnect, on
   </section>
 }
 
-function MarketPage({ t }: { t: (phrase: string) => string }) {
-  return <section className="inner-page">
-    <div className="kicker">{t('OFFICIAL ARNOLD STORE')}</div><h1><span>{t('MARKET.')}</span></h1>
-    <div className="feature-panel"><div className="feature-icon"><ShoppingBag size={22} /></div><div><b>{t('BUY $ARNOLD DIRECTLY')}</b><span>{t('Official token listings, purchase amounts and prices will be displayed here.')}</span></div></div>
-    <div className="market-preview"><div className="market-coin"><Flame size={30} fill="currentColor" /></div><div className="market-token"><b>$ARNOLD</b><span>{t('Official token · TON')}</span></div><div className="market-state">{t('NOT LISTED')}</div></div>
-    <div className="empty-state"><ShoppingBag size={34} /><b>{t('OFFICIAL MARKET COMING SOON')}</b><span>{t('The administrator will publish token quantities and prices here. Purchases will open only after the TON sale contract is deployed and tested.')}</span></div>
+function MarketPage({ walletAddress, onConnect, tonConnect }: { walletAddress: string | null; onConnect: () => void; tonConnect: TonConnectInstance | null }) {
+  const phases = [
+    { number: 1, amount: '50,000', price: 0.003 },
+    { number: 2, amount: '50,000', price: 0.0045 },
+    { number: 3, amount: '50,000', price: 0.0065 },
+    { number: 4, amount: '50,000', price: 0.008 },
+  ]
+  const [grams, setGrams] = useState(0.1)
+  const [quote, setQuote] = useState<{ ton_usd: string; arnold_usd: string; active_phase: number; purchases_enabled: boolean; timestamp: string } | null>(null)
+  const [quoteError, setQuoteError] = useState('')
+  const [quoteLoading, setQuoteLoading] = useState(true)
+  const [activeOrder, setActiveOrder] = useState<{ order_id: string; gram_nano: string; recipient: string; memo: string; arnold_amount: string; expires_at: string } | null>(null)
+  const [paymentSubmitted, setPaymentSubmitted] = useState(false)
+  const [purchaseBusy, setPurchaseBusy] = useState(false)
+  const [purchaseMessage, setPurchaseMessage] = useState('')
+  const [purchaseError, setPurchaseError] = useState('')
+  const saleEndpoint = 'https://vnslzfivilgdqqgdyoxd.supabase.co/functions/v1/arnold-sale'
+  const saleRequest = async (body: Record<string, unknown>) => {
+    const response = await fetch(saleEndpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    const data = await response.json().catch(() => ({}))
+    if (!response.ok) throw new Error(data?.message || data?.error || 'No se pudo completar la operación')
+    return data
+  }
+  const verifyOrder = async () => {
+    if (!activeOrder || !WebApp.initData || purchaseBusy) return
+    setPurchaseBusy(true)
+    setPurchaseError('')
+    try {
+      const result = await saleRequest({ action: 'verify_payment', initData: WebApp.initData, orderId: activeOrder.order_id })
+      setPurchaseMessage(result.message || (result.payment_status === 'paid' ? 'Pago confirmado. La entrega está siendo verificada.' : 'Pago aún pendiente de confirmación en TON.'))
+    } catch (error) {
+      setPurchaseError(error instanceof Error ? error.message : 'No se pudo verificar el pago')
+    } finally {
+      setPurchaseBusy(false)
+    }
+  }
+  const startPurchase = async () => {
+    if (purchaseBusy) return
+    if (!walletAddress) { onConnect(); return }
+    if (!tonConnect) { setPurchaseError('La conexión con TON Connect todavía no está lista.'); return }
+    if (!WebApp.initData) { setPurchaseError('Abre ARNOLD desde el bot oficial de Telegram para validar tu sesión.'); return }
+    if (!quote?.purchases_enabled) return
+    if (![0.1, 1, 3, 5, 10, 50].includes(grams)) { setPurchaseError('Selecciona uno de los paquetes disponibles: 0.10, 1, 3, 5, 10 o 50 GRAM.'); return }
+    setPurchaseBusy(true)
+    setPurchaseError('')
+    setPurchaseMessage('')
+    try {
+      let order = activeOrder
+      if (!order) {
+        const created = await saleRequest({ action: 'create_order', initData: WebApp.initData, grams: grams.toFixed(1), walletAddress })
+        order = {
+          order_id: String(created.order_id),
+          gram_nano: String(created.gram_nano),
+          recipient: String(created.recipient),
+          memo: String(created.memo),
+          arnold_amount: String(created.arnold_amount),
+          expires_at: String(created.expires_at)
+        }
+        setActiveOrder(order)
+      }
+      const boc = beginCell().storeUint(0, 32).storeStringTail(order.memo).endCell().toBoc()
+      let binary = ''
+      for (let i = 0; i < boc.length; i++) binary += String.fromCharCode(boc[i])
+      const payload = btoa(binary)
+      await tonConnect.sendTransaction({
+        validUntil: Math.floor(Date.now() / 1000) + 300,
+        messages: [{ address: order.recipient, amount: order.gram_nano, payload }]
+      })
+      setPaymentSubmitted(true)
+      setPurchaseMessage('Transferencia enviada. Estamos comprobando su confirmación en la red TON.')
+      const result = await saleRequest({ action: 'verify_payment', initData: WebApp.initData, orderId: order.order_id })
+      setPurchaseMessage(result.message || (result.payment_status === 'paid' ? 'Pago confirmado. La entrega está siendo verificada.' : 'Transferencia detectada o pendiente de indexación. Pulsa “Verificar pago” en unos instantes.'))
+    } catch (error) {
+      setPurchaseError(error instanceof Error ? error.message : 'No se pudo iniciar la compra')
+    } finally {
+      setPurchaseBusy(false)
+    }
+  }
+  useEffect(() => {
+    let cancelled = false
+    const loadQuote = async () => {
+      try {
+        const response = await fetch('https://vnslzfivilgdqqgdyoxd.supabase.co/functions/v1/arnold-sale', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'quote' })
+        })
+        const data = await response.json()
+        if (!response.ok) throw new Error(data?.error || 'No se pudo obtener la cotización')
+        if (!cancelled) {
+          setQuote({
+            ton_usd: String(data.ton_usd),
+            arnold_usd: String(data.arnold_usd),
+            active_phase: Number(data.active_phase),
+            purchases_enabled: data.purchases_enabled === true,
+            timestamp: String(data.ton_quote_timestamp || '')
+          })
+          setQuoteError('')
+        }
+      } catch {
+        if (!cancelled) setQuoteError('Cotización en vivo no disponible. Inténtalo de nuevo más tarde.')
+      } finally {
+        if (!cancelled) setQuoteLoading(false)
+      }
+    }
+    void loadQuote()
+    const interval = window.setInterval(loadQuote, 30000)
+    return () => { cancelled = true; window.clearInterval(interval) }
+  }, [])
+  const activePhase = quote?.active_phase ?? 1
+  const phasePrice = Number(quote?.arnold_usd ?? phases[activePhase - 1]?.price ?? phases[0].price)
+  const tonUsd = Number(quote?.ton_usd ?? 0)
+  const estimatedTokens = tonUsd > 0 && phasePrice > 0 ? grams * tonUsd / phasePrice : 0
+  const quoteTime = quote?.timestamp ? new Date(quote.timestamp).toLocaleTimeString() : ''
+  return <section className="inner-page market-sale-page">
+    <div className="market-buy-header">
+      <div className="market-buy-brand"><div className="market-buy-logo"><Flame size={25} fill="currentColor" /></div><div><b>ARNOLD</b><span>OFFICIAL TOKEN SALE</span></div></div>
+      <div className="market-live-price"><span className={quote ? 'market-live-dot' : 'market-live-dot market-live-dot-off'} />{quote ? '$' + phasePrice.toFixed(quote.active_phase === 1 ? 3 : 4) : '—'}<small>USD / ARNOLD</small></div>
+    </div>
+    <section className="market-buy-card">
+      <div className="market-buy-title"><span>COMPRA $ARNOLD</span><small>{quote ? 'FASE ' + activePhase + ' ACTIVA' : 'VENTA EN PREPARACIÓN'}</small></div>
+      <label className="market-amount-label" htmlFor="arnold-gram-amount">Cantidad en GRAM · Elige un paquete</label>
+      <div className="market-amount-input"><input id="arnold-gram-amount" type="number" min="0.1" max="50" step="0.1" value={grams} onChange={event => setGrams(Math.max(0.1, Math.min(50, Math.round((Number(event.target.value) || 0.1) * 10) / 10)))} /><span>GRAM</span></div>
+      <div className="market-quick-amounts">{[0.1,1,3,5,10,50].map(amount => <button type="button" key={amount} className={grams === amount ? 'active' : ''} onClick={() => setGrams(amount)}>{amount}</button>)}</div>
+      <div className="market-quote-rows">
+        <div><span>Pagas</span><b>{grams} GRAM</b></div>
+        <div><span>Precio de GRAM</span><b>{quote ? '$' + tonUsd.toFixed(4) + ' USD' : '—'}</b></div>
+        <div><span>Precio de ARNOLD</span><b>{quote ? '$' + phasePrice.toFixed(4) + ' USD' : '—'}</b></div>
+        <div className="market-receive-row"><span>Recibirías aproximadamente</span><b>{quote ? Math.floor(estimatedTokens).toLocaleString() + ' $ARNOLD' : '—'}</b></div>
+      </div>
+      <p className="market-quote-note">{quoteLoading ? 'Consultando cotización…' : quote ? 'Cotización actualizada ' + quoteTime + '. El importe final se confirma al crear la orden.' : quoteError}</p>
+      <button className="market-connect-btn" type="button" onClick={onConnect} disabled={!!walletAddress}>
+        <Wallet size={18} /> {walletAddress ? 'BILLETERA CONECTADA' : 'CONECTAR BILLETERA'}
+      </button>
+      <button className="market-buy-disabled" type="button" disabled={!quote?.purchases_enabled || purchaseBusy || (!walletAddress && !tonConnect)} onClick={() => { if (activeOrder && paymentSubmitted) void verifyOrder(); else void startPurchase() }}>
+        <LockKeyhole size={17} /> {purchaseBusy ? 'PROCESANDO…' : activeOrder && paymentSubmitted ? 'VERIFICAR PAGO' : activeOrder ? 'CONTINUAR PAGO' : quote?.purchases_enabled ? 'COMPRAR $ARNOLD' : 'COMPRAS TODAVÍA CERRADAS'}
+      </button>
+      {purchaseMessage && <p className="market-quote-note" role="status">{purchaseMessage}</p>}
+      {purchaseError && <p className="market-quote-note" role="alert">{purchaseError}</p>}
+      {activeOrder && <p className="market-buy-footnote">Orden {activeOrder.order_id.slice(0, 8)} · {activeOrder.arnold_amount} $ARNOLD · vence {new Date(activeOrder.expires_at).toLocaleTimeString()}.</p>}
+      <p className="market-buy-footnote">{walletAddress ? 'Billetera conectada. La compra solo solicitará la cantidad exacta que confirmes en tu wallet.' : 'Conecta tu billetera TON para poder comprar cuando la venta esté abierta.'}</p>
+    </section>
+    <div className="sale-inventory market-sale-inventory">
+      <div><span>ASIGNACIÓN TOTAL DE VENTA</span><b>200,000 <small>$ARNOLD</small></b></div>
+      <div><span>FASES</span><b>4</b></div>
+    </div>
+    <div className="market-phases-heading"><b>FASES DE LA VENTA</b><span>PROGRESIÓN AUTOMÁTICA</span></div>
+    <div className="sale-phase-list">
+      {phases.map((phase) => <article className={phase.number === activePhase ? 'sale-phase-card sale-phase-first' : 'sale-phase-card'} key={phase.number}>
+        <div className="sale-phase-top"><span>FASE {phase.number}</span><small>{phase.number === activePhase ? 'FASE ACTUAL' : phase.number < activePhase ? 'FASE ANTERIOR' : phase.number === 4 ? 'FASE FINAL' : 'SIGUIENTE FASE'}</small></div>
+        <div className="sale-phase-price">{'$' + phase.price}<span>USD / ARNOLD</span></div>
+        <div className="sale-phase-allocation"><span>ASIGNACIÓN DE FASE</span><b>{phase.amount} $ARNOLD</b></div>
+      </article>)}
+    </div>
+    <div className="listing-estimate">
+      <div className="listing-estimate-label">PRECIO ESTIMADO DE LISTADO</div>
+      <strong>$0.01 <small>USD</small></strong>
+      <b>STON.fi</b>
+      <p>Referencia estimada, no representa un precio garantizado ni una promesa de listado.</p>
+    </div>
+    <div className="sale-automation-note"><ShieldCheck size={17} /><p>La siguiente fase se activará automáticamente cuando se vendan y confirmen los 50,000 tokens de la fase actual.</p></div>
+    <div className="sale-security-note"><LockKeyhole size={15} /><span>La interfaz de compra está preparada, pero los pagos siguen deshabilitados hasta completar y validar todas las pruebas de extremo a extremo.</span></div>
   </section>
 }
-
 function P2PPage({ t }: { t: (phrase: string) => string }) {
   return <section className="inner-page p2p-page">
     <div className="p2p-emblem"><Handshake size={38} /></div><div className="kicker">{t('PEER-TO-PEER TRADING')}</div>
@@ -417,7 +573,7 @@ export default function App() {
         retryTimer = window.setTimeout(initialize, 200)
         return
       }
-      const connector = new api.TonConnectUI({ manifestUrl: 'https://arnold-schwartzenigga-mining-vofi.vercel.app/tonconnect-manifest.json' })
+      const connector = new api.TonConnectUI({ manifestUrl: 'https://arnold-schwartzenigga-mining.vercel.app/tonconnect-manifest.json' })
       tonConnect.current = connector
       const syncWallet = (wallet: TonConnectWallet | null) => {
         if (cancelled) return
@@ -522,7 +678,7 @@ export default function App() {
       {tab === 'tasks' && <TasksPage t={t} />}
       {tab === 'referrals' && <ReferralsPage t={t} />}
       {tab === 'wallet' && <WalletPage t={t} walletAddress={walletAddress} walletReady={walletReady} onConnect={connectWallet} onDisconnect={disconnectWallet} onReconnect={() => { void reconnectWallet() }} onRefreshBalance={refreshBalance} onVerifyPayment={verifyWalletPayment} walletAppName={walletAppName} paymentState={paymentState} arnoldBalance={arnoldBalance} balanceLoading={balanceLoading} balanceError={balanceError} />}
-      {tab === 'market' && <MarketPage t={t} />}
+      {tab === 'market' && <MarketPage walletAddress={walletAddress} onConnect={connectWallet} tonConnect={tonConnect.current} />}
       {tab === 'p2p' && <P2PPage t={t} />}
     </div>
     <nav className="bottom-nav" aria-label="Main navigation">
