@@ -381,7 +381,7 @@ function MarketPage({ walletAddress, onConnect }: { walletAddress: string | null
     { number: 3, amount: '50,000', price: 0.0065 },
     { number: 4, amount: '50,000', price: 0.008 },
   ]
-  const [grams, setGrams] = useState(1)
+  const [grams, setGrams] = useState(0.1)
   const [quote, setQuote] = useState<{ ton_usd: string; arnold_usd: string; active_phase: number; purchases_enabled: boolean; timestamp: string } | null>(null)
   const [quoteError, setQuoteError] = useState('')
   const [quoteLoading, setQuoteLoading] = useState(true)
@@ -429,8 +429,8 @@ function MarketPage({ walletAddress, onConnect }: { walletAddress: string | null
     <section className="market-buy-card">
       <div className="market-buy-title"><span>COMPRA $ARNOLD</span><small>{quote ? 'FASE ' + activePhase + ' ACTIVA' : 'VENTA EN PREPARACIÓN'}</small></div>
       <label className="market-amount-label" htmlFor="arnold-gram-amount">Cantidad en GRAM · Elige un paquete</label>
-      <div className="market-amount-input"><input id="arnold-gram-amount" type="number" min="1" max="50" step="1" value={grams} onChange={event => setGrams(Math.max(1, Math.min(50, Number(event.target.value) || 1)))} /><span>GRAM</span></div>
-      <div className="market-quick-amounts">{[1,3,5,10,50].map(amount => <button type="button" key={amount} className={grams === amount ? 'active' : ''} onClick={() => setGrams(amount)}>{amount}</button>)}</div>
+      <div className="market-amount-input"><input id="arnold-gram-amount" type="number" min="0.1" max="50" step="0.1" value={grams} onChange={event => setGrams(Math.max(0.1, Math.min(50, Math.round((Number(event.target.value) || 0.1) * 10) / 10)))} /><span>GRAM</span></div>
+      <div className="market-quick-amounts">{[0.1,1,3,5,10,50].map(amount => <button type="button" key={amount} className={grams === amount ? 'active' : ''} onClick={() => setGrams(amount)}>{amount}</button>)}</div>
       <div className="market-quote-rows">
         <div><span>Pagas</span><b>{grams} GRAM</b></div>
         <div><span>Precio de GRAM</span><b>{quote ? '$' + tonUsd.toFixed(4) + ' USD' : '—'}</b></div>
