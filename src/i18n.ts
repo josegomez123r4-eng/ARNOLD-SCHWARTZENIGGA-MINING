@@ -248,10 +248,21 @@ const translations: Record<string, Record<string, string>> = {
 }
 
 export function detectLanguage(): LanguageCode {
-  const saved = localStorage.getItem('arnold-language')
-  if (languages.some((item) => item.code === saved)) return saved as LanguageCode
-  const telegramLang = (window as unknown as { Telegram?: { WebApp?: { initDataUnsafe?: { user?: { language_code?: string } } } } }).Telegram?.WebApp?.initDataUnsafe?.user?.language_code
-  const browserLang = telegramLang || navigator.language || 'en'
+  // Telegram and embedded browsers can deny localStorage access; language
+  // detection must never prevent the entire app from mounting.
+  try {
+    const saved = window.localStorage?.getItem('arnold-language')
+    if (languages.some((item) => item.code === saved)) return saved as LanguageCode
+  } catch {
+    // Continue with Telegram/browser language when storage is unavailable.
+  }
+  let telegramLang: string | undefined
+  try {
+    telegramLang = (window as unknown as { Telegram?: { WebApp?: { initDataUnsafe?: { user?: { language_code?: string } } } } }).Telegram?.WebApp?.initDataUnsafe?.user?.language_code
+  } catch {
+    // Ignore unavailable Telegram WebApp context.
+  }
+  const browserLang = telegramLang || (typeof navigator !== 'undefined' ? navigator.language : 'en') || 'en'
   if (browserLang.toLowerCase().startsWith('zh-tw') || browserLang.toLowerCase().startsWith('zh-hk') || browserLang.toLowerCase().startsWith('zh-hant')) return 'zh-TW'
   const match = languages.find((item) => browserLang.toLowerCase().startsWith(item.code.toLowerCase().split('-')[0]))
   return match?.code || 'en'
