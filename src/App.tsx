@@ -604,22 +604,53 @@ export default function App() {
       setBalanceLoading(true)
       setBalanceError(null)
       try {
-        const response = await fetch('https://tonapi.io/v2/accounts/' + encodeURIComponent(walletAddress) + '/jettons')
-        if (!response.ok) throw new Error('TON API ' + response.status)
-        const data = await response.json() as JettonBalanceResponse
+        const ownerAddress = normalizeTonAddress(walletAddress)
         const expectedMaster = normalizeTonAddress(ARNOLD_JETTON_MASTER)
-        if (!expectedMaster) throw new Error('Invalid configured Jetton master address')
-        const token = (data.balances ?? []).find(item => normalizeTonAddress(item.jetton.address) === expectedMaster)
+        if (!ownerAddress) throw new Error('TON Connect returned an invalid wallet address')
+        if (!expectedMaster) throw new Error('The configured ARNOLD Jetton master address is invalid')
+
+        // Ask TonAPI for this exact owner + ARNOLD master first. This avoids
+        // depending on the default page size/order of the owner's Jetton list.
+        const specificUrl = 'https://tonapi.io/v2/accounts/' +
+          encodeURIComponent(ownerAddress) + '/jettons/' + encodeURIComponent(expectedMaster)
+        let token: { balance: string; jetton?: { decimals?: number | string } } | null = null
+        const specificResponse = await fetch(specificUrl, { headers: { accept: 'application/json' } })
+        if (specificResponse.ok) {
+          const specificData = await specificResponse.json() as { balance?: string; jetton?: { decimals?: number | string } }
+          if (typeof specificData.balance === 'string') token = { balance: specificData.balance, jetton: specificData.jetton }
+        }
+
+        // Fallback to the complete Jetton list for API versions/indexer cases
+        // where the exact-balance endpoint does not return a balance.
+        if (!token) {
+          const listUrl = 'https://tonapi.io/v2/accounts/' + encodeURIComponent(ownerAddress) + '/jettons?limit=1000'
+          const listResponse = await fetch(listUrl, { headers: { accept: 'application/json' } })
+          if (!listResponse.ok) throw new Error('TonAPI balance lookup failed (' + listResponse.status + ')')
+          const data = await listResponse.json() as JettonBalanceResponse
+          const match = (data.balances ?? []).find(item =>
+            normalizeTonAddress(item.jetton.address) === expectedMaster
+          )
+          if (match) token = { balance: match.balance, jetton: match.jetton }
+        }
+
         if (!cancelled) {
-          if (!token) setArnoldBalance('0')
-          else {
-            const decimals = Number(token.jetton.decimals ?? 9)
-            const amount = Number(token.balance) / Math.pow(10, decimals)
-            setArnoldBalance(amount.toLocaleString(undefined, { maximumFractionDigits: Math.min(decimals, 6) }))
+          if (!token) {
+            setArnoldBalance('0')
+          } else {
+            const decimals = Math.max(0, Math.min(30, Number(token.jetton?.decimals ?? 9)))
+            const raw = BigInt(token.balance)
+            const divisor = 10n ** BigInt(decimals)
+            const whole = raw / divisor
+            const fraction = (raw % divisor).toString().padStart(decimals, '0').slice(0, 6).replace(/0+$/, '')
+            const amount = fraction ? whole.toString() + '.' + fraction : whole.toString()
+            setArnoldBalance(Number(amount).toLocaleString(undefined, { maximumFractionDigits: 6 }))
           }
         }
-      } catch {
-        if (!cancelled) setBalanceError(t('Unable to load token balance. Please try again.'))
+      } catch (error) {
+        if (!cancelled) {
+          console.error('ARNOLD balance lookup failed:', error)
+          setBalanceError(error instanceof Error ? error.message : t('Unable to load token balance. Please try again.'))
+        }
       } finally {
         if (!cancelled) setBalanceLoading(false)
       }
