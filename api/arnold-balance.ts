@@ -36,12 +36,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const data = await list.json() as {
       balances?: Array<{ balance: string; jetton: { address: string; decimals?: number } }>
     }
-    const match = (data.balances ?? []).find(item => item.jetton.address === master)
-    if (!match) return res.status(200).json({ balance: '0', decimals: 9 })
-    return res.status(200).json({
-      balance: match.balance,
-      decimals: match.jetton.decimals ?? 9
-    })
+    return res.status(200).json({ balances: data.balances ?? [] })
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     return res.status(502).json({ error: 'Balance provider request failed: ' + message })
