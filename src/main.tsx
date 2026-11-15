@@ -1,39 +1,24 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import App from './App'
-import './styles.css'
+import { Buffer } from 'buffer'
 
-class StartupErrorBoundary extends React.Component<React.PropsWithChildren, { error: string | null }> {
-  state = { error: null as string | null }
+// Some TON/browser dependencies expect Node's Buffer global.
+// Install it before importing the React application bundle.
+;(globalThis as typeof globalThis & { Buffer: typeof Buffer }).Buffer = Buffer
 
-  static getDerivedStateFromError(error: unknown) {
-    return { error: error instanceof Error ? error.message : String(error) }
-  }
-
-  componentDidCatch(error: Error, info: React.ErrorInfo) {
-    console.error('ARNOLD app render failed:', error, info.componentStack)
-  }
-
-  render() {
-    if (this.state.error) {
-      return <main style={{ minHeight: '100vh', padding: '32px 20px', background: '#090909', color: '#f4f0e7', fontFamily: 'sans-serif' }}>
-        <h1 style={{ color: '#f0b64b' }}>ARNOLD no pudo iniciar</h1>
-        <p>Se produjo un error al cargar la interfaz. El detalle aparece abajo para poder corregirlo.</p>
-        <pre style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', padding: 14, background: '#1b1711', border: '1px solid #8a642e', borderRadius: 10 }}>{this.state.error}</pre>
-        <button onClick={() => window.location.reload()} style={{ padding: '12px 18px', border: 0, borderRadius: 8, background: '#e7b34e', color: '#171108', fontWeight: 700 }}>RECARGAR</button>
-      </main>
-    }
-    return this.props.children
-  }
-}
-
-const rootElement = document.getElementById('root')
-if (!rootElement) {
-  document.body.textContent = 'ARNOLD: no se encontró el contenedor principal (#root).'
-} else {
-  ReactDOM.createRoot(rootElement).render(
-    <React.StrictMode>
-      <StartupErrorBoundary><App /></StartupErrorBoundary>
-    </React.StrictMode>
-  )
-}
+void import('./app-entry').catch((error: unknown) => {
+  const root = document.getElementById('root')
+  if (!root) return
+  const detail = error instanceof Error ? error.stack || error.message : String(error)
+  root.innerHTML = ''
+  const panel = document.createElement('main')
+  panel.style.cssText = 'min-height:100vh;padding:32px 20px;background:#090909;color:#f4f0e7;font:15px/1.5 Arial,sans-serif'
+  const heading = document.createElement('h1')
+  heading.textContent = 'ARNOLD no pudo iniciar'
+  heading.style.color = '#f0b64b'
+  const message = document.createElement('p')
+  message.textContent = 'Falló la carga de la aplicación.'
+  const pre = document.createElement('pre')
+  pre.textContent = detail
+  pre.style.cssText = 'white-space:pre-wrap;overflow-wrap:anywhere;padding:14px;background:#1b1711;border:1px solid #8a642e;border-radius:10px'
+  panel.append(heading, message, pre)
+  root.append(panel)
+})
