@@ -43,10 +43,6 @@ function normalizeTonAddress(address: string): string | null {
   } catch { return null }
 }
 
-type JettonBalanceResponse = {
-  balances?: Array<{ balance: string; jetton: { address: string; decimals?: number | string } }>
-}
-
 type Tab = 'mining' | 'tasks' | 'referrals' | 'wallet' | 'market' | 'p2p'
 
 const tabs = [
