@@ -611,23 +611,27 @@ export default function App() {
 
         // Ask TonAPI for this exact owner + ARNOLD master first. This avoids
         // depending on the default page size/order of the owner's Jetton list.
-        const specificUrl = 'https://tonapi.io/v2/accounts/' +
-          encodeURIComponent(ownerAddress) + '/jettons/' + encodeURIComponent(expectedMaster)
-        let token: { balance: string; jetton?: { decimals?: number | string } } | null = null
-        const specificResponse = await fetch(specificUrl, { headers: { accept: 'application/json' } })
-        if (specificResponse.ok) {
-          const specificData = await specificResponse.json() as { balance?: string; jetton?: { decimals?: number | string } }
-          if (typeof specificData.balance === 'string') token = { balance: specificData.balance, jetton: specificData.jetton }
+        const balanceUrl = '/api/arnold-balance?owner=' +
+          encodeURIComponent(walletAddress) + '&master=' + encodeURIComponent(ARNOLD_JETTON_MASTER)
+        const balanceResponse = await fetch(balanceUrl, { headers: { accept: 'application/json' } })
+        if (!balanceResponse.ok) {
+          let reason = 'HTTP ' + balanceResponse.status
+          try {
+            const errorData = await balanceResponse.json() as { error?: string }
+            if (errorData.error) reason = errorData.error
+          } catch { /* keep HTTP status */ }
+          throw new Error(reason)
         }
-
-        // Fallback to the complete Jetton list for API versions/indexer cases
-        // where the exact-balance endpoint does not return a balance.
-        if (!token) {
-          const listUrl = 'https://tonapi.io/v2/accounts/' + encodeURIComponent(ownerAddress) + '/jettons?limit=1000'
-          const listResponse = await fetch(listUrl, { headers: { accept: 'application/json' } })
-          if (!listResponse.ok) throw new Error('TonAPI balance lookup failed (' + listResponse.status + ')')
-          const data = await listResponse.json() as JettonBalanceResponse
-          const match = (data.balances ?? []).find(item =>
+        const result = await balanceResponse.json() as {
+          balance?: string
+          decimals?: number
+          balances?: Array<{ balance: string; jetton: { address: string; decimals?: number | string } }>
+        }
+        let token: { balance: string; jetton?: { decimals?: number | string } } | null = null
+        if (typeof result.balance === 'string') {
+          token = { balance: result.balance, jetton: { decimals: result.decimals ?? 9 } }
+        } else {
+          const match = (result.balances ?? []).find(item =>
             normalizeTonAddress(item.jetton.address) === expectedMaster
           )
           if (match) token = { balance: match.balance, jetton: match.jetton }
