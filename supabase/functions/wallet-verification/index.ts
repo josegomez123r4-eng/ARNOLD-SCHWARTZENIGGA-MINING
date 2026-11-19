@@ -87,7 +87,9 @@ Deno.serve(async(req:Request)=>{
     if(action==="status"){
       const {data,error}=await admin.from("telegram_wallet_links").select("wallet_address,verified_at").eq("telegram_user_id",telegramId).maybeSingle();
       if(error) throw error;
-      return json(200,{verified:!!data,wallet_address:data?.wallet_address??null,verified_at:data?.verified_at??null});
+      const {data:pending,error:pendingError}=await admin.from("telegram_wallet_verification_intents").select("id,memo,wallet_address,expires_at,created_at").eq("telegram_user_id",telegramId).is("used_at",null).order("created_at",{ascending:false}).limit(1).maybeSingle();
+      if(pendingError) throw pendingError;
+      return json(200,{verified:!!data,wallet_address:data?.wallet_address??null,verified_at:data?.verified_at??null,pending_intent:pending?{intent_id:pending.id,memo:pending.memo,wallet_address:pending.wallet_address,recipient:TREASURY,amount_nano:FEE_NANO,expires_at:pending.expires_at}:null});
     }
     if(action==="create_intent"){
       const wallet=String(body.walletAddress??"");
@@ -95,7 +97,7 @@ Deno.serve(async(req:Request)=>{
       const {data:existing,error:existingError}=await admin.from("telegram_wallet_links").select("wallet_address,verified_at").eq("telegram_user_id",telegramId).maybeSingle();
       if(existingError) throw existingError;
       if(existing && rawAddress(existing.wallet_address)===rawAddress(wallet)) return json(200,{verified:true,wallet_address:existing.wallet_address});
-      const {data:pending,error:pendingError}=await admin.from("telegram_wallet_verification_intents").select("id,memo,expires_at").eq("telegram_user_id",telegramId).eq("wallet_address",wallet).is("used_at",null).gt("expires_at",new Date().toISOString()).order("created_at",{ascending:false}).limit(1).maybeSingle();
+      const {data:pending,error:pendingError}=await admin.from("telegram_wallet_verification_intents").select("id,memo,expires_at").eq("telegram_user_id",telegramId).eq("wallet_address",wallet).is("used_at",null).order("created_at",{ascending:false}).limit(1).maybeSingle();
       if(pendingError) throw pendingError;
       if(pending) return json(200,{intent_id:pending.id,memo:pending.memo,recipient:TREASURY,amount_nano:FEE_NANO,expires_at:pending.expires_at,reused:true});
       const id=crypto.randomUUID();
@@ -114,7 +116,6 @@ Deno.serve(async(req:Request)=>{
         const {data:link}=await admin.from("telegram_wallet_links").select("wallet_address,verified_at").eq("telegram_user_id",telegramId).maybeSingle();
         return json(200,{verified:!!link,wallet_address:link?.wallet_address??null});
       }
-      if(new Date(intent.expires_at).getTime()<Date.now()) return json(410,{error:"VERIFICATION_INTENT_EXPIRED"});
       const txHash=await findPayment(intent.wallet_address,intent.memo,intent.created_at);
       if(!txHash) return json(202,{verified:false,status:"pending",message:"Todavía no aparece la transferencia confirmada. Vuelve a comprobar en unos segundos."});
       const {data:used,error:usedError}=await admin.from("telegram_wallet_links").select("telegram_user_id").eq("payment_tx_hash",txHash).maybeSingle();
