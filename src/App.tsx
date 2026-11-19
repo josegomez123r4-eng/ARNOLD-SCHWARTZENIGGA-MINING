@@ -182,7 +182,7 @@ function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMin
         <button className="primary-btn mining-start-btn" type="button" disabled={miningBusy || !!cycle || !miningStatus?.verified} onClick={miningStatus?.verified ? onStartMining : onOpenWallet}><Pickaxe size={17} /> {miningBusy ? 'PROCESSING…' : cycle ? 'MINING ACTIVE' : miningStatus?.verified ? 'START MINING' : t('MINING')}</button>
         <button className="claim-btn" type="button" disabled={miningBusy || !cycleFinished} onClick={onClaimMining}><Gift size={17} /> {miningBusy ? 'PROCESSING…' : t('CLAIM')}</button>
       </div>
-      <p className="helper">{cycle ? (cycleFinished ? 'Tu ciclo terminó. Reclama la recompensa registrada en tu saldo ARNOLD.' : 'Tu ciclo de 24 horas está activo. Podrás reclamarlo al finalizar.') : miningStatus?.verified ? 'Billetera verificada. Puedes iniciar un ciclo de 24 horas.' : 'Conecta y verifica tu billetera con el pago único de 0.10 GRAM para desbloquear la minería.' )}</p>
+      <p className="helper">{cycle ? (cycleFinished ? 'Tu ciclo terminó. Reclama la recompensa registrada en tu saldo ARNOLD.' : 'Tu ciclo de 24 horas está activo. Podrás reclamarlo al finalizar.') : miningStatus?.verified ? 'Billetera verificada. Puedes iniciar un ciclo de 24 horas.' : 'Conecta y verifica tu billetera con el pago único de 0.10 GRAM para desbloquear la minería.'}</p>
     </section>
     <section className="stats">
       <article className="stat-card featured"><div className="stat-label"><Coins size={14} /> {t('BASE REWARD')}</div><div className="stat-number">5 <small>$ARNOLD</small></div><div className="stat-caption">{t('Per completed 24-hour cycle')}</div></article>
