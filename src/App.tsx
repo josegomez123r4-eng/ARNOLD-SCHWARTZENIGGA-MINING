@@ -330,10 +330,11 @@ function WalletPage({ t, walletAddress, walletReady, onConnect, onDisconnect, on
       <div className="wallet-withdraw-heading"><Coins size={19} /><div><b>{t('WALLET VERIFICATION')}</b><span>{t('One-time payment')}</span></div></div>
       <div className="profile-row"><span>{t('Verification fee')}</span><b>0.10 GRAM</b></div>
       <p className="helper helper-left">{t('Pay 0.10 GRAM from your connected wallet to complete the verification request.')}</p>
-      <button className="primary-btn" type="button" disabled={!walletAddress || paymentState === 'sending'} onClick={onVerifyPayment}>
-        <LockKeyhole size={17} /> {paymentState === 'sending' ? t('WAITING FOR WALLET') : t('PAY 0.10 GRAM')}
+      <button className="primary-btn" type="button" disabled={!walletAddress || paymentState === 'sending' || paymentState === 'verified'} onClick={onVerifyPayment}>
+        <LockKeyhole size={17} /> {paymentState === 'sending' ? t('WAITING FOR WALLET') : paymentState === 'sent' ? 'VERIFY 0.10 GRAM PAYMENT' : paymentState === 'verified' ? 'WALLET VERIFIED' : t('PAY 0.10 GRAM')}
       </button>
-      {paymentState === 'sent' && <p className="balance-hint">{t('Payment submitted. Verification will be completed after on-chain confirmation.')}</p>}
+      {paymentState === 'sent' && <p className="balance-hint">Transferencia enviada. Pulsa “VERIFICAR PAGO” para confirmar su inclusión en la blockchain.</p>}
+      {paymentState === 'verified' && <p className="balance-hint">Billetera verificada en la blockchain. Ya puedes iniciar minería y participar en referidos.</p>}
       {paymentState === 'cancelled' && <p className="balance-hint">{t('Payment was cancelled in your wallet.')}</p>}
       {paymentState === 'error' && <p className="balance-error">{t('Payment could not be sent. Please reconnect and try again.')}</p>}
     </div>
