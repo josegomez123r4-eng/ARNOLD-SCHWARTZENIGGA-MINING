@@ -126,6 +126,12 @@ Deno.serve(async(req:Request)=>{
         const {data:existingProfile,error:fetchProfileError}=await admin.schema("arnold").from("user_profiles").select("user_id").eq("telegram_user_id",telegramId).single();
         if(fetchProfileError) throw fetchProfileError; userId=existingProfile.user_id;
       }
+      const {data:walletOwner,error:walletOwnerError}=await admin.schema("arnold").from("wallet_links").select("user_id").eq("network","TON").eq("wallet_address",intent.wallet_address).maybeSingle();
+      if(walletOwnerError) throw walletOwnerError;
+      if(walletOwner && walletOwner.user_id!==userId) return json(409,{error:"WALLET_ALREADY_LINKED_TO_ANOTHER_ACCOUNT"});
+      const {data:telegramWalletOwner,error:telegramWalletOwnerError}=await admin.from("telegram_wallet_links").select("telegram_user_id").eq("wallet_address",intent.wallet_address).maybeSingle();
+      if(telegramWalletOwnerError) throw telegramWalletOwnerError;
+      if(telegramWalletOwner && telegramWalletOwner.telegram_user_id!==telegramId) return json(409,{error:"WALLET_ALREADY_LINKED_TO_ANOTHER_TELEGRAM_USER"});
       const {error:walletError}=await admin.schema("arnold").from("wallet_links").upsert({
         user_id:userId,network:"TON",wallet_address:intent.wallet_address,is_verified:true,verified_at:new Date().toISOString(),is_primary:true
       },{onConflict:"network,wallet_address"});
