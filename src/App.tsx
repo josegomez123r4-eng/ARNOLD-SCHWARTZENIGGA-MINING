@@ -331,9 +331,9 @@ function WalletPage({ t, walletAddress, walletReady, onConnect, onDisconnect, on
       <div className="profile-row"><span>{t('Verification fee')}</span><b>0.10 GRAM</b></div>
       <p className="helper helper-left">{t('Pay 0.10 GRAM from your connected wallet to complete the verification request.')}</p>
       <button className="primary-btn" type="button" disabled={!walletAddress || paymentState === 'sending' || paymentState === 'verified'} onClick={onVerifyPayment}>
-        <LockKeyhole size={17} /> {paymentState === 'sending' ? t('WAITING FOR WALLET') : paymentState === 'sent' ? 'VERIFY 0.10 GRAM PAYMENT' : paymentState === 'verified' ? 'WALLET VERIFIED' : t('PAY 0.10 GRAM')}
+        <LockKeyhole size={17} /> {paymentState === 'sending' ? 'COMPROBANDO PAGO…' : paymentState === 'sent' ? 'COMPROBAR PAGO ANTERIOR' : paymentState === 'verified' ? '✅ VERIFICADO' : t('PAY 0.10 GRAM')}
       </button>
-      {paymentState === 'sent' && <p className="balance-hint">Transferencia enviada. Pulsa “VERIFICAR PAGO” para confirmar su inclusión en la blockchain.</p>}
+      {paymentState === 'sent' && <p className="balance-hint">Ya existe un pago enviado. Pulsa “COMPROBAR PAGO ANTERIOR”; no se abrirá otra transacción ni se realizará otro cobro.</p>}
       {paymentState === 'verified' && <p className="balance-hint">Billetera verificada en la blockchain. Ya puedes iniciar minería y participar en referidos.</p>}
       {paymentState === 'cancelled' && <p className="balance-hint">{t('Payment was cancelled in your wallet.')}</p>}
       {paymentState === 'error' && <p className="balance-error">{t('Payment could not be sent. Please reconnect and try again.')}</p>}
@@ -745,9 +745,16 @@ export default function App() {
     const checkWalletVerification = async () => {
       try {
         const result = await postTelegramAction(walletVerificationEndpoint, { action: 'status' })
-        if (!cancelled && result.data.verified && normalizeTonAddress(String(result.data.wallet_address)) === normalizeTonAddress(walletAddress ?? '')) {
+        if (cancelled) return
+        if (result.data.verified && normalizeTonAddress(String(result.data.wallet_address)) === normalizeTonAddress(walletAddress ?? '')) {
           setPaymentState('verified')
+          setVerificationIntent(null)
+          setVerificationSent(false)
           await loadMiningStatus()
+        } else if (result.data.pending_intent && normalizeTonAddress(String(result.data.pending_intent.wallet_address)) === normalizeTonAddress(walletAddress ?? '')) {
+          setVerificationIntent(result.data.pending_intent)
+          setVerificationSent(true)
+          setPaymentState('sent')
         }
       } catch { /* Telegram session or network may not be ready yet */ }
     }
