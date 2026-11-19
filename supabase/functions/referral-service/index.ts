@@ -104,63 +104,10 @@ Deno.serve(async (req: Request) => {
     }
 
     if (action === "pay") {
-      const sender = String(body.walletAddress ?? "");
-      const normalizedSender = normalizeAddress(sender);
-      if (!sender || normalizedSender === normalizeAddress(RECIPIENT)) {
-        return json(400, { error: "INVALID_SENDER_WALLET" });
-      }
-
-      // Confirm the payment from the treasury's indexed inbound transactions.
-      // A client-side "sent" response is never treated as proof of payment.
-      const txResponse = await fetch(
-        "https://tonapi.io/v2/blockchain/accounts/" + encodeURIComponent(RECIPIENT) + "/transactions?limit=100",
-        { headers: { accept: "application/json" } }
-      );
-      if (!txResponse.ok) {
-        return json(502, { error: "PAYMENT_INDEXER_UNAVAILABLE", detail: "HTTP " + txResponse.status });
-      }
-      const txData = await txResponse.json();
-      const cutoff = Math.floor(Date.now() / 1000) - 20 * 60;
-      const transactions = Array.isArray(txData.transactions) ? txData.transactions : [];
-      const match = transactions.find((tx: any) => {
-        const message = tx?.in_msg;
-        return Number(tx?.utime ?? 0) >= cutoff
-          && message
-          && normalizeAddress(String(message.source ?? "")) === normalizedSender
-          && normalizeAddress(String(message.destination ?? RECIPIENT)) === normalizeAddress(RECIPIENT)
-          && String(message.value ?? "") === FEE_NANO
-          && typeof message.hash === "string"
-          && message.hash.length > 20;
+      return json(503, {
+        error: "WALLET_PROOF_REQUIRED",
+        detail: "The connected wallet must be cryptographically bound to the Telegram user before an on-chain fee can be credited."
       });
-      if (!match) {
-        return json(202, { verified: false, status: "pending", message: "Pago todavía no aparece confirmado en la blockchain. Inténtalo de nuevo en unos segundos." });
-      }
-
-      const transactionHash = String(match.in_msg.hash);
-      const { data: existing, error: existingError } = await admin
-        .from("referral_payments").select("transaction_hash")
-        .eq("transaction_hash", transactionHash).maybeSingle();
-      if (existingError) throw existingError;
-      if (existing) {
-        const { data: prior, error: priorError } = await admin
-          .from("referral_payments").select("telegram_user_id")
-          .eq("transaction_hash", transactionHash).maybeSingle();
-        if (priorError) throw priorError;
-        if (String(prior?.telegram_user_id) !== telegramId) {
-          return json(409, { error: "PAYMENT_ALREADY_USED" });
-        }
-        return json(200, { verified: true, status: "verified", transaction_hash: transactionHash });
-      }
-
-      const { error: insertError } = await admin.from("referral_payments").insert({
-        telegram_user_id: telegramId,
-        transaction_hash: transactionHash,
-        sender_address: sender,
-        recipient_address: RECIPIENT,
-        amount_nano: FEE_NANO,
-      });
-      if (insertError) throw insertError;
-      return json(200, { verified: true, status: "verified", transaction_hash: transactionHash });
     }
 
     return json(400, { error: "UNKNOWN_ACTION" });
