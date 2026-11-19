@@ -150,7 +150,10 @@ function Header({ language, onLanguageChange, musicOn, onMusicToggle }: { langua
   </header>
 }
 
-function MiningPage({ t, onOpenReferrals, onOpenWallet }: { t: (phrase: string) => string; onOpenReferrals: () => void; onOpenWallet: () => void }) {
+type MiningStatus = { verified: boolean; wallet_address?: string | null; cycle: { id: string; status: string; started_at: string; ends_at: string; total_reward: string } | null; earned: string; pending: string }
+function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMining, onClaimMining, miningBusy }: { t: (phrase: string) => string; onOpenReferrals: () => void; onOpenWallet: () => void; miningStatus: MiningStatus | null; onStartMining: () => void; onClaimMining: () => void; miningBusy: boolean }) {
+  const cycle = miningStatus?.cycle ?? null
+  const cycleFinished = !!cycle && new Date(cycle.ends_at).getTime() <= Date.now()
   return <section className="page-section">
     <div className="hero"><div className="overline"><span /> THE DAILY GRIND <span /></div>
       <h1>{t('MAKE YOUR')}<br /><em>{t('HOLDINGS')}</em><br />{t('WORK.')}</h1>
@@ -161,25 +164,25 @@ function MiningPage({ t, onOpenReferrals, onOpenWallet }: { t: (phrase: string) 
         <div><div className="kicker">{t('YOUR REWARDS')}</div><h2><Coins size={19} /> {t('EARNINGS SUMMARY')}</h2></div>
         <span className="earnings-live-label">{t('CONFIRMED')}</span>
       </div>
-      <div className="earnings-total"><span>{t('TOTAL EARNED')}</span><strong>— <small>$ARNOLD</small></strong></div>
+      <div className="earnings-total"><span>{t('TOTAL EARNED')}</span><strong>{miningStatus?.earned ?? '—'} <small>$ARNOLD</small></strong></div>
       <div className="earnings-sources">
         <div className="earnings-source"><span><ListChecks size={15} /> {t('TASK REWARDS')}</span><b>— <small>$ARNOLD</small></b></div>
-        <div className="earnings-source"><span><Pickaxe size={15} /> {t('MINING REWARDS')}</span><b>— <small>$ARNOLD</small></b></div>
+        <div className="earnings-source"><span><Pickaxe size={15} /> {t('MINING REWARDS')}</span><b>{miningStatus?.earned ?? '—'} <small>$ARNOLD</small></b></div>
       </div>
-      <p className="earnings-note">{t('Only confirmed rewards will appear here. Earnings history is not connected yet.')}</p>
+      <p className="earnings-note">{miningStatus ? 'Recompensas confirmadas en el registro interno de ARNOLD.' : t('Only confirmed rewards will appear here.')}</p>
     </section>
     <section className="mining-card">
-      <div className="card-head"><div><div className="kicker">{t('MINING STATION')}</div><h2><Pickaxe size={20} /> {t('MINING SESSION')}</h2></div><div className="status"><span /> {t('NOT ACTIVE')}</div></div>
-      <div className="timer-panel"><div className="timer-label">{t('MINING WILL OPEN SOON')}</div>
-        <div className="timer"><div><strong>24</strong><span>{t('HOURS')}</span></div><i>:</i><div><strong>00</strong><span>{t('MINUTES')}</span></div><i>:</i><div><strong>00</strong><span>{t('SECONDS')}</span></div></div>
-        <div className="progress"><div style={{ width: '0%' }} /></div><div className="progress-meta"><span>0H</span><span>{t('NOT STARTED')}</span><span>24H</span></div>
+      <div className="card-head"><div><div className="kicker">{t('MINING STATION')}</div><h2><Pickaxe size={20} /> {t('MINING SESSION')}</h2></div><div className="status"><span /> {cycle ? (cycleFinished ? 'READY TO CLAIM' : 'ACTIVE') : 'NOT ACTIVE'}</div></div>
+      <div className="timer-panel"><div className="timer-label">{cycle ? (cycleFinished ? 'CYCLE COMPLETED' : 'CYCLE IN PROGRESS') : (miningStatus?.verified ? 'READY TO START' : 'WALLET VERIFICATION REQUIRED')}</div>
+        <div className="timer"><div><strong>{cycle ? new Date(cycle.ends_at).toLocaleDateString() : '24'}</strong><span>{cycle ? 'END DATE' : t('HOURS')}</span></div><i>:</i><div><strong>{cycle ? new Date(cycle.ends_at).toLocaleTimeString() : '00'}</strong><span>{cycle ? 'END TIME' : t('MINUTES')}</span></div></div>
+        <div className="progress"><div style={{ width: cycle ? (cycleFinished ? '100%' : '50%') : '0%' }} /></div><div className="progress-meta"><span>{cycle ? new Date(cycle.started_at).toLocaleTimeString() : '0H'}</span><span>{cycle ? cycle.status.toUpperCase() : t('NOT STARTED')}</span><span>{cycle ? new Date(cycle.ends_at).toLocaleTimeString() : '24H'}</span></div>
       </div>
       <div className="reward-line"><div className="reward-icon"><Zap size={19} /></div><div className="reward-desc"><b>{t('BASE CYCLE REWARD')}</b><span>{t('Initial reward before holding bonuses')}</span></div><div className="reward-value">+5<small>$ARNOLD</small></div></div>
       <div className="mining-action-buttons">
-        <button className="primary-btn mining-start-btn" type="button" onClick={onOpenWallet}><Pickaxe size={17} /> {t('MINING')}</button>
-        <button className="claim-btn" type="button" disabled><Gift size={17} /> {t('CLAIM')}</button>
+        <button className="primary-btn mining-start-btn" type="button" disabled={miningBusy || !!cycle || !miningStatus?.verified} onClick={miningStatus?.verified ? onStartMining : onOpenWallet}><Pickaxe size={17} /> {miningBusy ? 'PROCESSING…' : cycle ? 'MINING ACTIVE' : miningStatus?.verified ? 'START MINING' : t('MINING')}</button>
+        <button className="claim-btn" type="button" disabled={miningBusy || !cycleFinished} onClick={onClaimMining}><Gift size={17} /> {miningBusy ? 'PROCESSING…' : t('CLAIM')}</button>
       </div>
-      <p className="helper">{t('Connect and verify your wallet with the one-time 0.10 TON payment to unlock mining. Claim becomes available when verified rewards can be claimed.')}</p>
+      <p className="helper">{cycle ? (cycleFinished ? 'Tu ciclo terminó. Reclama la recompensa registrada en tu saldo ARNOLD.' : 'Tu ciclo de 24 horas está activo. Podrás reclamarlo al finalizar.') : miningStatus?.verified ? 'Billetera verificada. Puedes iniciar un ciclo de 24 horas.' : 'Conecta y verifica tu billetera con el pago único de 0.10 GRAM para desbloquear la minería.' )}</p>
     </section>
     <section className="stats">
       <article className="stat-card featured"><div className="stat-label"><Coins size={14} /> {t('BASE REWARD')}</div><div className="stat-number">5 <small>$ARNOLD</small></div><div className="stat-caption">{t('Per completed 24-hour cycle')}</div></article>
@@ -689,7 +692,7 @@ export default function App() {
     <div className="glow glow-a" /><div className="glow glow-b" />
     <Header language={language} onLanguageChange={changeLanguage} musicOn={musicOn} onMusicToggle={toggleMusic} />
     <div className="content">
-      {tab === 'mining' && <MiningPage t={t} onOpenReferrals={() => setTab('referrals')} onOpenWallet={() => setTab('wallet')} />}
+      {tab === 'mining' && <MiningPage t={t} onOpenReferrals={() => setTab('referrals')} onOpenWallet={() => setTab('wallet')} miningStatus={miningStatus} onStartMining={() => { void runMiningAction('start') }} onClaimMining={() => { void runMiningAction('claim') }} miningBusy={miningBusy} />}
       {tab === 'tasks' && <TasksPage t={t} />}
       {tab === 'referrals' && <ReferralsPage t={t} />}
       {tab === 'wallet' && <WalletPage t={t} walletAddress={walletAddress} walletReady={walletReady} onConnect={connectWallet} onDisconnect={disconnectWallet} onReconnect={() => { void reconnectWallet() }} onRefreshBalance={refreshBalance} onVerifyPayment={verifyWalletPayment} walletAppName={walletAppName} paymentState={paymentState} arnoldBalance={arnoldBalance} balanceLoading={balanceLoading} balanceError={balanceError} />}
