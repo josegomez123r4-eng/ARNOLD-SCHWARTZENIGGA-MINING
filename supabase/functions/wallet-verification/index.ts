@@ -95,6 +95,9 @@ Deno.serve(async(req:Request)=>{
       const {data:existing,error:existingError}=await admin.from("telegram_wallet_links").select("wallet_address,verified_at").eq("telegram_user_id",telegramId).maybeSingle();
       if(existingError) throw existingError;
       if(existing && rawAddress(existing.wallet_address)===rawAddress(wallet)) return json(200,{verified:true,wallet_address:existing.wallet_address});
+      const {data:pending,error:pendingError}=await admin.from("telegram_wallet_verification_intents").select("id,memo,expires_at").eq("telegram_user_id",telegramId).eq("wallet_address",wallet).is("used_at",null).gt("expires_at",new Date().toISOString()).order("created_at",{ascending:false}).limit(1).maybeSingle();
+      if(pendingError) throw pendingError;
+      if(pending) return json(200,{intent_id:pending.id,memo:pending.memo,recipient:TREASURY,amount_nano:FEE_NANO,expires_at:pending.expires_at,reused:true});
       const id=crypto.randomUUID();
       const memo="ARNOLD-WALLET:"+id;
       const expiresAt=new Date(Date.now()+15*60_000).toISOString();
