@@ -538,7 +538,11 @@ export default function App() {
   const [musicOn, setMusicOn] = useState(false)
   const [walletAddress, setWalletAddress] = useState<string | null>(null)
   const [walletAppName, setWalletAppName] = useState<string | null>(null)
-  const [paymentState, setPaymentState] = useState<'idle' | 'sending' | 'sent' | 'cancelled' | 'error'>('idle')
+  const [paymentState, setPaymentState] = useState<'idle' | 'sending' | 'sent' | 'cancelled' | 'error' | 'verified'>('idle')
+  const [verificationIntent, setVerificationIntent] = useState<{ intent_id: string; memo: string; recipient: string; amount_nano: string } | null>(null)
+  const [verificationSent, setVerificationSent] = useState(false)
+  const [miningStatus, setMiningStatus] = useState<MiningStatus | null>(null)
+  const [miningBusy, setMiningBusy] = useState(false)
   const [walletReady, setWalletReady] = useState(false)
   const [arnoldBalance, setArnoldBalance] = useState<string | null>(null)
   const [balanceLoading, setBalanceLoading] = useState(false)
@@ -667,20 +671,89 @@ export default function App() {
     await tonConnect.current.openModal()
   }
   const refreshBalance = () => setBalanceRefresh((value) => value + 1)
+  const walletVerificationEndpoint = 'https://vnslzfivilgdqqgdyoxd.supabase.co/functions/v1/wallet-verification'
+  const miningEndpoint = 'https://vnslzfivilgdqqgdyoxd.supabase.co/functions/v1/arnold-mining'
+  const postTelegramAction = async (endpoint: string, body: Record<string, unknown>) => {
+    if (!WebApp.initData) throw new Error('Abre ARNOLD desde el bot oficial de Telegram.')
+    const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...body, initData: WebApp.initData }) })
+    const data = await response.json().catch(() => ({}))
+    if (!response.ok && response.status !== 202) throw new Error(data?.message || data?.error || 'No se pudo completar la operación')
+    return { status: response.status, data }
+  }
+  const loadMiningStatus = async () => {
+    try {
+      const result = await postTelegramAction(miningEndpoint, { action: 'status' })
+      setMiningStatus(result.data as MiningStatus)
+    } catch (error) {
+      console.warn('Mining status unavailable:', error)
+      setMiningStatus(null)
+    }
+  }
+  const runMiningAction = async (action: 'start' | 'claim') => {
+    if (miningBusy) return
+    setMiningBusy(true)
+    try {
+      const body: Record<string, unknown> = { action }
+      if (action === 'claim' && miningStatus?.cycle?.id) body.cycleId = miningStatus.cycle.id
+      await postTelegramAction(miningEndpoint, body)
+      await loadMiningStatus()
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : 'No se pudo completar la operación')
+    } finally {
+      setMiningBusy(false)
+    }
+  }
   const verifyWalletPayment = async () => {
-    if (!walletAddress || !tonConnect.current || paymentState === 'sending') return
+    if (!walletAddress || !tonConnect.current || paymentState === 'sending' || paymentState === 'verified') return
     setPaymentState('sending')
     try {
-      await tonConnect.current.sendTransaction({
-        validUntil: Math.floor(Date.now() / 1000) + 300,
-        messages: [{ address: 'UQDuU4KpCx7KsjwXJa4N9XizHF9k1s7pfyfzCvftFwofEgGk', amount: '100000000' }]
-      })
-      setPaymentState('sent')
+      let intent = verificationIntent
+      if (!intent) {
+        const created = await postTelegramAction(walletVerificationEndpoint, { action: 'create_intent', walletAddress })
+        intent = created.data as typeof verificationIntent
+        if (!intent?.intent_id || !intent.memo || !intent.recipient || !intent.amount_nano) throw new Error('No se pudo crear la orden de verificación.')
+        setVerificationIntent(intent)
+      }
+      if (!verificationSent) {
+        const payloadCell = beginCell().storeUint(0, 32).storeStringTail(intent.memo).endCell().toBoc()
+        let binary = ''
+        for (let i = 0; i < payloadCell.length; i++) binary += String.fromCharCode(payloadCell[i])
+        await tonConnect.current.sendTransaction({
+          validUntil: Math.floor(Date.now() / 1000) + 300,
+          messages: [{ address: intent.recipient, amount: intent.amount_nano, payload: btoa(binary) }]
+        })
+        setVerificationSent(true)
+      }
+      const checked = await postTelegramAction(walletVerificationEndpoint, { action: 'verify_payment', intentId: intent.intent_id })
+      if (checked.data.verified === true) {
+        setPaymentState('verified')
+        setVerificationIntent(null)
+        setVerificationSent(false)
+        await loadMiningStatus()
+      } else {
+        setPaymentState('sent')
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message.toLowerCase() : ''
       setPaymentState(message.includes('reject') || message.includes('cancel') ? 'cancelled' : 'error')
     }
   }
+  useEffect(() => {
+    if (!WebApp.initData) return
+    let cancelled = false
+    const checkWalletVerification = async () => {
+      try {
+        const result = await postTelegramAction(walletVerificationEndpoint, { action: 'status' })
+        if (!cancelled && result.data.verified && normalizeTonAddress(String(result.data.wallet_address)) === normalizeTonAddress(walletAddress ?? '')) {
+          setPaymentState('verified')
+          await loadMiningStatus()
+        }
+      } catch { /* Telegram session or network may not be ready yet */ }
+    }
+    void checkWalletVerification()
+    return () => { cancelled = true }
+  }, [walletAddress])
+  useEffect(() => { if (WebApp.initData) void loadMiningStatus() }, [])
   const changeLanguage = (next: LanguageCode) => { localStorage.setItem('arnold-language', next); setLanguage(next); document.documentElement.lang = next; document.documentElement.dir = next === 'ar' ? 'rtl' : 'ltr' }
   useEffect(() => {
     document.documentElement.lang = language
