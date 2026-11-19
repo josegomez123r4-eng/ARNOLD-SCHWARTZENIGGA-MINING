@@ -96,10 +96,10 @@ Deno.serve(async (req: Request) => {
       if (error) throw error;
       const ids = (rows ?? []).map((r: { referred_telegram_id: string }) => r.referred_telegram_id);
       if (!ids.length) return json(200, { total: 0, eligible: 0, ineligible: 0 });
-      const { data: paid, error: paymentError } = await admin.from("referral_payments")
+      const { data: verified, error: verificationError } = await admin.from("telegram_wallet_links")
         .select("telegram_user_id").in("telegram_user_id", ids);
-      if (paymentError) throw paymentError;
-      const eligible = new Set((paid ?? []).map((r: { telegram_user_id: string }) => r.telegram_user_id)).size;
+      if (verificationError) throw verificationError;
+      const eligible = new Set((verified ?? []).map((r: { telegram_user_id: string }) => r.telegram_user_id)).size;
       return json(200, { total: ids.length, eligible, ineligible: ids.length - eligible });
     }
 
