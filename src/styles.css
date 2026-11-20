@@ -323,3 +323,51 @@ body{background:#050505}
 .market-phases-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:20px 2px 10px}
 .market-phases-heading b{color:#ffe0a0;font-size:12px;letter-spacing:1px}
 .market-phases-heading span{color:#a99470;font-size:7px;font-weight:900;letter-spacing:.7px}
+
+
+/* Compact animated Arnold mining companion + live cycle meter */
+.mining-hero{padding-bottom:18px}
+.arnold-mascot{position:relative;display:flex;align-items:center;min-height:116px;gap:8px;margin:14px 0 12px;padding:8px 10px 7px 14px;overflow:hidden;border:1px solid #ffb33b55;border-radius:15px;background:radial-gradient(ellipse at 80% 50%,#65300d66,transparent 55%),linear-gradient(100deg,#21160d,#100d09 75%);box-shadow:inset 0 1px #fff1}
+.arnold-mascot:after{content:"";position:absolute;right:18px;top:12px;width:94px;height:94px;border-radius:50%;background:#ff8d2317;filter:blur(18px);pointer-events:none}
+.mascot-copy{position:relative;z-index:1;display:flex;flex-direction:column;gap:6px;max-width:45%}
+.mascot-copy b{font:800 12px 'Barlow Condensed',sans-serif;letter-spacing:1px;color:#ffe0a0}
+.mascot-copy span{font-size:9px;color:#bda47e}
+.mascot-art{position:relative;z-index:1;width:53%;height:116px;margin-left:auto;overflow:visible}
+.mascot-arm{transform-box:fill-box;transform-origin:50% 15%}
+.is-training .mascot-arm-left{animation:arnoldCurlLeft 1.05s ease-in-out infinite alternate}
+.is-training .mascot-arm-right{animation:arnoldCurlRight 1.05s ease-in-out infinite alternate}
+.is-resting .mascot-art{opacity:.76}
+.mascot-status{position:absolute;left:14px;bottom:9px;display:flex;align-items:center;gap:6px;font-size:7px;font-weight:800;letter-spacing:1px;color:#e7b55c}
+.mascot-status i{width:5px;height:5px;border-radius:50%;background:#6fce88;box-shadow:0 0 8px #6fce88}
+@keyframes arnoldCurlLeft{from{transform:rotate(-8deg)}to{transform:rotate(42deg)}}
+@keyframes arnoldCurlRight{from{transform:rotate(8deg)}to{transform:rotate(-42deg)}}
+.mining-countdown{margin:15px 0 17px}
+.mining-countdown strong{font-size:clamp(34px,10vw,49px);letter-spacing:2px;font-variant-numeric:tabular-nums}
+.mining-live-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:12px 0 2px}
+.mining-live-stats article{min-width:0;padding:11px 8px;border:1px solid #ffb43d38;border-radius:11px;background:linear-gradient(145deg,#24180d,#110e0a)}
+.mining-live-stats article>span{display:block;min-height:22px;font-size:7px;line-height:1.3;letter-spacing:.55px;color:#c8ad7c}
+.mining-live-stats article>b{display:block;margin-top:6px;font:700 clamp(13px,3.7vw,18px) 'Barlow Condensed',sans-serif;color:#ffe0a0;white-space:nowrap}
+.mining-live-stats article>b small{font:700 7px 'DM Sans',sans-serif;color:#ffc15a}
+.mining-live-stats article>em{display:block;margin-top:4px;font-size:7px;line-height:1.35;color:#98866b;font-style:normal}
+.mining-boost-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;padding:12px;border:1px solid #ffb43d55;border-radius:12px;background:linear-gradient(100deg,#2b1b0c,#15100a)}
+.mining-boost-row>div{display:flex;flex-direction:column;gap:4px}
+.mining-boost-row b{font:800 12px 'Barlow Condensed',sans-serif;letter-spacing:.8px;color:#ffe0a0}
+.mining-boost-row span{font-size:8px;color:#b5a184}
+.mining-boost-row button{display:flex;align-items:center;gap:6px;padding:10px 13px;border:1px solid #ffd16b;border-radius:9px;background:linear-gradient(100deg,#ff8a19,#ffc34c);color:#211006;font-size:9px;font-weight:900;letter-spacing:.8px}
+.boost-modal-backdrop{position:fixed;z-index:20;inset:0;display:flex;align-items:center;justify-content:center;padding:18px;background:#000c;backdrop-filter:blur(8px)}
+.boost-modal{position:relative;width:min(100%,440px);padding:23px 17px 17px;border:1px solid #ffbd5b99;border-radius:19px;background:radial-gradient(ellipse at 50% 0%,#58300f,#17100a 65%);box-shadow:0 24px 80px #000d;text-align:center}
+.boost-modal-close{position:absolute;top:10px;right:12px;width:30px;height:30px;border:1px solid #ffffff22;border-radius:50%;background:#21160d;color:#ffe0a0;font-size:21px}
+.boost-modal-icon{width:46px;height:46px;margin:0 auto 12px;display:grid;place-items:center;border:1px solid #ffb43d66;border-radius:14px;background:#ff9c2b20;color:#ffd16b}
+.boost-modal h2{margin:5px 0 9px;font:900 29px 'Barlow Condensed',sans-serif;letter-spacing:1px;color:#ffe0a0}
+.boost-modal>p{max-width:330px;margin:0 auto 16px;color:#bba787;font-size:10px;line-height:1.6}
+.boost-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.boost-options article{display:flex;flex-direction:column;gap:5px;padding:12px 5px;border:1px solid #ffb43d55;border-radius:11px;background:#1d140c}
+.boost-options article>b{font-size:8px;letter-spacing:.8px;color:#d9b26e}
+.boost-options article>strong{font:800 23px 'Barlow Condensed',sans-serif;color:#ffd16b}
+.boost-options article>span{font-size:7px;color:#bba787}
+.boost-options article>small{font-size:7px;color:#8e7c60}
+.boost-safety-note{display:flex;align-items:flex-start;gap:8px;margin:14px 0;padding:10px;border:1px solid #6b9a6244;border-radius:10px;background:#172014;color:#b9d6a8;font-size:8px;line-height:1.5;text-align:left}
+.boost-safety-note svg{flex:none}
+.boost-coming-btn{min-height:44px;font-size:10px}
+@media(max-width:370px){.mining-live-stats{gap:5px}.mining-live-stats article{padding:9px 6px}.mining-live-stats article>span{font-size:6.5px}.mining-live-stats article>em{font-size:6.5px}.mascot-copy b{font-size:10px}.mascot-copy span{font-size:8px}.mascot-art{width:55%}}
+@media(prefers-reduced-motion:reduce){.mascot-arm{animation:none!important}}
