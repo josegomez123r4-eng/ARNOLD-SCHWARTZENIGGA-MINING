@@ -151,11 +151,57 @@ function Header({ language, onLanguageChange, musicOn, onMusicToggle }: { langua
 }
 
 type MiningStatus = { verified: boolean; wallet_address?: string | null; cycle: { id: string; status: string; started_at: string; ends_at: string; total_reward: string } | null; earned: string; pending: string }
+function ArnoldWorkoutMascot({ active }: { active: boolean }) {
+  return <div className={active ? 'arnold-mascot is-training' : 'arnold-mascot is-resting'} aria-label={active ? 'Arnold entrenando mientras mina' : 'Arnold listo para minar'}>
+    <div className="mascot-copy"><b>{active ? 'ARNOLD IS GRINDING' : 'READY TO GRIND'}</b><span>{active ? 'Cada segundo cuenta' : 'Activa tu próximo ciclo'}</span></div>
+    <svg className="mascot-art" viewBox="0 0 176 142" role="img" aria-hidden="true">
+      <defs><linearGradient id="arnoldSkin" x1="0" x2="1" y1="0" y2="1"><stop stopColor="#ffd98a"/><stop offset="1" stopColor="#bd7130"/></linearGradient><linearGradient id="arnoldTop" x1="0" x2="1"><stop stopColor="#ffcf63"/><stop offset="1" stopColor="#d87920"/></linearGradient></defs>
+      <ellipse cx="89" cy="132" rx="66" ry="7" fill="#ff9b2b" opacity=".18"/>
+      <path d="M61 61 Q88 48 115 61 L126 119 Q89 132 51 119Z" fill="url(#arnoldTop)" stroke="#ffe0a0" strokeWidth="2"/>
+      <path d="M68 69 Q88 79 108 69 L104 118 L72 118Z" fill="#17100a" opacity=".8"/>
+      <path d="M68 28 Q89 9 110 28 L108 53 Q99 65 88 65 Q76 63 68 52Z" fill="url(#arnoldSkin)" stroke="#ffe0a0" strokeWidth="1.5"/>
+      <path d="M66 31 Q69 8 91 10 Q112 10 114 31 L107 25 L101 20 L93 25 L81 21 L72 31Z" fill="#282019"/>
+      <path d="M76 40 Q81 37 85 40 M94 40 Q99 37 103 40" fill="none" stroke="#4a2615" strokeWidth="2" strokeLinecap="round"/>
+      <path d="M82 52 Q89 57 97 52" fill="none" stroke="#7b351b" strokeWidth="2" strokeLinecap="round"/>
+      <path d="M63 68 Q43 67 34 84 L22 102" fill="none" stroke="url(#arnoldSkin)" strokeWidth="14" strokeLinecap="round"/>
+      <path d="M112 68 Q132 67 141 84 L153 102" fill="none" stroke="url(#arnoldSkin)" strokeWidth="14" strokeLinecap="round"/>
+      <g className="mascot-arm mascot-arm-left"><path d="M42 83 Q25 69 18 54" fill="none" stroke="url(#arnoldSkin)" strokeWidth="13" strokeLinecap="round"/><path d="M18 54 L18 39" stroke="#f2bd52" strokeWidth="5" strokeLinecap="round"/><path d="M8 37 H28" stroke="#f2bd52" strokeWidth="6" strokeLinecap="round"/><path d="M11 32 V42 M25 32 V42" stroke="#ffe09a" strokeWidth="3"/></g>
+      <g className="mascot-arm mascot-arm-right"><path d="M134 83 Q151 69 158 54" fill="none" stroke="url(#arnoldSkin)" strokeWidth="13" strokeLinecap="round"/><path d="M158 54 L158 39" stroke="#f2bd52" strokeWidth="5" strokeLinecap="round"/><path d="M148 37 H168" stroke="#f2bd52" strokeWidth="6" strokeLinecap="round"/><path d="M151 32 V42 M165 32 V42" stroke="#ffe09a" strokeWidth="3"/></g>
+      <path d="M74 82 Q88 92 102 82" fill="none" stroke="#ffe4a8" strokeWidth="2" opacity=".8"/>
+      <path d="M82 97 L95 97" stroke="#ffe4a8" strokeWidth="2" strokeLinecap="round" opacity=".8"/>
+    </svg>
+    <span className="mascot-status"><i /> {active ? 'MINING ACTIVE' : 'MINING STANDBY'}</span>
+  </div>
+}
+
 function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMining, onClaimMining, miningBusy }: { t: (phrase: string) => string; onOpenReferrals: () => void; onOpenWallet: () => void; miningStatus: MiningStatus | null; onStartMining: () => void; onClaimMining: () => void; miningBusy: boolean }) {
   const cycle = miningStatus?.cycle ?? null
-  const cycleFinished = !!cycle && new Date(cycle.ends_at).getTime() <= Date.now()
+  const [now, setNow] = useState(Date.now())
+  const [boostOpen, setBoostOpen] = useState(false)
+  useEffect(() => {
+    if (!cycle || new Date(cycle.ends_at).getTime() <= Date.now()) return
+    const timer = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(timer)
+  }, [cycle?.id, cycle?.ends_at])
+  const startedAt = cycle ? new Date(cycle.started_at).getTime() : 0
+  const endsAt = cycle ? new Date(cycle.ends_at).getTime() : 0
+  const duration = Math.max(1, endsAt - startedAt)
+  const remaining = cycle ? Math.max(0, endsAt - now) : 24 * 60 * 60 * 1000
+  const elapsed = cycle ? Math.min(duration, Math.max(0, now - startedAt)) : 0
+  const cycleFinished = !!cycle && remaining <= 0
+  const totalReward = cycle ? Math.max(0, Number(cycle.total_reward) || 5) : 5
+  const hourlyReward = totalReward / 24
+  const estimatedMined = cycle ? totalReward * (elapsed / duration) : 0
+  const formatClock = (milliseconds: number) => {
+    const seconds = Math.floor(milliseconds / 1000)
+    const hours = Math.floor(seconds / 3600)
+    const minutes = Math.floor((seconds % 3600) / 60)
+    const secs = seconds % 60
+    return [hours, minutes, secs].map(value => String(value).padStart(2, '0')).join(':')
+  }
+  const progressPercent = cycle ? Math.min(100, Math.max(0, elapsed / duration * 100)) : 0
   return <section className="page-section">
-    <div className="hero"><div className="overline"><span /> THE DAILY GRIND <span /></div>
+    <div className="hero mining-hero"><div className="overline"><span /> THE DAILY GRIND <span /></div>
       <h1>{t('MAKE YOUR')}<br /><em>{t('HOLDINGS')}</em><br />{t('WORK.')}</h1>
       <p>{t('Mine $ARNOLD every 24 hours. Stay active, stack rewards.')}</p>
     </div>
@@ -172,17 +218,24 @@ function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMin
       <p className="earnings-note">{miningStatus ? 'Recompensas confirmadas en el registro interno de ARNOLD.' : t('Only confirmed rewards will appear here.')}</p>
     </section>
     <section className="mining-card">
-      <div className="card-head"><div><div className="kicker">{t('MINING STATION')}</div><h2><Pickaxe size={20} /> {t('MINING SESSION')}</h2></div><div className="status"><span /> {cycle ? (cycleFinished ? 'READY TO CLAIM' : 'ACTIVE') : 'NOT ACTIVE'}</div></div>
-      <div className="timer-panel"><div className="timer-label">{cycle ? (cycleFinished ? 'CYCLE COMPLETED' : 'CYCLE IN PROGRESS') : (miningStatus?.verified ? 'READY TO START' : 'WALLET VERIFICATION REQUIRED')}</div>
-        <div className="timer"><div><strong>{cycle ? new Date(cycle.ends_at).toLocaleDateString() : '24'}</strong><span>{cycle ? 'END DATE' : t('HOURS')}</span></div><i>:</i><div><strong>{cycle ? new Date(cycle.ends_at).toLocaleTimeString() : '00'}</strong><span>{cycle ? 'END TIME' : t('MINUTES')}</span></div></div>
-        <div className="progress"><div style={{ width: cycle ? (cycleFinished ? '100%' : '50%') : '0%' }} /></div><div className="progress-meta"><span>{cycle ? new Date(cycle.started_at).toLocaleTimeString() : '0H'}</span><span>{cycle ? cycle.status.toUpperCase() : t('NOT STARTED')}</span><span>{cycle ? new Date(cycle.ends_at).toLocaleTimeString() : '24H'}</span></div>
+      <div className="card-head"><div><div className="kicker">{t('MINING STATION')}</div><h2><Pickaxe size={20} /> {t('MINING SESSION')}</h2></div><div className={cycle ? (cycleFinished ? 'status ready' : 'status active') : 'status'}><span /> {cycle ? (cycleFinished ? 'READY TO CLAIM' : 'ACTIVE') : 'NOT ACTIVE'}</div></div>
+      <ArnoldWorkoutMascot active={!!cycle && !cycleFinished} />
+      <div className="timer-panel"><div className="timer-label">{cycle ? (cycleFinished ? 'CYCLE COMPLETED' : 'TIME LEFT IN THIS CYCLE') : (miningStatus?.verified ? 'READY TO START' : 'WALLET VERIFICATION REQUIRED')}</div>
+        <div className="timer mining-countdown"><strong>{formatClock(remaining)}</strong></div>
+        <div className="progress"><div style={{ width: progressPercent + '%' }} /></div><div className="progress-meta"><span>{cycle ? new Date(cycle.started_at).toLocaleTimeString() : '0H'}</span><span>{cycle ? Math.round(progressPercent) + '% COMPLETE' : t('NOT STARTED')}</span><span>{cycle ? new Date(cycle.ends_at).toLocaleTimeString() : '24H'}</span></div>
       </div>
-      <div className="reward-line"><div className="reward-icon"><Zap size={19} /></div><div className="reward-desc"><b>{t('BASE CYCLE REWARD')}</b><span>{t('Initial reward before holding bonuses')}</span></div><div className="reward-value">+5<small>$ARNOLD</small></div></div>
+      <div className="mining-live-stats">
+        <article><span>MINED IN THIS CYCLE</span><b>{cycle ? estimatedMined.toFixed(6) : '0.000000'} <small>ARNOLD</small></b><em>Estimación en tiempo real</em></article>
+        <article><span>PER HOUR</span><b>{hourlyReward.toFixed(6)} <small>ARNOLD</small></b><em>Según recompensa del ciclo</em></article>
+        <article><span>24H REWARD</span><b>{totalReward.toFixed(4)} <small>ARNOLD</small></b><em>Al completar el ciclo</em></article>
+      </div>
+      <div className="reward-line"><div className="reward-icon"><Zap size={19} /></div><div className="reward-desc"><b>{t('BASE CYCLE REWARD')}</b><span>{t('Initial reward before holding bonuses')}</span></div><div className="reward-value">+{totalReward}<small>$ARNOLD</small></div></div>
       <div className="mining-action-buttons">
         <button className="primary-btn mining-start-btn" type="button" disabled={miningBusy || !!cycle || !miningStatus?.verified} onClick={miningStatus?.verified ? onStartMining : onOpenWallet}><Pickaxe size={17} /> {miningBusy ? 'PROCESSING…' : cycle ? 'MINING ACTIVE' : miningStatus?.verified ? 'START MINING' : t('MINING')}</button>
         <button className="claim-btn" type="button" disabled={miningBusy || !cycleFinished} onClick={onClaimMining}><Gift size={17} /> {miningBusy ? 'PROCESSING…' : t('CLAIM')}</button>
       </div>
-      <p className="helper">{cycle ? (cycleFinished ? 'Tu ciclo terminó. Reclama la recompensa registrada en tu saldo ARNOLD.' : 'Tu ciclo de 24 horas está activo. Podrás reclamarlo al finalizar.') : miningStatus?.verified ? 'Billetera verificada. Puedes iniciar un ciclo de 24 horas.' : 'Conecta y verifica tu billetera con el pago único de 0.10 GRAM para desbloquear la minería.'}</p>
+      <div className="mining-boost-row"><div><b>BOOST YOUR MINING</b><span>Potencia tu producción usando $ARNOLD</span></div><button type="button" onClick={() => setBoostOpen(true)}><Zap size={16} /> BOOST</button></div>
+      <p className="helper">{cycle ? (cycleFinished ? 'Tu ciclo terminó. Reclama la recompensa registrada en tu saldo ARNOLD.' : 'Tu ciclo de 24 horas está activo. La cifra minada es una estimación; la recompensa final se confirma al reclamar.') : miningStatus?.verified ? 'Billetera verificada. Puedes iniciar un ciclo de 24 horas.' : 'Conecta y verifica tu billetera con el pago único de 0.10 GRAM para desbloquear la minería.'}</p>
     </section>
     <section className="stats">
       <article className="stat-card featured"><div className="stat-label"><Coins size={14} /> {t('BASE REWARD')}</div><div className="stat-number">5 <small>$ARNOLD</small></div><div className="stat-caption">{t('Per completed 24-hour cycle')}</div></article>
@@ -194,8 +247,22 @@ function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMin
       <span className="home-referral-copy"><b>PROGRAMA DE REFERIDOS</b><small>Invita amigos · Consulta elegibles y pendientes</small></span>
       <span className="home-referral-arrow">VER <span>›</span></span>
     </button>
-    <div className="notice notice-large"><ShieldCheck size={17} /><span>{t('Mining is not active yet. Your rewards and wallet eligibility will be verified securely before the first cycle begins.')}</span></div>
+    <div className="notice notice-large"><ShieldCheck size={17} /><span>La recompensa se confirma en el servidor al completar el ciclo. El contador es solo una estimación visual.</span></div>
     <div className="section-footnote">{t('Total supply: 1,000,000 $ARNOLD · Mining allocation: 500,000 $ARNOLD')}</div>
+    {boostOpen && <div className="boost-modal-backdrop" role="presentation" onClick={() => setBoostOpen(false)}>
+      <section className="boost-modal" role="dialog" aria-modal="true" aria-labelledby="boost-modal-title" onClick={event => event.stopPropagation()}>
+        <button className="boost-modal-close" type="button" onClick={() => setBoostOpen(false)} aria-label="Cerrar">×</button>
+        <div className="boost-modal-icon"><Zap size={24} /></div><div className="kicker">ARNOLD BOOST STORE</div><h2 id="boost-modal-title">BOOST YOUR POWER</h2>
+        <p>Mejora tu producción pagando con $ARNOLD. Los precios y compras se habilitarán después de definir los límites de emisión y la reserva de recompensas.</p>
+        <div className="boost-options">
+          <article><b>BRONZE</b><strong>+5%</strong><span>24 HORAS</span><small>Precio por definir</small></article>
+          <article><b>SILVER</b><strong>+10%</strong><span>24 HORAS</span><small>Precio por definir</small></article>
+          <article><b>GOLD</b><strong>+15%</strong><span>24 HORAS</span><small>Precio por definir</small></article>
+        </div>
+        <div className="boost-safety-note"><ShieldCheck size={16} /> Compras desactivadas por ahora. Ningún ARNOLD será cobrado hasta aprobar la economía del Boost.</div>
+        <button className="primary-btn boost-coming-btn" type="button" disabled>COMING SOON</button>
+      </section>
+    </div>}
   </section>
 }
 
