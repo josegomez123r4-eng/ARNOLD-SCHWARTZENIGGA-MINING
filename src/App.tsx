@@ -54,35 +54,41 @@ const tabs = [
   { id: 'p2p', label: 'P2P', icon: Handshake },
 ] satisfies { id: Tab; label: string; icon: typeof Pickaxe }[]
 
+const ARNOLD_MUSIC_URL = 'https://www.orangefreesounds.com/wp-content/uploads/2017/06/Electron-breeze-downtempo-lounge-chill-out.mp3'
+
 function startBackgroundMusic() {
-  // Radio oficial: stream MP3 continuo de SomaFM Groove Salad.
-  // La reproducción comienza solo tras la interacción del usuario con MUSIC.
-  const audio = new Audio('https://ice1.somafm.com/groovesalad-128-mp3')
-  audio.preload = 'none'
-  audio.loop = false
+  // Electron Breeze — zeropage. Reproducción en bucle dentro de la Mini App.
+  const audio = new Audio(ARNOLD_MUSIC_URL)
+  audio.preload = 'auto'
+  audio.loop = true
   audio.volume = 0.28
+  let disposed = false
   const resume = async () => {
+    if (disposed) return
     try {
       await audio.play()
     } catch (error) {
-      // Telegram/navegador puede bloquear la reproducción hasta otro toque.
-      console.warn('No se pudo iniciar la radio:', error)
+      // Telegram/navegador puede exigir otro toque del usuario.
+      console.warn('No se pudo iniciar Electron Breeze:', error)
     }
   }
   const stop = () => {
+    if (disposed) return
+    disposed = true
     audio.pause()
+    audio.currentTime = 0
     audio.removeAttribute('src')
     audio.load()
   }
   return { resume, stop, isRunning: () => !audio.paused && !audio.ended }
 }
 
-function Header({ language, onLanguageChange, musicOn, onMusicToggle }: { language: LanguageCode; onLanguageChange: (language: LanguageCode) => void; musicOn: boolean; onMusicToggle: () => void }) {
+function Header({ language, onLanguageChange, musicOn, musicAvailable, onMusicToggle }: { language: LanguageCode; onLanguageChange: (language: LanguageCode) => void; musicOn: boolean; musicAvailable: boolean; onMusicToggle: () => void }) {
   return <header className="topbar">
     <div className="brand"><img className="brand-logo" src="https://azure-high-cougar-588.mypinata.cloud/ipfs/bafybeid7ztv2vpc77hkdcuvsh7y3dbg54tqair2qvebpcxhgvqg7owhdl4" alt="Arnold Schwartzenigga Mining" />
       <div><div className="brand-name">ARNOLD</div><div className="brand-sub">SCHWARTZENIGGA MINING</div></div>
     </div>
-    <div className="header-actions"><button className="music-toggle" type="button" onClick={onMusicToggle} aria-label={musicOn ? "Mute music" : "Play music"}>{musicOn ? <Volume2 size={16} /> : <VolumeX size={16} />}<span>{musicOn ? "MUSIC ON" : "MUSIC OFF"}</span></button><label className="language-picker" aria-label={translate(language, 'Select language')}><span>{languages.find((item) => item.code === language)?.flag}</span><select value={language} onChange={(event) => { onLanguageChange(event.target.value as LanguageCode) }}>{languages.map((item) => <option key={item.code} value={item.code}>{item.flag} {item.name}</option>)}</select></label></div>
+    <div className="header-actions"><button className="music-toggle" type="button" onClick={onMusicToggle} disabled={!musicAvailable} aria-label={musicOn ? "Mute music" : "Play music"} title={musicAvailable ? (musicOn ? "Apagar música" : "Encender música") : "La música se activa al iniciar la minería"}>{musicOn ? <Volume2 size={16} /> : <VolumeX size={16} />}<span>{musicOn ? "MUSIC ON" : "MUSIC OFF"}</span></button><small className="music-credit" style={{ display: 'block', fontSize: '9px', opacity: 0.65 }}>Electron Breeze · zeropage · CC BY 3.0</small><label className="language-picker" aria-label={translate(language, 'Select language')}><span>{languages.find((item) => item.code === language)?.flag}</span><select value={language} onChange={(event) => { onLanguageChange(event.target.value as LanguageCode) }}>{languages.map((item) => <option key={item.code} value={item.code}>{item.flag} {item.name}</option>)}</select></label></div>
   </header>
 }
 
@@ -726,7 +732,24 @@ export default function App() {
     const interval = window.setInterval(loadBalance, 30000)
     return () => { cancelled = true; window.clearInterval(interval) }
   }, [walletAddress, language, balanceRefresh])
-  useEffect(() => () => { stopMusic.current?.stop(); stopMusic.current = null }, [])
+  useEffect(() => {
+    const stopOnMiniAppClose = () => {
+      stopMusic.current?.stop()
+      stopMusic.current = null
+      setMusicOn(false)
+    }
+    // pagehide/beforeunload se disparan al cerrar o abandonar la Mini App.
+    // No detenemos por visibilitychange: Telegram puede ocultarla temporalmente.
+    window.addEventListener('pagehide', stopOnMiniAppClose)
+    window.addEventListener('beforeunload', stopOnMiniAppClose)
+    return () => {
+      window.removeEventListener('pagehide', stopOnMiniAppClose)
+      window.removeEventListener('beforeunload', stopOnMiniAppClose)
+      stopOnMiniAppClose()
+    }
+  }, [])
+  const miningCycleActive = Boolean(miningStatus?.cycle && new Date(miningStatus.cycle.ends_at).getTime() > Date.now())
+  const musicAvailable = musicOn || miningCycleActive
   const toggleMusic = () => {
     if (musicOn) {
       stopMusic.current?.stop()
@@ -734,6 +757,7 @@ export default function App() {
       setMusicOn(false)
       return
     }
+    if (!miningCycleActive) return
     const player = startBackgroundMusic()
     stopMusic.current = player
     void player.resume()
@@ -767,9 +791,10 @@ export default function App() {
   }
   const runMiningAction = async (action: 'start' | 'claim') => {
     if (miningBusy) return
-    // El toque en START MINING es una interacción directa del usuario:
-    // iniciar la radio aquí permite cumplir las restricciones de autoplay de Telegram.
-    if (action === 'start' && !musicOn) {
+    // El toque en START MINING habilita el audio dentro del gesto del usuario.
+    // Si el servidor rechaza el inicio, apagamos la música para no dejarla sonando sola.
+    const startedMusicForThisAttempt = action === 'start' && !musicOn
+    if (startedMusicForThisAttempt) {
       const player = startBackgroundMusic()
       stopMusic.current = player
       void player.resume()
@@ -782,6 +807,11 @@ export default function App() {
       await postTelegramAction(miningEndpoint, body)
       await loadMiningStatus()
     } catch (error) {
+      if (startedMusicForThisAttempt) {
+        stopMusic.current?.stop()
+        stopMusic.current = null
+        setMusicOn(false)
+      }
       window.alert(error instanceof Error ? error.message : 'No se pudo completar la operación')
     } finally {
       setMiningBusy(false)
@@ -854,7 +884,7 @@ export default function App() {
 
   return <main className="app-shell">
     <div className="glow glow-a" /><div className="glow glow-b" />
-    <Header language={language} onLanguageChange={changeLanguage} musicOn={musicOn} onMusicToggle={toggleMusic} />
+    <Header language={language} onLanguageChange={changeLanguage} musicOn={musicOn} musicAvailable={musicAvailable} onMusicToggle={toggleMusic} />
     <div className="content">
       {tab === 'mining' && <MiningPage t={t} onOpenReferrals={() => setTab('referrals')} onOpenWallet={() => setTab('wallet')} miningStatus={miningStatus} onStartMining={() => { void runMiningAction('start') }} onClaimMining={() => { void runMiningAction('claim') }} miningBusy={miningBusy} />}
       {tab === 'tasks' && <TasksPage t={t} />}
