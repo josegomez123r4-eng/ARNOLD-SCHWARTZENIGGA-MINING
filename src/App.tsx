@@ -622,7 +622,7 @@ function MarketPage({ t, walletAddress, onConnect, tonConnect }: { t: (phrase: s
     <section className="market-buy-card">
       <div className="market-buy-title"><span>{t('COMPRA $ARNOLD')}</span><small>{quote ? t('FASE') + ' ' + activePhase + ' ' + t('ACTIVA') : t('VENTA EN PREPARACIÓN')}</small></div>
       <label className="market-amount-label" htmlFor="arnold-gram-amount">{t('Cantidad libre en GRAM (mínimo 1)')}</label>
-      <div className="market-amount-input"><input id="arnold-gram-amount" type="number" min="1" step="any" inputMode="decimal" value={grams} onChange={event => setGrams(Math.max(1, Number(event.target.value) || 1)) /><span>GRAM</span></div>
+      <div className="market-amount-input"><input id="arnold-gram-amount" type="number" min="1" step="any" inputMode="decimal" value={grams} onChange={event => setGrams(Math.max(1, Number(event.target.value) || 1))} /><span>GRAM</span></div>
       <div className="market-quick-amounts">{[1,3,5,10,50].map(amount => <button type="button" key={amount} className={grams === amount ? 'active' : ''} onClick={() => setGrams(amount)}>{amount}</button>)}</div>
       <div className="market-quote-rows">
         <div><span>{t('Pagas')}</span><b>{grams} GRAM</b></div>
