@@ -146,16 +146,45 @@ Deno.serve(async (req: Request) => {
     }
 
 
-    if (action === "earnings") {
+    if (action === "earnings" || action === "claim") {
       const { data: profile, error: profileError } = await admin.schema("arnold").from("user_profiles")
         .select("user_id").eq("telegram_user_id", telegramId).maybeSingle();
       if (profileError) throw profileError;
-      if (!profile?.user_id) return json(200, { referrals: 0 });
+      if (!profile?.user_id) return json(200, { available: 0, reserved: 0, paid: 0, lifetime: 0, mining: 0, tasks: 0 });
+
+      if (action === "claim") {
+        const { data: wallet, error: walletError } = await admin.schema("arnold").from("wallet_links")
+          .select("wallet_address").eq("user_id", profile.user_id).eq("is_verified", true).eq("is_primary", true).maybeSingle();
+        if (walletError) throw walletError;
+        if (!wallet?.wallet_address) return json(403, { error: "VERIFIED_WALLET_REQUIRED" });
+        const { data: claim, error: claimError } = await admin.rpc("request_arnold_referral_claim", { p_referrer_user_id: profile.user_id });
+        if (claimError) throw claimError;
+        if (!claim?.requested) return json(409, { error: claim?.error || "NO_REFERRAL_REWARDS_AVAILABLE" });
+        return json(200, { requested: true, claim_id: claim.claim_id, amount: Number(claim.amount || 0), status: "requested" });
+      }
+
       const { data: rows, error: rewardsError } = await admin.schema("arnold").from("referral_rewards")
-        .select("amount,status").eq("referrer_user_id", profile.user_id).in("status", ["pending", "paid"]);
+        .select("amount,status,source_cycle_id,source_earning_id")
+        .eq("referrer_user_id", profile.user_id).in("status", ["pending", "reserved", "paid"]);
       if (rewardsError) throw rewardsError;
-      const referrals = (rows ?? []).reduce((sum: number, row: any) => sum + (Number(row.amount) || 0), 0);
-      return json(200, { referrals: Number(referrals.toFixed(6)) });
+      const totals = { available: 0, reserved: 0, paid: 0, mining: 0, tasks: 0 };
+      for (const row of rows ?? []) {
+        const amount = Number(row.amount) || 0;
+        if (row.status === "pending") {
+          totals.available += amount;
+          if (row.source_cycle_id) totals.mining += amount;
+          if (row.source_earning_id) totals.tasks += amount;
+        } else if (row.status === "reserved") totals.reserved += amount;
+        else if (row.status === "paid") totals.paid += amount;
+      }
+      return json(200, {
+        available: Number(totals.available.toFixed(6)),
+        reserved: Number(totals.reserved.toFixed(6)),
+        paid: Number(totals.paid.toFixed(6)),
+        lifetime: Number((totals.available + totals.reserved + totals.paid).toFixed(6)),
+        mining: Number(totals.mining.toFixed(6)),
+        tasks: Number(totals.tasks.toFixed(6))
+      });
     }
 
     if (action === "leaderboard") {
