@@ -175,6 +175,27 @@ function ArnoldWorkoutMascot({ active }: { active: boolean }) {
 }
 function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMining, onClaimMining, miningBusy }: { t: (phrase: string) => string; onOpenReferrals: () => void; onOpenWallet: () => void; miningStatus: MiningStatus | null; onStartMining: () => void; onClaimMining: () => void; miningBusy: boolean }) {
   const cycle = miningStatus?.cycle ?? null
+  const [referralEarnings, setReferralEarnings] = useState<number | null>(null)
+  useEffect(() => {
+    if (!WebApp.initData) return
+    let cancelled = false
+    const loadReferralEarnings = async () => {
+      try {
+        const response = await fetch('https://vnslzfivilgdqqgdyoxd.supabase.co/functions/v1/referral-service', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'earnings', initData: WebApp.initData })
+        })
+        const data = await response.json().catch(() => ({}))
+        if (!response.ok) throw new Error(data?.error || 'No se pudieron cargar las recompensas por referidos')
+        if (!cancelled) setReferralEarnings(Number(data.referrals) || 0)
+      } catch {
+        if (!cancelled) setReferralEarnings(null)
+      }
+    }
+    void loadReferralEarnings()
+    return () => { cancelled = true }
+  }, [])
   const [now, setNow] = useState(Date.now())
   const [boostOpen, setBoostOpen] = useState(false)
   const [rankingOpen, setRankingOpen] = useState(false)
@@ -245,6 +266,7 @@ function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMin
       <div className="earnings-sources">
         <div className="earnings-source"><span><ListChecks size={15} /> {t('TASK REWARDS')}</span><b>— <small>$ARNOLD</small></b></div>
         <div className="earnings-source"><span><Pickaxe size={15} /> {t('MINING REWARDS')}</span><b>{miningStatus?.earned ?? '—'} <small>$ARNOLD</small></b></div>
+        <div className="earnings-source"><span><Gift size={15} /> {t('REFERRAL REWARDS')}</span><b>{referralEarnings === null ? '—' : referralEarnings.toFixed(6)} <small>$ARNOLD</small></b></div>
       </div>
       <p className="earnings-note">{miningStatus ? 'Recompensas confirmadas en el registro interno de ARNOLD.' : t('Only confirmed rewards will appear here.')}</p>
     </section>
