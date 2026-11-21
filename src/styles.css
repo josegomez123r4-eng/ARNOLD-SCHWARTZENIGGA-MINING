@@ -373,3 +373,29 @@ body{background:#050505}
 @media(prefers-reduced-motion:reduce){.mascot-arm{animation:none!important}}
 
 .mascot-animation{object-fit:contain;display:block}
+
+
+/* Mining: mascot-only crop on the left, independent live meters on the right */
+.mining-showcase{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);gap:10px;align-items:stretch;margin:14px 0 12px}
+.arnold-mascot{min-width:0;min-height:254px;height:100%;margin:0;padding:0;display:block;border:1px solid #ffb33b66;border-radius:15px;background:radial-gradient(ellipse at 50% 50%,#65300d66,transparent 65%),linear-gradient(145deg,#21160d,#100d09);overflow:hidden}
+.arnold-mascot:after{right:10px;top:20px;width:110px;height:110px}
+.mascot-art-window{position:absolute;inset:0 0 24px;overflow:hidden;display:flex;align-items:center;justify-content:flex-start}
+.mascot-art{position:absolute;z-index:1;left:0;top:0;width:170%;max-width:none;height:100%;margin:0;object-fit:cover;object-position:left center}
+.mascot-status{z-index:2;left:10px;bottom:8px;font-size:7px}
+.mining-meters{display:grid;grid-template-rows:1.15fr 1fr 1fr;gap:8px;min-width:0}
+.mining-meter{display:flex;min-width:0;flex-direction:column;justify-content:center;gap:5px;padding:10px 9px;border:1px solid #ffb43d45;border-radius:11px;background:linear-gradient(145deg,#24180d,#110e0a)}
+.mining-meter>span{color:#c8ad7c;font-size:7px;font-weight:900;letter-spacing:.55px;line-height:1.25}
+.mining-meter>strong{display:block;color:#ffe0a0;font:800 clamp(17px,4.4vw,25px) 'Barlow Condensed',sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap;letter-spacing:.3px}
+.mining-meter>small{color:#a8916a;font-size:7px;line-height:1.3;letter-spacing:.35px}
+.mining-meter-time .progress{height:5px;margin:2px 0}
+.mining-meter-time>strong{font-size:clamp(20px,5.2vw,29px);letter-spacing:1px}
+.mining-meter-time>small{font-weight:800;color:#d3ad69}
+.mining-live-stats{display:none}
+@media(max-width:370px){
+  .mining-showcase{grid-template-columns:minmax(0,1fr) minmax(0,.94fr);gap:7px}
+  .arnold-mascot{min-height:230px}
+  .mining-meters{gap:6px}
+  .mining-meter{padding:8px 7px}
+  .mining-meter>strong{font-size:clamp(15px,4.2vw,20px)}
+  .mining-meter-time>strong{font-size:clamp(18px,4.8vw,23px)}
+}
