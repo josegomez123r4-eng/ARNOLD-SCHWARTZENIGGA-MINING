@@ -451,6 +451,7 @@ const translations: Record<string, Record<string, string>> = {
     "CONNECT TON WALLET": "CONECTAR BILLETERA TON",
     "LOADING WALLET CONNECT": "CARGANDO CONEXIÓN DE BILLETERA",
     "CONNECTED ADDRESS": "DIRECCIÓN CONECTADA",
+    "Cerrar": "Cerrar",
 
   },
   id: {
