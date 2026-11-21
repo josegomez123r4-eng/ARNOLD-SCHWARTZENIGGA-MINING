@@ -7,6 +7,10 @@ export type LanguageCode = typeof languages[number]['code']
 
 const translations: Record<string, Record<string, string>> = {
   en: {
+    'Cantidad libre en GRAM (mínimo 0.10)':'Any amount in GRAM (0.10 minimum)',
+    'Precio actual de GRAM':'Current GRAM price',
+    'Se actualiza automáticamente cada 30 segundos. El cálculo definitivo se fija al crear la orden.':'Updates automatically every 30 seconds. The final conversion rate is locked when the order is created.',
+
     'ARNOLD LEADERBOARD':'ARNOLD LEADERBOARD','See top earners from mining, tasks and referrals':'See top earners from mining, tasks and referrals','VIEW':'VIEW','ARNOLD COMMUNITY':'ARNOLD COMMUNITY','GLOBAL RANKING':'GLOBAL RANKING','Ranked by confirmed ARNOLD rewards earned from mining, tasks and referrals.':'Ranked by confirmed ARNOLD rewards earned from mining, tasks and referrals.','YOUR POSITION':'YOUR POSITION','LOADING RANKING':'LOADING RANKING','TRY AGAIN':'TRY AGAIN','No confirmed rewards yet. Be among the first to earn ARNOLD!':'No confirmed rewards yet. Be among the first to earn ARNOLD!','Only server-recorded rewards are counted. Wallet token balances are not included.':'Only server-recorded rewards are counted. Wallet token balances are not included.','REFRESH RANKING':'REFRESH RANKING','TASKS':'TASKS','MINING':'MINING','REFERRAL REWARDS':'REFERRAL REWARDS',
     "INVITE.": "INVITE.",
     "EARN.": "EARN.",
@@ -202,6 +206,10 @@ const translations: Record<string, Record<string, string>> = {
     "OCULTAR FASES": "HIDE PHASES",
   },
   es: {
+    'Cantidad libre en GRAM (mínimo 0.10)':'Cantidad libre en GRAM (mínimo 0.10)',
+    'Precio actual de GRAM':'Precio actual de GRAM',
+    'Se actualiza automáticamente cada 30 segundos. El cálculo definitivo se fija al crear la orden.':'Se actualiza automáticamente cada 30 segundos. El cálculo definitivo se fija al crear la orden.',
+
     Mining:'Minería',Tasks:'Tareas',Referrals:'Referidos',Wallet:'Billetera',Market:'Mercado',P2P:'P2P',
     'ARNOLD LEADERBOARD':'RANKING ARNOLD','See top earners from mining, tasks and referrals':'Mira quiénes más han ganado con minería, tareas y referidos','VIEW':'VER','ARNOLD COMMUNITY':'COMUNIDAD ARNOLD','GLOBAL RANKING':'CLASIFICACIÓN GLOBAL','Ranked by confirmed ARNOLD rewards earned from mining, tasks and referrals.':'Ordenado por los ARNOLD confirmados ganados mediante minería, tareas y referidos.','YOUR POSITION':'TU POSICIÓN','LOADING RANKING':'CARGANDO RANKING','TRY AGAIN':'INTENTAR DE NUEVO','No confirmed rewards yet. Be among the first to earn ARNOLD!':'Aún no hay recompensas confirmadas. ¡Sé de los primeros en ganar ARNOLD!','Only server-recorded rewards are counted. Wallet token balances are not included.':'Solo cuentan las recompensas registradas en el servidor. No se incluyen los tokens de la billetera.','REFRESH RANKING':'ACTUALIZAR RANKING','TASKS':'TAREAS','MINING':'MINERÍA','REFERRAL REWARDS':'GANANCIAS POR REFERIDOS',
     'THE DAILY GRIND':'MINERÍA DE ALTO RENDIMIENTO','MAKE YOUR':'FORJA TU',HOLDINGS:'POTENCIAL','WORK.':'CON $ARNOLD.',
