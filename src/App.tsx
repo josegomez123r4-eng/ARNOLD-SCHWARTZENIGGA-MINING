@@ -69,12 +69,10 @@ function startBackgroundMusic() {
   master.connect(compressor)
   compressor.connect(audio.destination)
 
-  // Original retro arcade soundtrack: bright 8-bit lead, pulsing bass and game-like percussion.
-  const bpm = 112
+  // Original high-energy gym beat: punchy four-on-the-floor kick, snare, hats and a driving low synth bass.
+  const bpm = 126
   const beat = 60 / bpm
-  const melody = [659.25, 783.99, 987.77, 783.99, 587.33, 659.25, 783.99, 523.25,
-    659.25, 783.99, 1046.5, 987.77, 783.99, 659.25, 587.33, 523.25]
-  const bassline = [130.81, 130.81, 196, 196, 174.61, 174.61, 146.83, 146.83]
+  const bassline = [55, 55, 73.42, 55, 65.41, 65.41, 82.41, 65.41]
   const tone = (frequency: number, at: number, length: number, level: number, wave: OscillatorType, endFrequency?: number) => {
     const osc = audio.createOscillator()
     const amp = audio.createGain()
@@ -109,12 +107,22 @@ function startBackgroundMusic() {
     while (nextTime < limit) {
       const at = nextTime
       const note = step % melody.length
-      // Eighth-note arcade melody and a steady pulsing low bass.
-      tone(melody[note], at, beat * 0.42, 0.095, 'square')
-      if (step % 2 === 0) tone(bassline[Math.floor(step / 2) % bassline.length], at, beat * 0.78, 0.12, 'triangle')
-      if (step % 4 === 0) tone(95, at, 0.11, 0.10, 'sine', 42)
-      if (step % 4 === 2) noiseHit(at, 0.075, 0.035)
-      if (step % 8 === 6) noiseHit(at, 0.045, 0.025)
+      // Heavy kick on every beat, backbeat snare, crisp hats and short minor-key power stabs.
+      if (step % 2 === 0) {
+        tone(118, at, 0.17, 0.19, 'sine', 43)
+        tone(bassline[(step / 2) % bassline.length], at, beat * 0.82, 0.105, 'sawtooth')
+      }
+      if (step % 4 === 2) noiseHit(at, 0.12, 0.055)
+      if (step % 2 === 1) noiseHit(at, 0.035, 0.018)
+      if (step % 8 === 0) {
+        tone(110, at, beat * 0.62, 0.035, 'sawtooth')
+        tone(164.81, at, beat * 0.62, 0.028, 'sawtooth')
+        tone(220, at, beat * 0.62, 0.022, 'sawtooth')
+      }
+      if (step % 16 === 14) {
+        tone(130.81, at, beat * 0.42, 0.045, 'sawtooth')
+        tone(196, at, beat * 0.42, 0.035, 'sawtooth')
+      }
       step++
       nextTime += beat / 2
     }
@@ -143,10 +151,10 @@ function startBackgroundMusic() {
 
 function Header({ language, onLanguageChange, musicOn, onMusicToggle }: { language: LanguageCode; onLanguageChange: (language: LanguageCode) => void; musicOn: boolean; onMusicToggle: () => void }) {
   return <header className="topbar">
-    <div className="brand"><div className="brand-symbol"><Flame size={21} fill="currentColor" /></div>
+    <div className="brand"><img className="brand-logo" src="https://azure-high-cougar-588.mypinata.cloud/ipfs/bafybeid7ztv2vpc77hkdcuvsh7y3dbg54tqair2qvebpcxhgvqg7owhdl4" alt="Arnold Schwartzenigga Mining" />
       <div><div className="brand-name">ARNOLD</div><div className="brand-sub">SCHWARTZENIGGA MINING</div></div>
     </div>
-    <div className="header-actions"><button className="music-toggle" type="button" onClick={onMusicToggle} aria-label={musicOn ? "Mute music" : "Play music"}>{musicOn ? <Volume2 size={16} /> : <VolumeX size={16} />}<span>{musicOn ? "MUSIC ON" : "MUSIC OFF"}</span></button><label className="language-picker" aria-label={translate(language, 'Select language')}><span>{languages.find((item) => item.code === language)?.flag}</span><select value={language} onChange={(event) => { onLanguageChange(event.target.value as LanguageCode) }}>{languages.map((item) => <option key={item.code} value={item.code}>{item.flag} {item.name}</option>)}</select></label><div className="live-pill"><span /> MINI APP</div></div>
+    <div className="header-actions"><button className="music-toggle" type="button" onClick={onMusicToggle} aria-label={musicOn ? "Mute music" : "Play music"}>{musicOn ? <Volume2 size={16} /> : <VolumeX size={16} />}<span>{musicOn ? "MUSIC ON" : "MUSIC OFF"}</span></button><label className="language-picker" aria-label={translate(language, 'Select language')}><span>{languages.find((item) => item.code === language)?.flag}</span><select value={language} onChange={(event) => { onLanguageChange(event.target.value as LanguageCode) }}>{languages.map((item) => <option key={item.code} value={item.code}>{item.flag} {item.name}</option>)}</select></label></div>
   </header>
 }
 
@@ -187,9 +195,11 @@ function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMin
   }
   const progressPercent = cycle ? Math.min(100, Math.max(0, elapsed / duration * 100)) : 0
   return <section className="page-section">
-    <div className="hero mining-hero"><div className="overline"><span /> THE DAILY GRIND <span /></div>
-      <h1>{t('MAKE YOUR')}<br /><em>{t('HOLDINGS')}</em><br />{t('WORK.')}</h1>
+    <div className="hero mining-hero mining-brand-hero"><div className="overline"><span /> {t('THE DAILY GRIND')} <span /></div>
+      <div className="hero-energy-tag"><Zap size={13} fill="currentColor" /> {t('TRAIN. MINE. DOMINATE.')}</div>
+      <h1>{t('MAKE YOUR')}<br /><em>{t('HOLDINGS')}</em><br /><span className="hero-final-line">{t('WORK.')}</span></h1>
       <p>{t('Mine $ARNOLD every 24 hours. Stay active, stack rewards.')}</p>
+      <div className="hero-bottom-mark"><i /><span>$ARNOLD · 24H MINING CYCLE</span><i /></div>
     </div>
     <section className="earnings-summary" aria-label="Resumen de ganancias">
       <div className="earnings-summary-head">
