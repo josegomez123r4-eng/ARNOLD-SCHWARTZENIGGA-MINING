@@ -153,8 +153,7 @@ Deno.serve(async (req: Request) => {
       if (!profile?.user_id) return json(200, { available: 0, reserved: 0, paid: 0, lifetime: 0, mining: 0, tasks: 0 });
 
       if (action === "claim") {
-        const { data: claim, error: claimError } = await admin.schema("arnold")
-          .rpc("credit_arnold_referral_rewards", { p_referrer_user_id: profile.user_id });
+        const { data: claim, error: claimError } = await admin.rpc("credit_arnold_referral_rewards", { p_referrer_user_id: profile.user_id });
         if (claimError) throw claimError;
         const credited = Number(claim?.credited || 0);
         const amount = Number(claim?.amount || 0);
@@ -200,7 +199,7 @@ Deno.serve(async (req: Request) => {
         admin.schema("arnold").from("wallet_links").select("user_id").in("user_id", ids).eq("is_verified", true).eq("is_primary", true),
         admin.schema("arnold").from("reward_ledger").select("user_id,amount,status").in("user_id", ids).eq("status", "claimed"),
         admin.from("user_earnings").select("telegram_user_id,amount,source").in("telegram_user_id", (profiles ?? []).map((p: any) => String(p.telegram_user_id))),
-        admin.schema("arnold").from("referral_rewards").select("referrer_user_id,amount,status").in("referrer_user_id", ids).in("status", ["pending", "paid"])
+        admin.schema("arnold").from("referral_rewards").select("referrer_user_id,amount,status").in("referrer_user_id", ids).in("status", ["pending", "credited", "paid"])
       ]);
       if (walletResult.error) throw walletResult.error;
       if (miningResult.error) throw miningResult.error;
