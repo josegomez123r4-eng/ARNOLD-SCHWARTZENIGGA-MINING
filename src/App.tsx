@@ -423,6 +423,10 @@ function MarketPage({ t, walletAddress, onConnect, tonConnect }: { t: (phrase: s
   const [activeOrder, setActiveOrder] = useState<{ order_id: string; gram_nano: string; recipient: string; memo: string; arnold_amount: string; expires_at: string } | null>(null)
   const [recoveringOrder, setRecoveringOrder] = useState(true)
   const [paymentSubmitted, setPaymentSubmitted] = useState(false)
+  const [paymentStatus, setPaymentStatus] = useState<'pending' | 'paid' | 'fulfilled'>('pending')
+  const [payoutStatus, setPayoutStatus] = useState('not_started')
+  const [paymentSubmittedAt, setPaymentSubmittedAt] = useState<number | null>(null)
+  const [recoveryAvailable, setRecoveryAvailable] = useState(false)
   const [purchaseBusy, setPurchaseBusy] = useState(false)
   const [purchaseMessage, setPurchaseMessage] = useState('')
   const [purchaseError, setPurchaseError] = useState('')
@@ -433,13 +437,35 @@ function MarketPage({ t, walletAddress, onConnect, tonConnect }: { t: (phrase: s
     if (!response.ok) throw new Error(data?.message || data?.error || 'No se pudo completar la operación')
     return data
   }
+  const applyOrderVerification = (result: any) => {
+    const paid = result.payment_status === 'paid'
+    const fulfilled = result.payout_status === 'fulfilled'
+    setPaymentStatus(fulfilled ? 'fulfilled' : paid ? 'paid' : 'pending')
+    setPayoutStatus(String(result.payout_status ?? (paid ? 'pending' : 'not_started')))
+    if (fulfilled) {
+      setActiveOrder(null)
+      setPaymentSubmitted(false)
+      setPaymentSubmittedAt(null)
+      setRecoveryAvailable(false)
+      setPurchaseMessage('¡Compra completada! Los $ARNOLD llegaron y la entrega fue verificada. Ya puedes realizar otra compra.')
+      setPurchaseError('')
+      return
+    }
+    if (paid) {
+      const submittedAt = paymentSubmittedAt ?? Date.now()
+      setRecoveryAvailable(Date.now() - submittedAt >= 90_000 || result.payout_status === 'failed')
+      setPurchaseMessage(result.message || 'Pago confirmado. Estamos verificando automáticamente la llegada de tus $ARNOLD.')
+    } else {
+      setPurchaseMessage(result.message || 'Pago aún pendiente de confirmación en TON.')
+    }
+  }
   const verifyOrder = async () => {
     if (!activeOrder || !WebApp.initData || purchaseBusy) return
     setPurchaseBusy(true)
     setPurchaseError('')
     try {
       const result = await saleRequest({ action: 'verify_payment', initData: WebApp.initData, orderId: activeOrder.order_id })
-      setPurchaseMessage(result.message || (result.payment_status === 'paid' ? 'Pago confirmado. La entrega está siendo verificada.' : 'Pago aún pendiente de confirmación en TON.'))
+      applyOrderVerification(result)
     } catch (error) {
       setPurchaseError(error instanceof Error ? error.message : 'No se pudo verificar el pago')
     } finally {
@@ -479,9 +505,13 @@ function MarketPage({ t, walletAddress, onConnect, tonConnect }: { t: (phrase: s
         messages: [{ address: order.recipient, amount: order.gram_nano, payload }]
       })
       setPaymentSubmitted(true)
-      setPurchaseMessage('Transferencia enviada. Estamos comprobando su confirmación en la red TON.')
+      setPaymentStatus('pending')
+      setPayoutStatus('pending')
+      setPaymentSubmittedAt(Date.now())
+      setRecoveryAvailable(false)
+      setPurchaseMessage('Transferencia enviada. Verificando automáticamente el pago y la entrega de ARNOLD…')
       const result = await saleRequest({ action: 'verify_payment', initData: WebApp.initData, orderId: order.order_id })
-      setPurchaseMessage(result.message || (result.payment_status === 'paid' ? 'Pago confirmado. La entrega está siendo verificada.' : 'Transferencia detectada o pendiente de indexación. Pulsa “Verificar pago” en unos instantes.'))
+      applyOrderVerification(result)
     } catch (error) {
       setPurchaseError(error instanceof Error ? error.message : 'No se pudo iniciar la compra')
     } finally {
@@ -505,7 +535,11 @@ function MarketPage({ t, walletAddress, onConnect, tonConnect }: { t: (phrase: s
             expires_at: String(recovered.expires_at)
           })
           setPaymentSubmitted(true)
-          setPurchaseMessage('Encontramos tu compra anterior. Puedes recuperar la verificación sin volver a pagar.')
+          setPaymentStatus('paid')
+          setPayoutStatus(String(recovered.payout_status ?? 'pending'))
+          setPaymentSubmittedAt(Date.now())
+          setRecoveryAvailable(false)
+          setPurchaseMessage('Encontramos una compra pagada. Estamos comprobando automáticamente si los tokens ya llegaron.')
         }
       } catch (error) {
         if (error instanceof Error && !error.message.includes('NO_RECOVERABLE_ORDER') && !cancelled) {
@@ -518,6 +552,24 @@ function MarketPage({ t, walletAddress, onConnect, tonConnect }: { t: (phrase: s
     void recoverLatestOrder()
     return () => { cancelled = true }
   }, [])
+  useEffect(() => {
+    if (!activeOrder || !paymentSubmitted || !WebApp.initData || paymentStatus === 'fulfilled') return
+    let cancelled = false
+    const checkDelivery = async () => {
+      try {
+        const result = await saleRequest({ action: 'verify_payment', initData: WebApp.initData, orderId: activeOrder.order_id })
+        if (!cancelled) applyOrderVerification(result)
+      } catch {
+        if (!cancelled && paymentStatus === 'paid' && paymentSubmittedAt && Date.now() - paymentSubmittedAt >= 90_000) {
+          setRecoveryAvailable(true)
+        }
+      }
+    }
+    void checkDelivery()
+    const timer = window.setInterval(() => { void checkDelivery() }, 6000)
+    return () => { cancelled = true; window.clearInterval(timer) }
+  }, [activeOrder?.order_id, paymentSubmitted, paymentStatus, paymentSubmittedAt])
+
   useEffect(() => {
     let cancelled = false
     const loadQuote = async () => {
@@ -575,12 +627,15 @@ function MarketPage({ t, walletAddress, onConnect, tonConnect }: { t: (phrase: s
       <button className="market-connect-btn" type="button" onClick={onConnect} disabled={!!walletAddress}>
         <Wallet size={18} /> {walletAddress ? t('BILLETERA CONECTADA') : t('CONECTAR BILLETERA')}
       </button>
-      <button className={(activeOrder && paymentSubmitted) || (quote?.purchases_enabled && !purchaseBusy) ? 'market-buy-btn market-buy-btn-active' : 'market-buy-btn'} type="button" disabled={purchaseBusy || recoveringOrder || (quoteLoading && !(activeOrder && paymentSubmitted)) || (!quote?.purchases_enabled && !(activeOrder && paymentSubmitted))} onClick={() => { if (activeOrder && paymentSubmitted) void verifyOrder(); else void startPurchase() }}>
-        <ShoppingBag size={17} /> {purchaseBusy ? t('PROCESANDO…') : recoveringOrder ? 'BUSCANDO COMPRA…' : activeOrder && paymentSubmitted ? 'RECUPERAR MI COMPRA' : activeOrder ? t('CONTINUAR PAGO') : quote?.purchases_enabled ? 'BUY $ARNOLD' : t('COMPRAS TODAVÍA CERRADAS')}
+      <button className={quote?.purchases_enabled && !activeOrder && !purchaseBusy && !recoveringOrder ? 'market-buy-btn market-buy-btn-active' : 'market-buy-btn'} type="button" disabled={purchaseBusy || recoveringOrder || !!activeOrder || quoteLoading || !quote?.purchases_enabled} onClick={() => void startPurchase()}>
+        <ShoppingBag size={17} /> {purchaseBusy ? t('PROCESANDO…') : recoveringOrder ? 'COMPROBANDO COMPRA…' : activeOrder ? 'COMPRA EN VERIFICACIÓN…' : quote?.purchases_enabled ? 'BUY $ARNOLD' : t('COMPRAS TODAVÍA CERRADAS')}
+      </button>
+      <button className="market-recovery-btn" type="button" disabled={!recoveryAvailable || purchaseBusy || !activeOrder} onClick={() => void verifyOrder()}>
+        <ShieldCheck size={16} /> {purchaseBusy ? 'VERIFICANDO…' : 'RECUPERAR / VERIFICAR ENTREGA'}
       </button>
       {purchaseMessage && <p className="market-quote-note" role="status">{purchaseMessage}</p>}
       {purchaseError && <p className="market-quote-note" role="alert">{purchaseError}</p>}
-      {activeOrder && <p className="market-buy-footnote">Orden {activeOrder.order_id.slice(0, 8)} · {activeOrder.arnold_amount} $ARNOLD · vence {new Date(activeOrder.expires_at).toLocaleTimeString()}.</p>}
+      {activeOrder && <p className="market-buy-footnote">Orden {activeOrder.order_id.slice(0, 8)} · {activeOrder.arnold_amount} $ARNOLD · pago: {paymentStatus} · entrega: {payoutStatus}.</p>}
       <p className="market-buy-footnote">{walletAddress ? 'Billetera conectada. La compra solo solicitará la cantidad exacta que confirmes en tu wallet.' : 'Conecta tu billetera para comprar GRAM desde 0.10. Puedes introducir cualquier importe o usar los paquetes sugeridos.'}</p>
     </section>
     <button className="sale-allocation-toggle" type="button" onClick={() => setShowSalePhases(value => !value)} aria-expanded={showSalePhases}>
