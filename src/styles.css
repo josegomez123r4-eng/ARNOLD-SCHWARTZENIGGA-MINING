@@ -313,11 +313,13 @@ body{background:#050505}
 .market-quote-rows .market-receive-row{padding:14px 0;border-bottom:0}
 .market-receive-row b{color:#ffd06b;font-size:17px}
 .market-quote-note{min-height:26px;margin:0 0 10px;color:#9f8d70;font-size:9px;line-height:1.5}
-.market-connect-btn,.market-buy-disabled{width:100%;min-height:50px;display:flex;align-items:center;justify-content:center;gap:8px;border-radius:13px;font-size:11px;font-weight:900;letter-spacing:.5px}
+.market-connect-btn,.market-buy-btn{width:100%;min-height:50px;display:flex;align-items:center;justify-content:center;gap:8px;border-radius:13px;font-size:11px;font-weight:900;letter-spacing:.5px}
 .market-connect-btn{border:1px solid #ffcf73;background:linear-gradient(100deg,#b87325,#f5c66c);color:#201306}
 .market-connect-btn:disabled{opacity:.7}
-.market-buy-disabled{margin-top:9px;border:1px solid #ffffff22;background:#15110b;color:#b9a98e;opacity:.8}
-.market-buy-disabled:disabled{cursor:not-allowed}
+.market-buy-btn{margin-top:9px;border:1px solid #ffffff22;background:#21190f;color:#b9a98e;opacity:.75}
+.market-buy-btn:disabled{cursor:not-allowed}
+.market-buy-btn-active{border:1px solid #ffcf73;background:linear-gradient(100deg,#b87325,#f5c66c);color:#201306;opacity:1;box-shadow:0 5px 18px #ff9c2b35}
+.market-buy-btn-active:active{transform:translateY(1px);filter:brightness(.96)}
 .market-buy-footnote{margin:10px 2px 0;color:#9f9078;font-size:9px;line-height:1.55;text-align:center}
 .market-sale-inventory{margin-top:14px}
 .market-phases-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:20px 2px 10px}
