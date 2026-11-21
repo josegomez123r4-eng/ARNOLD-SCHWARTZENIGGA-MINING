@@ -263,7 +263,7 @@ function ReferralsPage({ t }: { t: (phrase: string) => string }) {
   const [stats, setStats] = useState({ total: 0, eligible: 0, ineligible: 0 })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [earnings, setEarnings] = useState({ available: 0, reserved: 0, paid: 0, lifetime: 0, mining: 0, tasks: 0 })
+  const [earnings, setEarnings] = useState({ available: 0, reserved: 0, credited: 0, paid: 0, lifetime: 0, mining: 0, tasks: 0 })
   const [claiming, setClaiming] = useState(false)
   const [claimMessage, setClaimMessage] = useState('')
   const [claimError, setClaimError] = useState('')
@@ -318,6 +318,7 @@ function ReferralsPage({ t }: { t: (phrase: string) => string }) {
         if (!cancelled) setEarnings({
           available: Number(earningsData.available || 0),
           reserved: Number(earningsData.reserved || 0),
+          credited: Number(earningsData.credited || 0),
           paid: Number(earningsData.paid || 0),
           lifetime: Number(earningsData.lifetime || 0),
           mining: Number(earningsData.mining || 0),
@@ -345,10 +346,8 @@ function ReferralsPage({ t }: { t: (phrase: string) => string }) {
         body: JSON.stringify({ action: 'claim', initData: WebApp.initData })
       })
       const data = await response.json().catch(() => ({}))
-      if (!response.ok) throw new Error(data?.error === 'VERIFIED_WALLET_REQUIRED'
-        ? 'Verifica tu billetera para solicitar el cobro de tus referidos.'
-        : data?.error || 'No se pudo registrar la solicitud de cobro.')
-      setClaimMessage('Solicitud registrada: ' + Number(data.amount || 0).toLocaleString(undefined, { maximumFractionDigits: 6 }) + ' $ARNOLD. El pago queda pendiente de procesamiento.')
+      if (!response.ok) throw new Error(data?.error || 'No se pudo acreditar la comisión.')
+      setClaimMessage('Comisión acreditada al tablero interno: ' + Number(data.amount || 0).toLocaleString(undefined, { maximumFractionDigits: 6 }) + ' $ARNOLD. No se realizó ninguna transferencia.')
       const refresh = await fetch('https://vnslzfivilgdqqgdyoxd.supabase.co/functions/v1/referral-service', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'earnings', initData: WebApp.initData })
@@ -356,7 +355,7 @@ function ReferralsPage({ t }: { t: (phrase: string) => string }) {
       const updated = await refresh.json()
       if (refresh.ok) setEarnings({
         available: Number(updated.available || 0), reserved: Number(updated.reserved || 0),
-        paid: Number(updated.paid || 0), lifetime: Number(updated.lifetime || 0),
+        credited: Number(updated.credited || 0), paid: Number(updated.paid || 0), lifetime: Number(updated.lifetime || 0),
         mining: Number(updated.mining || 0), tasks: Number(updated.tasks || 0)
       })
     } catch (e) {
@@ -414,11 +413,12 @@ function ReferralsPage({ t }: { t: (phrase: string) => string }) {
         <div><span>{t('POR TAREAS')}</span><b>{earnings.tasks.toLocaleString(undefined, { maximumFractionDigits: 6 })}</b></div>
       </div>
       <button className="primary-btn referral-claim-btn" type="button" disabled={claiming || earnings.available <= 0} onClick={() => { void requestClaim() }}>
-        {claiming ? t('PROCESANDO…') : 'CLAIM'}
+        {claiming ? t('ACREDITANDO…') : 'CLAIM'}
       </button>
       <div className="referral-claim-status">
         <span>{t('EN PROCESO')}: {earnings.reserved.toLocaleString(undefined, { maximumFractionDigits: 6 })} $ARNOLD</span>
-        <span>{t('RECLAMADO')}: {earnings.paid.toLocaleString(undefined, { maximumFractionDigits: 6 })} $ARNOLD</span>
+        <span>{t('ACREDITADO AL TABLERO')}: {earnings.credited.toLocaleString(undefined, { maximumFractionDigits: 6 })} $ARNOLD</span>
+        <span>{t('PAGADO')}: {earnings.paid.toLocaleString(undefined, { maximumFractionDigits: 6 })} $ARNOLD</span>
         <span>{t('TOTAL DE POR VIDA')}: {earnings.lifetime.toLocaleString(undefined, { maximumFractionDigits: 6 })} $ARNOLD</span>
       </div>
       {claimMessage && <p className="referral-claim-message" role="status">{claimMessage}</p>}
