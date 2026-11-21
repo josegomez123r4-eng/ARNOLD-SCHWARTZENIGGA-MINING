@@ -463,3 +463,34 @@ body{background:#050505}
 @keyframes claim-ready-pulse{0%,100%{box-shadow:0 0 0 1px #ffcf6a55,0 0 13px #f2b74466,0 0 24px #e8a52d33;filter:brightness(1)}50%{box-shadow:0 0 0 2px #ffe5a088,0 0 23px #f2b744bb,0 0 42px #e8a52d66;filter:brightness(1.08)}}
 @keyframes claim-ready-shine{0%,45%{transform:translateX(-120%)}75%,100%{transform:translateX(120%)}}
 @media(prefers-reduced-motion:reduce){.claim-btn.claim-ready,.claim-btn.claim-ready::after{animation:none}}
+
+
+/* Responsive banner supplied for the Telegram Mini App mining screen */
+.mining-banner-wrap {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto 18px;
+  overflow: hidden;
+  border-radius: 16px;
+  line-height: 0;
+  background: #090909;
+}
+.mining-banner-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+@media (max-width: 480px) {
+  .mining-banner-wrap {
+    margin-bottom: 14px;
+    border-radius: 12px;
+  }
+}
+@media (min-width: 700px) {
+  .mining-banner-wrap {
+    max-width: 720px;
+  }
+}
