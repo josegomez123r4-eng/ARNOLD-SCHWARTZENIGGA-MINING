@@ -152,51 +152,10 @@ function Header({ language, onLanguageChange, musicOn, onMusicToggle }: { langua
 
 type MiningStatus = { verified: boolean; wallet_address?: string | null; cycle: { id: string; status: string; started_at: string; ends_at: string; total_reward: string } | null; earned: string; pending: string }
 function ArnoldWorkoutMascot({ active }: { active: boolean }) {
+  const animationUrl = 'https://gateway.pinata.cloud/ipfs/bafybeif3wxsbkq75ukpdk2xzomrgp4ph6i2sz3bggsmsyjjrov5y6sqsue'
   return <div className={active ? 'arnold-mascot is-training' : 'arnold-mascot is-resting'} aria-label={active ? 'Arnold entrenando mientras mina' : 'Arnold listo para minar'}>
     <div className="mascot-copy"><b>{active ? 'ARNOLD IS GRINDING' : 'READY TO GRIND'}</b><span>{active ? 'Cada segundo cuenta' : 'Activa tu próximo ciclo'}</span></div>
-    <svg className="mascot-art" viewBox="0 0 220 154" role="img" aria-hidden="true">
-      <defs>
-        <linearGradient id="arnoldSkin" x1="0" x2="1" y1="0" y2="1"><stop stopColor="#a65d35"/><stop offset=".48" stopColor="#75402b"/><stop offset="1" stopColor="#3e241d"/></linearGradient>
-        <linearGradient id="arnoldMuscle" x1="0" x2="1" y1="0" y2="1"><stop stopColor="#c17b4c"/><stop offset="1" stopColor="#613522"/></linearGradient>
-        <linearGradient id="arnoldHoodie" x1="0" x2="1"><stop stopColor="#252321"/><stop offset="1" stopColor="#080909"/></linearGradient>
-        <linearGradient id="arnoldDumbbell" x1="0" x2="1"><stop stopColor="#ffe49a"/><stop offset="1" stopColor="#b97928"/></linearGradient>
-      </defs>
-      <ellipse cx="112" cy="146" rx="91" ry="6" fill="#ff9b2b" opacity=".16"/>
-      <!-- seated legs and torso -->
-      <path d="M73 105 Q61 121 48 137 L87 143 L111 128 L134 143 L176 137 Q159 118 148 105Z" fill="#101112" stroke="#5b4934" strokeWidth="2"/>
-      <path d="M77 57 Q109 46 145 59 L159 116 Q111 132 61 116Z" fill="url(#arnoldHoodie)" stroke="#685038" strokeWidth="2"/>
-      <path d="M91 61 L110 79 L130 61 L137 116 L83 116Z" fill="#171819"/>
-      <path d="M101 72 Q110 79 119 72 M104 84 L116 84" fill="none" stroke="#776a58" strokeWidth="2" strokeLinecap="round"/>
-      <!-- neck and face -->
-      <path d="M99 47 L99 62 Q111 70 124 61 L122 44Z" fill="url(#arnoldSkin)"/>
-      <path d="M83 24 Q85 8 111 8 Q138 9 140 29 L136 49 Q128 63 111 64 Q93 62 86 48Z" fill="url(#arnoldSkin)" stroke="#3d251b" strokeWidth="1.5"/>
-      <!-- dense short afro silhouette -->
-      <path d="M81 34 Q73 28 80 20 Q78 12 89 11 Q91 1 101 7 Q108 -1 116 6 Q127 0 132 10 Q144 9 143 20 Q151 27 141 37 L136 29 L130 23 L124 28 L117 21 L109 27 L101 21 L94 29 L87 25Z" fill="#171313" stroke="#35231b" strokeWidth="2"/>
-      <g fill="#33231e">
-        <circle cx="84" cy="19" r="4"/><circle cx="93" cy="11" r="4"/><circle cx="103" cy="8" r="4"/><circle cx="114" cy="8" r="4"/><circle cx="126" cy="12" r="4"/><circle cx="137" cy="20" r="4"/><circle cx="88" cy="29" r="3"/><circle cx="132" cy="29" r="3"/>
-      </g>
-      <!-- focused brows, eyes, nose and mouth -->
-      <path d="M91 36 L103 33 M119 33 L132 36" stroke="#211714" strokeWidth="3.5" strokeLinecap="round"/>
-      <path d="M94 41 L103 41 M120 41 L129 41" stroke="#f0d0a6" strokeWidth="2.2" strokeLinecap="round"/>
-      <path d="M112 39 L108 49 L114 50 M102 56 Q112 53 122 56" fill="none" stroke="#3c2119" strokeWidth="2" strokeLinecap="round"/>
-      <!-- broad muscular arms -->
-      <path d="M72 65 Q54 63 45 78 L33 103" fill="none" stroke="url(#arnoldMuscle)" strokeWidth="18" strokeLinecap="round"/>
-      <path d="M148 65 Q166 63 175 78 L187 103" fill="none" stroke="url(#arnoldMuscle)" strokeWidth="18" strokeLinecap="round"/>
-      <path d="M55 77 Q47 89 40 101 M165 77 Q173 89 180 101" fill="none" stroke="#d08a58" strokeWidth="3" opacity=".65"/>
-      <!-- articulated forearms curling the dumbbells -->
-      <g className="mascot-arm mascot-arm-left">
-        <path d="M39 100 Q28 86 26 67" fill="none" stroke="url(#arnoldMuscle)" strokeWidth="14" strokeLinecap="round"/>
-        <path d="M26 67 L26 45" stroke="url(#arnoldDumbbell)" strokeWidth="6" strokeLinecap="round"/>
-        <rect x="12" y="37" width="28" height="7" rx="3" fill="#d49a42"/><rect x="15" y="31" width="6" height="19" rx="2" fill="#f4d27d"/><rect x="31" y="31" width="6" height="19" rx="2" fill="#f4d27d"/>
-      </g>
-      <g className="mascot-arm mascot-arm-right">
-        <path d="M181 100 Q192 86 194 67" fill="none" stroke="url(#arnoldMuscle)" strokeWidth="14" strokeLinecap="round"/>
-        <path d="M194 67 L194 45" stroke="url(#arnoldDumbbell)" strokeWidth="6" strokeLinecap="round"/>
-        <rect x="180" y="37" width="28" height="7" rx="3" fill="#d49a42"/><rect x="183" y="31" width="6" height="19" rx="2" fill="#f4d27d"/><rect x="199" y="31" width="6" height="19" rx="2" fill="#f4d27d"/>
-      </g>
-      <!-- sleeveless hoodie shoulders -->
-      <path d="M76 62 Q88 65 94 75 L85 82 L69 75Z M144 62 Q132 65 126 75 L135 82 L151 75Z" fill="#080909"/>
-    </svg>
+    <img className="mascot-art mascot-animation" src={animationUrl} alt="Arnold haciendo curls con dos mancuernas" />
     <span className="mascot-status"><i /> {active ? 'MINING ACTIVE' : 'MINING STANDBY'}</span>
   </div>
 }
