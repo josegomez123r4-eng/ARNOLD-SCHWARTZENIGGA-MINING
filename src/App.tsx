@@ -21,7 +21,7 @@ declare global {
 }
 import {
   CircleHelp, Clock3, Coins, Flame, Gift, Handshake, ListChecks, LockKeyhole,
-  Pickaxe, ShoppingBag, ShieldCheck, Wallet, Zap, Volume2, VolumeX, ArrowDownToLine
+  Pickaxe, ShoppingBag, ShieldCheck, Wallet, Zap, ArrowDownToLine
 } from 'lucide-react'
 
 
@@ -54,41 +54,12 @@ const tabs = [
   { id: 'p2p', label: 'P2P', icon: Handshake },
 ] satisfies { id: Tab; label: string; icon: typeof Pickaxe }[]
 
-const ARNOLD_MUSIC_URL = 'https://www.orangefreesounds.com/wp-content/uploads/2017/06/Electron-breeze-downtempo-lounge-chill-out.mp3'
-
-function startBackgroundMusic() {
-  // Electron Breeze — zeropage. Reproducción en bucle dentro de la Mini App.
-  const audio = new Audio(ARNOLD_MUSIC_URL)
-  audio.preload = 'auto'
-  audio.loop = true
-  audio.volume = 0.28
-  let disposed = false
-  const resume = async () => {
-    if (disposed) return
-    try {
-      await audio.play()
-    } catch (error) {
-      // Telegram/navegador puede exigir otro toque del usuario.
-      console.warn('No se pudo iniciar Electron Breeze:', error)
-    }
-  }
-  const stop = () => {
-    if (disposed) return
-    disposed = true
-    audio.pause()
-    audio.currentTime = 0
-    audio.removeAttribute('src')
-    audio.load()
-  }
-  return { resume, stop, isRunning: () => !audio.paused && !audio.ended }
-}
-
-function Header({ language, onLanguageChange, musicOn, musicAvailable, onMusicToggle }: { language: LanguageCode; onLanguageChange: (language: LanguageCode) => void; musicOn: boolean; musicAvailable: boolean; onMusicToggle: () => void }) {
+function Header({ language, onLanguageChange }: { language: LanguageCode; onLanguageChange: (language: LanguageCode) => void }) {
   return <header className="topbar">
     <div className="brand"><img className="brand-logo" src="https://azure-high-cougar-588.mypinata.cloud/ipfs/bafybeid7ztv2vpc77hkdcuvsh7y3dbg54tqair2qvebpcxhgvqg7owhdl4" alt="Arnold Schwartzenigga Mining" />
       <div><div className="brand-name">ARNOLD</div><div className="brand-sub">SCHWARTZENIGGA MINING</div></div>
     </div>
-    <div className="header-actions"><button className="music-toggle" type="button" onClick={onMusicToggle} disabled={!musicAvailable} aria-label={musicOn ? "Mute music" : "Play music"} title={musicAvailable ? (musicOn ? "Apagar música" : "Encender música") : "La música se activa al iniciar la minería"}>{musicOn ? <Volume2 size={16} /> : <VolumeX size={16} />}<span>{musicOn ? "MUSIC ON" : "MUSIC OFF"}<small className="music-credit" style={{ display: 'block', fontSize: '8px', opacity: 0.65 }}>Electron Breeze · zeropage · CC BY 3.0</small></span></button><label className="language-picker" aria-label={translate(language, 'Select language')}><span>{languages.find((item) => item.code === language)?.flag}</span><select value={language} onChange={(event) => { onLanguageChange(event.target.value as LanguageCode) }}>{languages.map((item) => <option key={item.code} value={item.code}>{item.flag} {item.name}</option>)}</select></label></div>
+    <div className="header-actions"><label className="language-picker" aria-label={translate(language, 'Select language')}><span>{languages.find((item) => item.code === language)?.flag}</span><select value={language} onChange={(event) => { onLanguageChange(event.target.value as LanguageCode) }}>{languages.map((item) => <option key={item.code} value={item.code}>{item.flag} {item.name}</option>)}</select></label></div>
   </header>
 }
 
@@ -235,7 +206,6 @@ function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMin
       <article className="stat-card featured"><div className="stat-label"><Coins size={14} /> {t('BASE REWARD')}</div><div className="stat-number">5 <small>$ARNOLD</small></div><div className="stat-caption">{t('Per completed 24-hour cycle')}</div></article>
       <article className="stat-card"><div className="stat-label"><Clock3 size={14} /> {t('CYCLE')}</div><div className="stat-number">24 <small>{t('HOURS')}</small></div><div className="stat-caption">{t('One manual cycle at a time')}</div></article>
     </section>
-    <div className="community-counter"><span className="community-dot" /><div><b>10,200+</b><span>{t('COMMUNITY USERS · INITIAL BASELINE')}</span></div></div>
     <button className="home-referral-cta" type="button" onClick={onOpenReferrals}>
       <span className="home-referral-icon"><Gift size={19} /></span>
       <span className="home-referral-copy"><b>PROGRAMA DE REFERIDOS</b><small>Invita amigos · Consulta elegibles y pendientes</small></span>
@@ -617,7 +587,6 @@ function P2PPage({ t }: { t: (phrase: string) => string }) {
 export default function App() {
   const [tab, setTab] = useState<Tab>('mining')
   const [language, setLanguage] = useState<LanguageCode>(detectLanguage)
-  const [musicOn, setMusicOn] = useState(false)
   const [walletAddress, setWalletAddress] = useState<string | null>(null)
   const [walletAppName, setWalletAppName] = useState<string | null>(null)
   const [paymentState, setPaymentState] = useState<'idle' | 'sending' | 'sent' | 'cancelled' | 'error' | 'verified'>('idle')
@@ -630,7 +599,6 @@ export default function App() {
   const [balanceLoading, setBalanceLoading] = useState(false)
   const [balanceError, setBalanceError] = useState<string | null>(null)
   const [balanceRefresh, setBalanceRefresh] = useState(0)
-  const stopMusic = useRef<ReturnType<typeof startBackgroundMusic> | null>(null)
   const tonConnect = useRef<TonConnectInstance | null>(null)
   const t = (phrase: string) => translate(language, phrase)
   useEffect(() => {
@@ -732,37 +700,6 @@ export default function App() {
     const interval = window.setInterval(loadBalance, 30000)
     return () => { cancelled = true; window.clearInterval(interval) }
   }, [walletAddress, language, balanceRefresh])
-  useEffect(() => {
-    const stopOnMiniAppClose = () => {
-      stopMusic.current?.stop()
-      stopMusic.current = null
-      setMusicOn(false)
-    }
-    // pagehide/beforeunload se disparan al cerrar o abandonar la Mini App.
-    // No detenemos por visibilitychange: Telegram puede ocultarla temporalmente.
-    window.addEventListener('pagehide', stopOnMiniAppClose)
-    window.addEventListener('beforeunload', stopOnMiniAppClose)
-    return () => {
-      window.removeEventListener('pagehide', stopOnMiniAppClose)
-      window.removeEventListener('beforeunload', stopOnMiniAppClose)
-      stopOnMiniAppClose()
-    }
-  }, [])
-  const miningCycleActive = Boolean(miningStatus?.cycle && new Date(miningStatus.cycle.ends_at).getTime() > Date.now())
-  const musicAvailable = musicOn || miningCycleActive
-  const toggleMusic = () => {
-    if (musicOn) {
-      stopMusic.current?.stop()
-      stopMusic.current = null
-      setMusicOn(false)
-      return
-    }
-    if (!miningCycleActive) return
-    const player = startBackgroundMusic()
-    stopMusic.current = player
-    void player.resume()
-    setMusicOn(true)
-  }
   const connectWallet = () => { void tonConnect.current?.openModal() }
   const disconnectWallet = () => { void tonConnect.current?.disconnect() }
   const reconnectWallet = async () => {
@@ -791,15 +728,6 @@ export default function App() {
   }
   const runMiningAction = async (action: 'start' | 'claim') => {
     if (miningBusy) return
-    // El toque en START MINING habilita el audio dentro del gesto del usuario.
-    // Si el servidor rechaza el inicio, apagamos la música para no dejarla sonando sola.
-    const startedMusicForThisAttempt = action === 'start' && !musicOn
-    if (startedMusicForThisAttempt) {
-      const player = startBackgroundMusic()
-      stopMusic.current = player
-      void player.resume()
-      setMusicOn(true)
-    }
     setMiningBusy(true)
     try {
       const body: Record<string, unknown> = { action }
@@ -807,11 +735,6 @@ export default function App() {
       await postTelegramAction(miningEndpoint, body)
       await loadMiningStatus()
     } catch (error) {
-      if (startedMusicForThisAttempt) {
-        stopMusic.current?.stop()
-        stopMusic.current = null
-        setMusicOn(false)
-      }
       window.alert(error instanceof Error ? error.message : 'No se pudo completar la operación')
     } finally {
       setMiningBusy(false)
@@ -884,7 +807,7 @@ export default function App() {
 
   return <main className="app-shell">
     <div className="glow glow-a" /><div className="glow glow-b" />
-    <Header language={language} onLanguageChange={changeLanguage} musicOn={musicOn} musicAvailable={musicAvailable} onMusicToggle={toggleMusic} />
+    <Header language={language} onLanguageChange={changeLanguage} />
     <div className="content">
       {tab === 'mining' && <MiningPage t={t} onOpenReferrals={() => setTab('referrals')} onOpenWallet={() => setTab('wallet')} miningStatus={miningStatus} onStartMining={() => { void runMiningAction('start') }} onClaimMining={() => { void runMiningAction('claim') }} miningBusy={miningBusy} />}
       {tab === 'tasks' && <TasksPage t={t} />}
