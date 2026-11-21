@@ -690,7 +690,15 @@ function MarketPage({ t, walletAddress, onConnect, tonConnect }: { t: (phrase: s
       <div className="market-buy-brand"><div className="market-buy-logo"><Flame size={25} fill="currentColor" /></div><div><b>ARNOLD</b><span>{t('OFFICIAL TOKEN SALE')}</span></div></div>
       <div className="market-live-price"><span className={quote ? 'market-live-dot' : 'market-live-dot market-live-dot-off'} />{quote ? '$' + phasePrice.toFixed(quote.active_phase === 1 ? 3 : 4) : '—'}<small>USD / ARNOLD</small></div>
     </div>
-    <section className="market-buy-card">
+        <section className="market-holdings-reward" aria-label="Beneficio de minería por compras">
+      <div className="market-holdings-reward-icon"><Zap size={20} /></div>
+      <div className="market-holdings-reward-copy">
+        <b>{t('GANA EL 1% DE TUS COMPRAS EN MINERÍA DIARIA')}</b>
+        <p>{t('Cada compra confirmada de $ARNOLD aumenta permanentemente tu producción diaria en un 1% de la cantidad comprada.')}</p>
+        <small>{t('Ejemplo: compra 1,000 $ARNOLD y suma +10 $ARNOLD al día. Tus bonificaciones se acumulan.')}</small>
+      </div>
+    </section>
+<section className="market-buy-card">
       <div className="market-buy-title"><span>{t('COMPRA $ARNOLD')}</span><small>{quote ? t('FASE') + ' ' + activePhase + ' ' + t('ACTIVA') : t('VENTA EN PREPARACIÓN')}</small></div>
       <label className="market-amount-label" htmlFor="arnold-gram-amount">{t('Cantidad libre en GRAM (mínimo 1)')}</label>
       <div className="market-amount-input"><input id="arnold-gram-amount" type="number" min="1" step="any" inputMode="decimal" value={grams} onChange={event => setGrams(Math.max(1, Number(event.target.value) || 1))} /><span>GRAM</span></div>
