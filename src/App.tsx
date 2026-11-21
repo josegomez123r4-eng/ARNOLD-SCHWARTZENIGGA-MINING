@@ -55,102 +55,26 @@ const tabs = [
 ] satisfies { id: Tab; label: string; icon: typeof Pickaxe }[]
 
 function startBackgroundMusic() {
-  const AudioClass = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
-  if (!AudioClass) return { resume: () => {}, stop: () => {}, isRunning: () => false }
-  const audio = new AudioClass()
-  const master = audio.createGain()
-  master.gain.value = 0.05
-  const gentleFilter = audio.createBiquadFilter()
-  gentleFilter.type = 'highpass'
-  gentleFilter.frequency.value = 175
-  gentleFilter.Q.value = 0.55
-  const softLowPass = audio.createBiquadFilter()
-  softLowPass.type = 'lowpass'
-  softLowPass.frequency.value = 4200
-  softLowPass.Q.value = 0.45
-  const compressor = audio.createDynamicsCompressor()
-  compressor.threshold.value = -30
-  compressor.knee.value = 18
-  compressor.ratio.value = 3
-  compressor.attack.value = 0.012
-  compressor.release.value = 0.24
-  master.connect(gentleFilter)
-  gentleFilter.connect(softLowPass)
-  softLowPass.connect(compressor)
-  compressor.connect(audio.destination)
-
-  // Suave groove electrónico: sin subgrave ni golpes de bombo fuertes.
-  const bpm = 112
-  const beat = 60 / bpm
-  const notes = [261.63, 329.63, 392, 523.25, 392, 329.63, 293.66, 349.23,
-    440, 587.33, 440, 349.23, 246.94, 311.13, 369.99, 493.88]
-  const tone = (frequency: number, at: number, length: number, level: number, wave: OscillatorType) => {
-    const osc = audio.createOscillator()
-    const amp = audio.createGain()
-    osc.type = wave
-    osc.frequency.setValueAtTime(frequency, at)
-    amp.gain.setValueAtTime(0.0001, at)
-    amp.gain.linearRampToValueAtTime(level, at + 0.025)
-    amp.gain.exponentialRampToValueAtTime(0.0001, at + length)
-    osc.connect(amp); amp.connect(master)
-    osc.start(at); osc.stop(at + length + 0.03)
-  }
-  const softClick = (at: number, length: number, level: number) => {
-    const buffer = audio.createBuffer(1, Math.floor(audio.sampleRate * length), audio.sampleRate)
-    const data = buffer.getChannelData(0)
-    for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 3)
-    const source = audio.createBufferSource()
-    const filter = audio.createBiquadFilter()
-    const amp = audio.createGain()
-    source.buffer = buffer
-    filter.type = 'highpass'
-    filter.frequency.value = 1900
-    amp.gain.setValueAtTime(0.0001, at)
-    amp.gain.linearRampToValueAtTime(level, at + 0.004)
-    amp.gain.exponentialRampToValueAtTime(0.0001, at + length)
-    source.connect(filter); filter.connect(amp); amp.connect(master)
-    source.start(at); source.stop(at + length)
-  }
-  let step = 0
-  let nextTime = audio.currentTime + 0.05
-  const schedule = () => {
-    const limit = audio.currentTime + 1
-    while (nextTime < limit) {
-      const at = nextTime
-      if (step % 2 === 0) {
-        tone(notes[(step / 2) % notes.length], at, beat * 0.58, 0.16, 'sine')
-        tone(notes[(step / 2 + 4) % notes.length] * 2, at + 0.015, beat * 0.34, 0.045, 'triangle')
-      }
-      if (step % 4 === 2) softClick(at, 0.075, 0.012)
-      if (step % 2 === 1) softClick(at, 0.022, 0.004)
-      if (step % 16 === 0) {
-        tone(523.25, at, beat * 1.7, 0.018, 'triangle')
-        tone(659.25, at, beat * 1.7, 0.014, 'sine')
-      }
-      step++
-      nextTime += beat / 2
-    }
-  }
-  let timer: number | null = null
-  let started = false
+  // Radio oficial: stream MP3 continuo de SomaFM Groove Salad.
+  // La reproducción comienza solo tras la interacción del usuario con MUSIC.
+  const audio = new Audio('https://ice1.somafm.com/groovesalad-128-mp3')
+  audio.preload = 'none'
+  audio.loop = false
+  audio.volume = 0.28
   const resume = async () => {
     try {
-      await audio.resume()
-      if (audio.state !== 'running' || started) return
-      started = true
-      schedule()
-      timer = window.setInterval(schedule, 100)
-    } catch {
-      // El navegador puede exigir otra interacción directa para iniciar el audio.
+      await audio.play()
+    } catch (error) {
+      // Telegram/navegador puede bloquear la reproducción hasta otro toque.
+      console.warn('No se pudo iniciar la radio:', error)
     }
   }
   const stop = () => {
-    if (timer !== null) window.clearInterval(timer)
-    timer = null
-    started = false
-    void audio.close()
+    audio.pause()
+    audio.removeAttribute('src')
+    audio.load()
   }
-  return { resume, stop, isRunning: () => audio.state === 'running' }
+  return { resume, stop, isRunning: () => !audio.paused && !audio.ended }
 }
 
 function Header({ language, onLanguageChange, musicOn, onMusicToggle }: { language: LanguageCode; onLanguageChange: (language: LanguageCode) => void; musicOn: boolean; onMusicToggle: () => void }) {
