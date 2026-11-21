@@ -12,7 +12,7 @@ const TREASURY = "UQCSeF2dCiBsO367d32y2OKPRCgbgSkTc5am-MU5K8EAlCWm";
 const PRICE_SOURCE = "coingecko:the-open-network";
 const QUOTE_MAX_AGE_MS = 60_000;
 const ORDER_TTL_MS = 15 * 60_000;
-const GRAM_OPTIONS_NANO = new Set(["100000000", "1000000000", "3000000000", "5000000000", "10000000000", "50000000000"]);
+const GRAM_OPTIONS_NANO = new Set(["1000000000", "3000000000", "5000000000", "10000000000", "50000000000"]);
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -177,7 +177,7 @@ Deno.serve(async (req: Request) => {
         quote_source: PRICE_SOURCE,
         active_phase: active.phase,
         arnold_usd: active.price,
-        supported_amounts_gram: [0.1, 1, 3, 5, 10, 50],
+        supported_amounts_gram: [1, 3, 5, 10, 50],
         purchases_enabled: Deno.env.get("ARNOLD_SALE_ENABLED") === "true",
       });
     }
