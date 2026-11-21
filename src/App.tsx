@@ -65,13 +65,13 @@ function Header({ language, onLanguageChange }: { language: LanguageCode; onLang
 
 type MiningStatus = { verified: boolean; wallet_address?: string | null; cycle: { id: string; status: string; started_at: string; ends_at: string; total_reward: string } | null; earned: string; pending: string }
 type LeaderboardEntry = { rank: number; name: string; total: number; mining: number; tasks: number; referrals: number }
-function ArnoldWorkoutMascot({ active }: { active: boolean }) {
+function ArnoldWorkoutMascot({ active, t }: { active: boolean; t: (phrase: string) => string }) {
   const animationUrl = 'https://gateway.pinata.cloud/ipfs/bafybeif3wxsbkq75ukpdk2xzomrgp4ph6i2sz3bggsmsyjjrov5y6sqsue'
-  return <div className={active ? 'arnold-mascot is-training' : 'arnold-mascot is-resting'} aria-label={active ? 'Arnold entrenando mientras mina' : 'Arnold listo para minar'}>
+  return <div className={active ? 'arnold-mascot is-training' : 'arnold-mascot is-resting'} aria-label={t(active ? 'Arnold entrenando mientras mina' : 'Arnold listo para minar')}>
     <div className="mascot-art-window">
       <img className="mascot-art mascot-animation" src={animationUrl} alt="Arnold haciendo curls con dos mancuernas" />
     </div>
-    <span className="mascot-status"><i /> {active ? 'MINING ACTIVE' : 'MINING STANDBY'}</span>
+    <span className="mascot-status"><i /> {active ? t('MINING ACTIVE') : t('MINING STANDBY')}</span>
   </div>
 }
 function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMining, onClaimMining, miningBusy }: { t: (phrase: string) => string; onOpenReferrals: () => void; onOpenWallet: () => void; miningStatus: MiningStatus | null; onStartMining: () => void; onClaimMining: () => void; miningBusy: boolean }) {
@@ -171,7 +171,7 @@ function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMin
     <section className="mining-card">
       <div className="card-head"><div><div className="kicker">{t('MINING STATION')}</div><h2><Pickaxe size={20} /> {t('MINING SESSION')}</h2></div><div className={cycle ? (cycleFinished ? 'status ready' : 'status active') : 'status'}><span /> {cycle ? (cycleFinished ? t('READY TO CLAIM') : t('ACTIVE')) : t('NOT ACTIVE')}</div></div>
       <div className="mining-showcase">
-        <ArnoldWorkoutMascot active={!!cycle && !cycleFinished} />
+        <ArnoldWorkoutMascot active={!!cycle && !cycleFinished} t={t} />
         <div className="mining-meters">
           <article className="mining-meter mining-meter-time">
             <span>{cycle ? (cycleFinished ? t('CYCLE COMPLETED') : t('TIME LEFT')) : t('TIME LEFT')}</span>
@@ -217,8 +217,8 @@ function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMin
         <p>{t('Mejora tu producción pagando con $ARNOLD. Los precios y compras se habilitarán después de definir los límites de emisión y la reserva de recompensas.')}</p>
         <div className="boost-options">
           <article><b>BRONZE</b><strong>+5%</strong><span>{t('24 HORAS')}</span><small>{t('Precio por definir')}</small></article>
-          <article><b>SILVER</b><strong>+10%</strong><span>24 HORAS</span><small>Precio por definir</small></article>
-          <article><b>GOLD</b><strong>+15%</strong><span>24 HORAS</span><small>Precio por definir</small></article>
+          <article><b>SILVER</b><strong>+10%</strong><span>{t('24 HORAS')}</span><small>{t('Precio por definir')}</small></article>
+          <article><b>GOLD</b><strong>+15%</strong><span>{t('24 HORAS')}</span><small>{t('Precio por definir')}</small></article>
         </div>
         <div className="boost-safety-note"><ShieldCheck size={16} /> {t('Compras desactivadas por ahora. Ningún ARNOLD será cobrado hasta aprobar la economía del Boost.')}</div>
         <button className="primary-btn boost-coming-btn" type="button" disabled>{t('COMING SOON')}</button>
@@ -551,7 +551,7 @@ function MarketPage({ t, walletAddress, onConnect, tonConnect }: { t: (phrase: s
     </section>
     <div className="sale-inventory market-sale-inventory">
       <div><span>{t('ASIGNACIÓN TOTAL DE VENTA')}</span><b>200,000 <small>$ARNOLD</small></b></div>
-      <div><span>FASES</span><b>4</b></div>
+      <div><span>{t('FASES')}</span><b>4</b></div>
     </div>
     <div className="market-phases-heading"><b>{t('FASES DE LA VENTA')}</b><span>{t('PROGRESIÓN AUTOMÁTICA')}</span></div>
     <div className="sale-phase-list">
