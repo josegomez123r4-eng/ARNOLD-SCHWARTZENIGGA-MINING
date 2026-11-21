@@ -193,7 +193,8 @@ const translations: Record<string, Record<string, string>> = {
     "Trade $ARNOLD directly with other community members. User listings and peer-to-peer orders will arrive in the next phase.": "Trade $ARNOLD directly with other community members. User listings and peer-to-peer orders will arrive in the next phase.",
     "P2P TRADING IS NOT ACTIVE": "P2P TRADING IS NOT ACTIVE",
     "Unable to load token balance. Please try again.": "Unable to load token balance. Please try again.",
-    "EARLY BUILD · LIVE FEATURES DISABLED": "EARLY BUILD · LIVE FEATURES DISABLED",    "Cerrar": "Close",
+    "EARLY BUILD · LIVE FEATURES DISABLED": "EARLY BUILD · LIVE FEATURES DISABLED",
+    "Cerrar": "Close",
     "Cerrar ranking": "Close ranking",
     "See top earners from mining, tasks and referrals": "See top earners from mining, tasks and referrals",
     "VIEW": "VIEW",
@@ -213,7 +214,6 @@ const translations: Record<string, Record<string, string>> = {
     "CONNECT TON WALLET": "CONNECT TON WALLET",
     "LOADING WALLET CONNECT": "LOADING WALLET CONNECT",
     "CONNECTED ADDRESS": "CONNECTED ADDRESS",
-    "Cerrar": "Close",
 
   },
   es: {
@@ -394,7 +394,8 @@ const translations: Record<string, Record<string, string>> = {
     "NOT CONNECTED": "NO CONECTADA",
     "Global user rankings will be enabled when the shared user database is connected.": "La clasificación global se habilitará cuando se conecte la base de datos compartida de usuarios.",
     "Withdrawal requirements": "REQUISITOS DE RETIRO",
-    "Keep at least 1,000 $ARNOLD in your connected wallet to qualify. This balance is not deducted from your withdrawal.": "Mantén al menos 1,000 $ARNOLD en tu billetera conectada para calificar. Este saldo no se descuenta de tu retiro.",    "Cerrar": "Cerrar",
+    "Keep at least 1,000 $ARNOLD in your connected wallet to qualify. This balance is not deducted from your withdrawal.": "Mantén al menos 1,000 $ARNOLD en tu billetera conectada para calificar. Este saldo no se descuenta de tu retiro.",
+    "Cerrar": "Cerrar",
 
     "INVITE.": "INVITA.",
     "EARN.": "GANA.",
@@ -451,7 +452,6 @@ const translations: Record<string, Record<string, string>> = {
     "CONNECT TON WALLET": "CONECTAR BILLETERA TON",
     "LOADING WALLET CONNECT": "CARGANDO CONEXIÓN DE BILLETERA",
     "CONNECTED ADDRESS": "DIRECCIÓN CONECTADA",
-    "Cerrar": "Cerrar",
 
   },
   id: {
