@@ -246,9 +246,21 @@ Deno.serve(async (req: Request) => {
       if (orderError) throw orderError;
       if (!order) return json(404, { error: "SALE_ORDER_NOT_FOUND" });
       if (order.payment_status === "paid") {
-        const payout: { status: string; error?: string } = order.payout_status === "pending"
+        let payoutState = String(order.payout_status);
+        if (payoutState === "failed") {
+          const { error: resetError } = await admin.from("arnold_sale_orders")
+            .update({ payout_status: "pending", payout_error: null })
+            .eq("id", order.id).eq("payment_status", "paid").eq("payout_status", "failed")
+            .is("payout_tx_hash", null);
+          if (resetError) throw resetError;
+          const { data: refreshed, error: refreshError } = await admin.from("arnold_sale_orders")
+            .select("payout_status").eq("id", order.id).maybeSingle();
+          if (refreshError) throw refreshError;
+          payoutState = String(refreshed?.payout_status ?? "failed");
+        }
+        const payout: { status: string; error?: string } = payoutState === "pending"
           ? await triggerArnoldPayout(order.id)
-          : { status: String(order.payout_status) };
+          : { status: payoutState };
         return json(200, {
           payment_status: "paid",
           payout_status: payout.status,
@@ -288,6 +300,28 @@ Deno.serve(async (req: Request) => {
           ? "JETTON_PAYOUT_SUBMITTED"
           : "PAYOUT_REQUIRES_RETRY_OR_REVIEW",
       });
+    }
+    if (action === "recover_order") {
+      const { data: order, error } = await admin.from("arnold_sale_orders")
+        .select("id,gram_nano,arnold_amount,expires_at,payment_status,payout_status,created_at")
+        .eq("telegram_user_id", telegramId)
+        .eq("payment_status", "paid")
+        .in("payout_status", ["pending", "failed", "processing"])
+        .order("paid_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      if (!order) return json(404, { error: "NO_PAID_ORDER_NEEDS_RECOVERY" });
+      return json(200, { order: {
+        order_id: order.id,
+        gram_nano: String(order.gram_nano),
+        recipient: TREASURY,
+        memo: "ARNOLD:" + order.id,
+        arnold_amount: String(order.arnold_amount),
+        expires_at: order.expires_at,
+        payment_status: order.payment_status,
+        payout_status: order.payout_status
+      }});
     }
     if (action === "sale_status") {
       const orderId = String(body.orderId ?? "");
