@@ -263,6 +263,10 @@ function ReferralsPage({ t }: { t: (phrase: string) => string }) {
   const [stats, setStats] = useState({ total: 0, eligible: 0, ineligible: 0 })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [earnings, setEarnings] = useState({ available: 0, reserved: 0, paid: 0, lifetime: 0, mining: 0, tasks: 0 })
+  const [claiming, setClaiming] = useState(false)
+  const [claimMessage, setClaimMessage] = useState('')
+  const [claimError, setClaimError] = useState('')
   const inviteUrl = telegramId
     ? 'https://t.me/ArnoldMiningOfficialBot?startapp=' + encodeURIComponent('ref_' + String(telegramId))
     : ''
@@ -304,6 +308,22 @@ function ReferralsPage({ t }: { t: (phrase: string) => string }) {
           eligible: Number(data.eligible || 0),
           ineligible: Number(data.ineligible || 0)
         })
+        const earningsResponse = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'earnings', initData })
+        })
+        const earningsData = await earningsResponse.json()
+        if (!earningsResponse.ok) throw new Error(earningsData?.error || 'No se pudieron cargar las ganancias')
+        if (!cancelled) setEarnings({
+          available: Number(earningsData.available || 0),
+          reserved: Number(earningsData.reserved || 0),
+          paid: Number(earningsData.paid || 0),
+          lifetime: Number(earningsData.lifetime || 0),
+          mining: Number(earningsData.mining || 0),
+          tasks: Number(earningsData.tasks || 0)
+        })
+
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'No se pudieron cargar los referidos')
       } finally {
@@ -313,6 +333,36 @@ function ReferralsPage({ t }: { t: (phrase: string) => string }) {
     void load()
     return () => { cancelled = true }
   }, [telegramId, startParam])
+  const requestClaim = async () => {
+    if (!WebApp.initData || claiming || earnings.available <= 0) return
+    setClaiming(true)
+    setClaimMessage('')
+    setClaimError('')
+    try {
+      const response = await fetch('https://vnslzfivilgdqqgdyoxd.supabase.co/functions/v1/referral-service', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'claim', initData: WebApp.initData })
+      })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(data?.error === 'VERIFIED_WALLET_REQUIRED'
+        ? 'Verifica tu billetera para solicitar el cobro de tus referidos.'
+        : data?.error || 'No se pudo registrar la solicitud de cobro.')
+      setClaimMessage('Solicitud registrada: ' + Number(data.amount || 0).toLocaleString(undefined, { maximumFractionDigits: 6 }) + ' $ARNOLD. El pago queda pendiente de procesamiento.')
+      const refresh = await fetch('https://vnslzfivilgdqqgdyoxd.supabase.co/functions/v1/referral-service', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'earnings', initData: WebApp.initData })
+      })
+      const updated = await refresh.json()
+      if (refresh.ok) setEarnings({
+        available: Number(updated.available || 0), reserved: Number(updated.reserved || 0),
+        paid: Number(updated.paid || 0), lifetime: Number(updated.lifetime || 0),
+        mining: Number(updated.mining || 0), tasks: Number(updated.tasks || 0)
+      })
+    } catch (e) {
+      setClaimError(e instanceof Error ? e.message : 'No se pudo registrar la solicitud.')
+    } finally { setClaiming(false) }
+  }
   const copyInvite = async () => {
     if (!inviteUrl) return
     setCopyError('')
@@ -353,6 +403,27 @@ function ReferralsPage({ t }: { t: (phrase: string) => string }) {
         <p className="referral-link-help">{t('Abre la Mini App desde Telegram para generar tu enlace personal de invitación.')}</p>
         <a className="referral-share-btn" href="https://t.me/ArnoldMiningOfficialBot" target="_blank" rel="noreferrer">{t('ABRIR @ArnoldMiningOfficialBot')}</a>
       </>}
+    </div>
+    <div className="referral-earnings-card">
+      <div className="referral-earnings-top">
+        <div><div className="referral-earnings-label">{t('GANANCIAS DE REFERIDOS')}</div><div className="referral-earnings-total">{earnings.available.toLocaleString(undefined, { maximumFractionDigits: 6 })} <small>$ARNOLD</small></div></div>
+        <span className="referral-lifetime-tag">{t('DE POR VIDA')}</span>
+      </div>
+      <div className="referral-earnings-breakdown">
+        <div><span>{t('POR MINERÍA')}</span><b>{earnings.mining.toLocaleString(undefined, { maximumFractionDigits: 6 })}</b></div>
+        <div><span>{t('POR TAREAS')}</span><b>{earnings.tasks.toLocaleString(undefined, { maximumFractionDigits: 6 })}</b></div>
+      </div>
+      <button className="primary-btn referral-claim-btn" type="button" disabled={claiming || earnings.available <= 0} onClick={() => { void requestClaim() }}>
+        {claiming ? t('PROCESANDO…') : 'CLAIM'}
+      </button>
+      <div className="referral-claim-status">
+        <span>{t('EN PROCESO')}: {earnings.reserved.toLocaleString(undefined, { maximumFractionDigits: 6 })} $ARNOLD</span>
+        <span>{t('RECLAMADO')}: {earnings.paid.toLocaleString(undefined, { maximumFractionDigits: 6 })} $ARNOLD</span>
+        <span>{t('TOTAL DE POR VIDA')}: {earnings.lifetime.toLocaleString(undefined, { maximumFractionDigits: 6 })} $ARNOLD</span>
+      </div>
+      {claimMessage && <p className="referral-claim-message" role="status">{claimMessage}</p>}
+      {claimError && <p className="balance-error" role="alert">{claimError}</p>}
+      <p className="referral-link-help">{t('Acumulas el 5% de cada recompensa de minería y tareas de tus referidos elegibles, sin límite de tiempo. Las compras no cuentan.')}</p>
     </div>
     <div className="stats referral-stats">
       <article className="stat-card"><div className="stat-label">{t('TOTAL DE INVITADOS')}</div><div className="stat-number">{loading ? '…' : stats.total}</div><div className="stat-caption">{t('Personas que se registraron con tu enlace')}</div></article>
