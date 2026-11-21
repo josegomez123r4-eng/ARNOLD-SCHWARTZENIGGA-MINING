@@ -421,6 +421,7 @@ function MarketPage({ t, walletAddress, onConnect, tonConnect }: { t: (phrase: s
   const [quoteError, setQuoteError] = useState('')
   const [quoteLoading, setQuoteLoading] = useState(true)
   const [activeOrder, setActiveOrder] = useState<{ order_id: string; gram_nano: string; recipient: string; memo: string; arnold_amount: string; expires_at: string } | null>(null)
+  const [recoveringOrder, setRecoveringOrder] = useState(true)
   const [paymentSubmitted, setPaymentSubmitted] = useState(false)
   const [purchaseBusy, setPurchaseBusy] = useState(false)
   const [purchaseMessage, setPurchaseMessage] = useState('')
@@ -489,6 +490,36 @@ function MarketPage({ t, walletAddress, onConnect, tonConnect }: { t: (phrase: s
   }
   useEffect(() => {
     let cancelled = false
+    const recoverLatestOrder = async () => {
+      if (!WebApp.initData) { if (!cancelled) setRecoveringOrder(false); return }
+      try {
+        const result = await saleRequest({ action: 'recover_order', initData: WebApp.initData })
+        const recovered = result?.order
+        if (!cancelled && recovered?.order_id) {
+          setActiveOrder({
+            order_id: String(recovered.order_id),
+            gram_nano: String(recovered.gram_nano),
+            recipient: String(recovered.recipient),
+            memo: String(recovered.memo),
+            arnold_amount: String(recovered.arnold_amount),
+            expires_at: String(recovered.expires_at)
+          })
+          setPaymentSubmitted(true)
+          setPurchaseMessage('Encontramos tu compra anterior. Puedes recuperar la verificación sin volver a pagar.')
+        }
+      } catch (error) {
+        if (error instanceof Error && !error.message.includes('NO_RECOVERABLE_ORDER') && !cancelled) {
+          setPurchaseError('No pudimos recuperar automáticamente tu orden. Inténtalo de nuevo en unos momentos.')
+        }
+      } finally {
+        if (!cancelled) setRecoveringOrder(false)
+      }
+    }
+    void recoverLatestOrder()
+    return () => { cancelled = true }
+  }, [])
+  useEffect(() => {
+    let cancelled = false
     const loadQuote = async () => {
       try {
         const response = await fetch('https://vnslzfivilgdqqgdyoxd.supabase.co/functions/v1/arnold-sale', {
@@ -544,8 +575,8 @@ function MarketPage({ t, walletAddress, onConnect, tonConnect }: { t: (phrase: s
       <button className="market-connect-btn" type="button" onClick={onConnect} disabled={!!walletAddress}>
         <Wallet size={18} /> {walletAddress ? t('BILLETERA CONECTADA') : t('CONECTAR BILLETERA')}
       </button>
-      <button className={quote?.purchases_enabled && !purchaseBusy ? 'market-buy-btn market-buy-btn-active' : 'market-buy-btn'} type="button" disabled={!quote?.purchases_enabled || quoteLoading || purchaseBusy} onClick={() => { if (activeOrder && paymentSubmitted) void verifyOrder(); else void startPurchase() }}>
-        <ShoppingBag size={17} /> {purchaseBusy ? t('PROCESANDO…') : activeOrder && paymentSubmitted ? t('VERIFICAR PAGO') : activeOrder ? t('CONTINUAR PAGO') : quote?.purchases_enabled ? 'BUY $ARNOLD' : t('COMPRAS TODAVÍA CERRADAS')}
+      <button className={(activeOrder && paymentSubmitted) || (quote?.purchases_enabled && !purchaseBusy) ? 'market-buy-btn market-buy-btn-active' : 'market-buy-btn'} type="button" disabled={purchaseBusy || recoveringOrder || (quoteLoading && !(activeOrder && paymentSubmitted)) || (!quote?.purchases_enabled && !(activeOrder && paymentSubmitted))} onClick={() => { if (activeOrder && paymentSubmitted) void verifyOrder(); else void startPurchase() }}>
+        <ShoppingBag size={17} /> {purchaseBusy ? t('PROCESANDO…') : recoveringOrder ? 'BUSCANDO COMPRA…' : activeOrder && paymentSubmitted ? 'RECUPERAR MI COMPRA' : activeOrder ? t('CONTINUAR PAGO') : quote?.purchases_enabled ? 'BUY $ARNOLD' : t('COMPRAS TODAVÍA CERRADAS')}
       </button>
       {purchaseMessage && <p className="market-quote-note" role="status">{purchaseMessage}</p>}
       {purchaseError && <p className="market-quote-note" role="alert">{purchaseError}</p>}
