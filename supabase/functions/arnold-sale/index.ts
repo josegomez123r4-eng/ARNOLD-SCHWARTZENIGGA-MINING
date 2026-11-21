@@ -121,7 +121,7 @@ async function verifyIncomingNativePayment(order: any): Promise<string | null> {
     if (!tx.description || tx.description.aborted !== false) continue;
     if (tx.description.compute_ph?.success === false || tx.description.action?.success === false) continue;
     const txTime = Number(tx.now ?? msg.created_at ?? 0);
-    if (!txTime || txTime < createdAt || txTime > expiresAt) continue;
+    if (!txTime || txTime < createdAt) continue; // Exact order memo, buyer, destination and value allow safe late-payment recovery.
     if (typeof tx.hash !== "string" || tx.hash.length < 20) continue;
     return tx.hash;
   }
@@ -261,7 +261,7 @@ Deno.serve(async (req: Request) => {
               : "Pago confirmado; la entrega requiere procesamiento o revisión.",
         });
       }
-      if (order.payment_status !== "pending") {
+      if (order.payment_status !== "pending" && order.payment_status !== "expired") {
         return json(409, { error: "SALE_ORDER_NOT_PAYABLE" });
       }
       const txHash = await verifyIncomingNativePayment(order);
