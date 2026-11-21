@@ -767,6 +767,14 @@ export default function App() {
   }
   const runMiningAction = async (action: 'start' | 'claim') => {
     if (miningBusy) return
+    // El toque en START MINING es una interacción directa del usuario:
+    // iniciar la radio aquí permite cumplir las restricciones de autoplay de Telegram.
+    if (action === 'start' && !musicOn) {
+      const player = startBackgroundMusic()
+      stopMusic.current = player
+      void player.resume()
+      setMusicOn(true)
+    }
     setMiningBusy(true)
     try {
       const body: Record<string, unknown> = { action }
