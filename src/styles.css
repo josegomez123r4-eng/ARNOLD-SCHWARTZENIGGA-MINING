@@ -510,3 +510,20 @@ body{background:#050505}
 .market-recovery-btn{width:100%;min-height:43px;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;padding:9px 12px;border:1px solid #a887554d;border-radius:11px;background:#17130e;color:#c4a875;font-size:9px;font-weight:900;letter-spacing:.65px;opacity:.62;cursor:not-allowed}
 .market-recovery-btn:disabled{opacity:.42;filter:saturate(.55);cursor:not-allowed}
 .market-recovery-btn:not(:disabled){border-color:#ffbd5b;background:linear-gradient(100deg,#59300f,#30200e);color:#ffe0a0;opacity:1;cursor:pointer;box-shadow:0 0 16px #ff9c2b22}
+
+
+/* Lifetime referral rewards and claim panel */
+.referral-earnings-card{margin:18px 0;padding:18px 16px;border:1px solid #d69b4d88;border-radius:16px;background:radial-gradient(ellipse at 5% 0,#80500b55,transparent 65%),linear-gradient(145deg,#25190d,#100d09);box-shadow:0 14px 32px #0007}
+.referral-earnings-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.referral-earnings-label{color:#e9bd77;font-size:11px;font-weight:900;letter-spacing:1.1px}
+.referral-earnings-total{margin-top:7px;color:#fff2d6;font-size:29px;font-weight:900;letter-spacing:-.8px}
+.referral-earnings-total small{font-size:12px;color:#d9b778;letter-spacing:0}
+.referral-lifetime-tag{padding:6px 9px;border:1px solid #dba84c66;border-radius:20px;color:#ffd27b;font-size:9px;font-weight:900;letter-spacing:.7px;white-space:nowrap}
+.referral-earnings-breakdown{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:15px 0}
+.referral-earnings-breakdown>div{padding:10px;border:1px solid #ffffff15;border-radius:10px;background:#0003}
+.referral-earnings-breakdown span,.referral-claim-status span{display:block;color:#bba98f;font-size:9px;line-height:1.5}
+.referral-earnings-breakdown b{display:block;margin-top:4px;color:#f6dfb8;font-size:14px}
+.referral-claim-btn{width:100%;min-height:46px;font-weight:950;letter-spacing:1.3px}
+.referral-claim-btn:disabled{opacity:.48;filter:saturate(.5)}
+.referral-claim-status{display:grid;gap:4px;margin-top:12px}
+.referral-claim-message{margin:10px 0 0;padding:10px;border:1px solid #62d99555;border-radius:9px;background:#102319;color:#a8efc2;font-size:11px;line-height:1.5}
