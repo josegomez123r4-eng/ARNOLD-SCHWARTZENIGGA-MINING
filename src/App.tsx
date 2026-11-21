@@ -484,6 +484,13 @@ function MarketPage({ t, walletAddress, onConnect, tonConnect }: { t: (phrase: s
     setPurchaseMessage('')
     try {
       let order = activeOrder
+      if (order && new Date(order.expires_at).getTime() <= Date.now()) {
+        setActiveOrder(null)
+        setPaymentSubmitted(false)
+        setPaymentSubmittedAt(null)
+        setRecoveryAvailable(false)
+        throw new Error('La orden anterior venció sin confirmación de pago. Inicia una compra nueva.')
+      }
       if (!order) {
         const created = await saleRequest({ action: 'create_order', initData: WebApp.initData, grams: grams.toFixed(9).replace(/\.?0+$/, ''), walletAddress })
         order = {
@@ -627,8 +634,8 @@ function MarketPage({ t, walletAddress, onConnect, tonConnect }: { t: (phrase: s
       <button className="market-connect-btn" type="button" onClick={onConnect} disabled={!!walletAddress}>
         <Wallet size={18} /> {walletAddress ? t('BILLETERA CONECTADA') : t('CONECTAR BILLETERA')}
       </button>
-      <button className={quote?.purchases_enabled && !activeOrder && !purchaseBusy && !recoveringOrder ? 'market-buy-btn market-buy-btn-active' : 'market-buy-btn'} type="button" disabled={purchaseBusy || recoveringOrder || !!activeOrder || quoteLoading || !quote?.purchases_enabled} onClick={() => void startPurchase()}>
-        <ShoppingBag size={17} /> {purchaseBusy ? t('PROCESANDO…') : recoveringOrder ? 'COMPROBANDO COMPRA…' : activeOrder ? 'COMPRA EN VERIFICACIÓN…' : quote?.purchases_enabled ? 'BUY $ARNOLD' : t('COMPRAS TODAVÍA CERRADAS')}
+      <button className={quote?.purchases_enabled && !(activeOrder && paymentSubmitted) && !purchaseBusy && !recoveringOrder ? 'market-buy-btn market-buy-btn-active' : 'market-buy-btn'} type="button" disabled={purchaseBusy || recoveringOrder || (!!activeOrder && paymentSubmitted) || quoteLoading || !quote?.purchases_enabled} onClick={() => void startPurchase()}>
+        <ShoppingBag size={17} /> {purchaseBusy ? t('PROCESANDO…') : recoveringOrder ? 'COMPROBANDO COMPRA…' : activeOrder && paymentSubmitted ? 'COMPRA EN VERIFICACIÓN…' : activeOrder ? 'CONTINUAR PAGO' : quote?.purchases_enabled ? 'BUY $ARNOLD' : t('COMPRAS TODAVÍA CERRADAS')}
       </button>
       <button className="market-recovery-btn" type="button" disabled={!recoveryAvailable || purchaseBusy || !activeOrder} onClick={() => void verifyOrder()}>
         <ShieldCheck size={16} /> {purchaseBusy ? 'VERIFICANDO…' : 'RECUPERAR / VERIFICAR ENTREGA'}
