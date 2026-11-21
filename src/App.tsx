@@ -212,7 +212,7 @@ function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMin
     <div className="section-footnote">{t('Total supply: 1,000,000 $ARNOLD · Mining allocation: 500,000 $ARNOLD')}</div>
     {boostOpen && <div className="boost-modal-backdrop" role="presentation" onClick={() => setBoostOpen(false)}>
       <section className="boost-modal" role="dialog" aria-modal="true" aria-labelledby="boost-modal-title" onClick={event => event.stopPropagation()}>
-        <button className="boost-modal-close" type="button" onClick={() => setBoostOpen(false)} aria-label="Cerrar">×</button>
+        <button className="boost-modal-close" type="button" onClick={() => setBoostOpen(false)} aria-label={t('Cerrar')}>×</button>
         <div className="boost-modal-icon"><Zap size={24} /></div><div className="kicker">{t('ARNOLD BOOST STORE')}</div><h2 id="boost-modal-title">{t('BOOST YOUR POWER')}</h2>
         <p>{t('Mejora tu producción pagando con $ARNOLD. Los precios y compras se habilitarán después de definir los límites de emisión y la reserva de recompensas.')}</p>
         <div className="boost-options">
@@ -226,7 +226,7 @@ function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMin
     </div>}
     {rankingOpen && <div className="ranking-modal-backdrop" role="presentation" onClick={() => setRankingOpen(false)}>
       <section className="ranking-modal" role="dialog" aria-modal="true" aria-labelledby="ranking-modal-title" onClick={event => event.stopPropagation()}>
-        <button className="ranking-modal-close" type="button" onClick={() => setRankingOpen(false)} aria-label="Cerrar ranking">×</button>
+        <button className="ranking-modal-close" type="button" onClick={() => setRankingOpen(false)} aria-label={t('Cerrar ranking')}>×</button>
         <div className="ranking-modal-trophy">🏆</div>
         <div className="kicker">{t('ARNOLD COMMUNITY')}</div>
         <h2 id="ranking-modal-title">{t('GLOBAL RANKING')}</h2>
