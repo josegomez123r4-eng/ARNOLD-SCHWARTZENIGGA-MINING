@@ -132,8 +132,10 @@ async function findVerifiedNotification(order: any, decimals: number): Promise<s
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return json(405, { error: "METHOD_NOT_ALLOWED" });
-  const bearer = req.headers.get("authorization") ?? "";
-  if (!WORKER_TOKEN || bearer !== "Bearer " + WORKER_TOKEN) return json(401, { error: "UNAUTHORIZED_WORKER" });
+  const authorization = req.headers.get("authorization") ?? "";
+  const workerHeader = req.headers.get("x-worker-token") ?? "";
+  const authorized = WORKER_TOKEN && (authorization === "Bearer " + WORKER_TOKEN || workerHeader === WORKER_TOKEN);
+  if (!authorized) return json(401, { error: "UNAUTHORIZED_WORKER" });
   if (!SUPABASE_URL || !SERVICE_KEY) return json(503, { error: "RECONCILER_BACKEND_NOT_CONFIGURED" });
 
   try {
