@@ -147,11 +147,8 @@ function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMin
   }
   const progressPercent = cycle ? Math.min(100, Math.max(0, elapsed / duration * 100)) : 0
   return <section className="page-section">
-    <div className="hero mining-hero mining-brand-hero"><div className="overline"><span /> {t('THE DAILY GRIND')} <span /></div>
-      <div className="hero-energy-tag"><Zap size={13} fill="currentColor" /> {t('TRAIN. MINE. DOMINATE.')}</div>
-      <h1>{t('MAKE YOUR')}<br /><em>{t('HOLDINGS')}</em><br /><span className="hero-final-line">{t('WORK.')}</span></h1>
-      <p>{t('Mine $ARNOLD every 24 hours. Stay active, stack rewards.')}</p>
-      <div className="hero-bottom-mark"><i /><span>$ARNOLD · 24H MINING CYCLE</span><i /></div>
+    <div className="mining-banner-wrap">
+      <img className="mining-banner-image" src="https://azure-high-cougar-588.mypinata.cloud/ipfs/bafybeibcbq7akhhr7nvlceupzbp7fdv6g4tt7fqliux6437242pkblpjva" alt="ARNOLD mining banner" fetchPriority="high" />
     </div>
     <button className="ranking-entry-card" type="button" onClick={() => { setRankingOpen(true); void loadLeaderboard() }} aria-haspopup="dialog">
       <span className="ranking-entry-trophy" aria-hidden="true">🏆</span>
