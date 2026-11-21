@@ -166,38 +166,38 @@ function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMin
         <div className="earnings-source"><span><Pickaxe size={15} /> {t('MINING REWARDS')}</span><b>{miningStatus?.earned ?? '—'} <small>$ARNOLD</small></b></div>
         <div className="earnings-source"><span><Gift size={15} /> {t('REFERRAL REWARDS')}</span><b>{referralEarnings === null ? '—' : referralEarnings.toFixed(6)} <small>$ARNOLD</small></b></div>
       </div>
-      <p className="earnings-note">{miningStatus ? 'Recompensas confirmadas en el registro interno de ARNOLD.' : t('Only confirmed rewards will appear here.')}</p>
+      <p className="earnings-note">{t(miningStatus ? 'Recompensas confirmadas en el registro interno de ARNOLD.' : 'Only confirmed rewards will appear here.')}</p>
     </section>
     <section className="mining-card">
-      <div className="card-head"><div><div className="kicker">{t('MINING STATION')}</div><h2><Pickaxe size={20} /> {t('MINING SESSION')}</h2></div><div className={cycle ? (cycleFinished ? 'status ready' : 'status active') : 'status'}><span /> {cycle ? (cycleFinished ? 'READY TO CLAIM' : 'ACTIVE') : 'NOT ACTIVE'}</div></div>
+      <div className="card-head"><div><div className="kicker">{t('MINING STATION')}</div><h2><Pickaxe size={20} /> {t('MINING SESSION')}</h2></div><div className={cycle ? (cycleFinished ? 'status ready' : 'status active') : 'status'}><span /> {cycle ? (cycleFinished ? t('READY TO CLAIM') : t('ACTIVE')) : t('NOT ACTIVE')}</div></div>
       <div className="mining-showcase">
         <ArnoldWorkoutMascot active={!!cycle && !cycleFinished} />
         <div className="mining-meters">
           <article className="mining-meter mining-meter-time">
-            <span>{cycle ? (cycleFinished ? 'CYCLE COMPLETED' : 'TIME LEFT') : 'TIME LEFT'}</span>
+            <span>{cycle ? (cycleFinished ? t('CYCLE COMPLETED') : t('TIME LEFT')) : t('TIME LEFT')}</span>
             <strong>{formatClock(remaining)}</strong>
             <div className="progress"><div style={{ width: progressPercent + '%' }} /></div>
-            <small>{cycle ? Math.round(progressPercent) + '% COMPLETE' : 'NOT STARTED'}</small>
+            <small>{cycle ? Math.round(progressPercent) + '% ' + t('COMPLETE') : t('NOT STARTED')}</small>
           </article>
           <article className="mining-meter mining-meter-earned">
-            <span>ARNOLD MINED</span>
+            <span>{t('ARNOLD MINED')}</span>
             <strong>{cycle ? estimatedMined.toFixed(6) : '0.000000'}</strong>
-            <small>ARNOLD · EN ESTE CICLO</small>
+            <small>{t('ARNOLD · EN ESTE CICLO')}</small>
           </article>
           <article className="mining-meter mining-meter-rate">
-            <span>MINING RATE</span>
+            <span>{t('MINING RATE')}</span>
             <strong>{hourlyReward.toFixed(6)}</strong>
-            <small>ARNOLD / HOUR</small>
+            <small>{t('ARNOLD / HOUR')}</small>
           </article>
         </div>
       </div>
       <div className="reward-line"><div className="reward-icon"><Zap size={19} /></div><div className="reward-desc"><b>{t('BASE CYCLE REWARD')}</b><span>{t('Initial reward before holding bonuses')}</span></div><div className="reward-value">+{totalReward}<small>$ARNOLD</small></div></div>
       <div className="mining-action-buttons">
-        <button className="primary-btn mining-start-btn" type="button" disabled={miningBusy || !!cycle || !miningStatus?.verified} onClick={miningStatus?.verified ? onStartMining : onOpenWallet}><Pickaxe size={17} /> {miningBusy ? 'PROCESSING…' : cycle ? 'MINING ACTIVE' : miningStatus?.verified ? 'START MINING' : t('MINING')}</button>
+        <button className="primary-btn mining-start-btn" type="button" disabled={miningBusy || !!cycle || !miningStatus?.verified} onClick={miningStatus?.verified ? onStartMining : onOpenWallet}><Pickaxe size={17} /> {miningBusy ? t('PROCESSING…') : cycle ? t('MINING ACTIVE') : miningStatus?.verified ? t('START MINING') : t('MINING')}</button>
         <button className={'claim-btn' + (cycleFinished && !miningBusy ? ' claim-ready' : '')} type="button" disabled={miningBusy || !cycleFinished} aria-live="polite" aria-label={cycleFinished ? t('CLAIM REWARD NOW') : t('CLAIM')} onClick={onClaimMining}><Gift size={17} /> {miningBusy ? 'PROCESSING…' : cycleFinished ? t('CLAIM REWARD NOW') : t('CLAIM')}</button>
       </div>
-      <div className="mining-boost-row"><div><b>BOOST YOUR MINING</b><span>Potencia tu producción usando $ARNOLD</span></div><button type="button" onClick={() => setBoostOpen(true)}><Zap size={16} /> BOOST</button></div>
-      <p className="helper">{cycle ? (cycleFinished ? 'Tu ciclo terminó. Reclama la recompensa registrada en tu saldo ARNOLD.' : 'Tu ciclo de 24 horas está activo. La cifra minada es una estimación; la recompensa final se confirma al reclamar.') : miningStatus?.verified ? 'Billetera verificada. Puedes iniciar un ciclo de 24 horas.' : 'Conecta y verifica tu billetera con el pago único de 0.10 GRAM para desbloquear la minería.'}</p>
+      <div className="mining-boost-row"><div><b>{t('BOOST YOUR MINING')}</b><span>{t('Potencia tu producción usando $ARNOLD')}</span></div><button type="button" onClick={() => setBoostOpen(true)}><Zap size={16} /> {t('BOOST')}</button></div>
+      <p className="helper">{t(cycle ? (cycleFinished ? 'Tu ciclo terminó. Reclama la recompensa registrada en tu saldo ARNOLD.' : 'Tu ciclo de 24 horas está activo. La cifra minada es una estimación; la recompensa final se confirma al reclamar.') : miningStatus?.verified ? 'Billetera verificada. Puedes iniciar un ciclo de 24 horas.' : 'Conecta y verifica tu billetera con el pago único de 0.10 GRAM para desbloquear la minería.')}</p>
     </section>
     <section className="stats">
       <article className="stat-card featured"><div className="stat-label"><Coins size={14} /> {t('BASE REWARD')}</div><div className="stat-number">5 <small>$ARNOLD</small></div><div className="stat-caption">{t('Per completed 24-hour cycle')}</div></article>
@@ -205,23 +205,23 @@ function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMin
     </section>
     <button className="home-referral-cta" type="button" onClick={onOpenReferrals}>
       <span className="home-referral-icon"><Gift size={19} /></span>
-      <span className="home-referral-copy"><b>PROGRAMA DE REFERIDOS</b><small>Invita amigos · Consulta elegibles y pendientes</small></span>
-      <span className="home-referral-arrow">VER <span>›</span></span>
+      <span className="home-referral-copy"><b>{t('PROGRAMA DE REFERIDOS')}</b><small>{t('Invita amigos · Consulta elegibles y pendientes')}</small></span>
+      <span className="home-referral-arrow">{t('VER')} <span>›</span></span>
     </button>
-    <div className="notice notice-large"><ShieldCheck size={17} /><span>La recompensa se confirma en el servidor al completar el ciclo. El contador es solo una estimación visual.</span></div>
+    <div className="notice notice-large"><ShieldCheck size={17} /><span>{t('La recompensa se confirma en el servidor al completar el ciclo. El contador es solo una estimación visual.')}</span></div>
     <div className="section-footnote">{t('Total supply: 1,000,000 $ARNOLD · Mining allocation: 500,000 $ARNOLD')}</div>
     {boostOpen && <div className="boost-modal-backdrop" role="presentation" onClick={() => setBoostOpen(false)}>
       <section className="boost-modal" role="dialog" aria-modal="true" aria-labelledby="boost-modal-title" onClick={event => event.stopPropagation()}>
         <button className="boost-modal-close" type="button" onClick={() => setBoostOpen(false)} aria-label="Cerrar">×</button>
-        <div className="boost-modal-icon"><Zap size={24} /></div><div className="kicker">ARNOLD BOOST STORE</div><h2 id="boost-modal-title">BOOST YOUR POWER</h2>
-        <p>Mejora tu producción pagando con $ARNOLD. Los precios y compras se habilitarán después de definir los límites de emisión y la reserva de recompensas.</p>
+        <div className="boost-modal-icon"><Zap size={24} /></div><div className="kicker">{t('ARNOLD BOOST STORE')}</div><h2 id="boost-modal-title">{t('BOOST YOUR POWER')}</h2>
+        <p>{t('Mejora tu producción pagando con $ARNOLD. Los precios y compras se habilitarán después de definir los límites de emisión y la reserva de recompensas.')}</p>
         <div className="boost-options">
-          <article><b>BRONZE</b><strong>+5%</strong><span>24 HORAS</span><small>Precio por definir</small></article>
+          <article><b>BRONZE</b><strong>+5%</strong><span>{t('24 HORAS')}</span><small>{t('Precio por definir')}</small></article>
           <article><b>SILVER</b><strong>+10%</strong><span>24 HORAS</span><small>Precio por definir</small></article>
           <article><b>GOLD</b><strong>+15%</strong><span>24 HORAS</span><small>Precio por definir</small></article>
         </div>
-        <div className="boost-safety-note"><ShieldCheck size={16} /> Compras desactivadas por ahora. Ningún ARNOLD será cobrado hasta aprobar la economía del Boost.</div>
-        <button className="primary-btn boost-coming-btn" type="button" disabled>COMING SOON</button>
+        <div className="boost-safety-note"><ShieldCheck size={16} /> {t('Compras desactivadas por ahora. Ningún ARNOLD será cobrado hasta aprobar la economía del Boost.')}</div>
+        <button className="primary-btn boost-coming-btn" type="button" disabled>{t('COMING SOON')}</button>
       </section>
     </div>}
     {rankingOpen && <div className="ranking-modal-backdrop" role="presentation" onClick={() => setRankingOpen(false)}>
@@ -345,22 +345,22 @@ function ReferralsPage({ t }: { t: (phrase: string) => string }) {
       <div className="referral-invite-heading"><Gift size={18} /><b>{t('YOUR INVITE LINK')}</b></div>
       {inviteUrl ? <>
         <input className="referral-link-input" readOnly value={inviteUrl} onFocus={event => event.currentTarget.select()} aria-label={t('YOUR INVITE LINK')} />
-        <button className="primary-btn" type="button" onClick={() => { void copyInvite() }}>{copied ? '✓ ENLACE COPIADO' : 'COPIAR ENLACE'}</button>
-        <a className="referral-share-btn" href={shareUrl} target="_blank" rel="noreferrer"><Gift size={16} /> COMPARTIR POR TELEGRAM</a>
+        <button className="primary-btn" type="button" onClick={() => { void copyInvite() }}>{copied ? '✓ ' + t('ENLACE COPIADO') : t('COPIAR ENLACE')}</button>
+        <a className="referral-share-btn" href={shareUrl} target="_blank" rel="noreferrer"><Gift size={16} /> {t('COMPARTIR POR TELEGRAM')}</a>
         {copyError && <p className="balance-error" role="alert">{copyError}</p>}
-        <p className="referral-link-help">Cada amigo que abra este enlace desde Telegram quedará asociado a tu invitación.</p>
+        <p className="referral-link-help">{t('Cada amigo que abra este enlace desde Telegram quedará asociado a tu invitación.')}</p>
       </> : <>
-        <p className="referral-link-help">Abre la Mini App desde Telegram para generar tu enlace personal de invitación.</p>
-        <a className="referral-share-btn" href="https://t.me/ArnoldMiningOfficialBot" target="_blank" rel="noreferrer">ABRIR @ArnoldMiningOfficialBot</a>
+        <p className="referral-link-help">{t('Abre la Mini App desde Telegram para generar tu enlace personal de invitación.')}</p>
+        <a className="referral-share-btn" href="https://t.me/ArnoldMiningOfficialBot" target="_blank" rel="noreferrer">{t('ABRIR @ArnoldMiningOfficialBot')}</a>
       </>}
     </div>
     <div className="stats referral-stats">
-      <article className="stat-card"><div className="stat-label">TOTAL DE INVITADOS</div><div className="stat-number">{loading ? '…' : stats.total}</div><div className="stat-caption">Personas que se registraron con tu enlace</div></article>
-      <article className="stat-card"><div className="stat-label">ELEGIBLES</div><div className="stat-number">{loading ? '…' : stats.eligible}</div><div className="stat-caption">Billetera confirmada y tarifa verificada</div></article>
-      <article className="stat-card"><div className="stat-label">AÚN NO ELEGIBLES</div><div className="stat-number">{loading ? '…' : stats.ineligible}</div><div className="stat-caption">Pendientes de completar la verificación</div></article>
+      <article className="stat-card"><div className="stat-label">{t('TOTAL DE INVITADOS')}</div><div className="stat-number">{loading ? '…' : stats.total}</div><div className="stat-caption">{t('Personas que se registraron con tu enlace')}</div></article>
+      <article className="stat-card"><div className="stat-label">{t('ELEGIBLES')}</div><div className="stat-number">{loading ? '…' : stats.eligible}</div><div className="stat-caption">{t('Billetera confirmada y tarifa verificada')}</div></article>
+      <article className="stat-card"><div className="stat-label">{t('AÚN NO ELEGIBLES')}</div><div className="stat-number">{loading ? '…' : stats.ineligible}</div><div className="stat-caption">{t('Pendientes de completar la verificación')}</div></article>
     </div>
     {error && <p className="balance-error" role="alert">{error}</p>}
-    <div className="eligibility-panel"><div className="eligibility-title"><ShieldCheck size={18} /> <b>REQUISITOS DE ELEGIBILIDAD</b></div><p>Un invitado cuenta como elegible únicamente después de confirmar su billetera y completar el pago único de 0.10 GRAM, verificado de forma segura en la blockchain.</p></div>
+    <div className="eligibility-panel"><div className="eligibility-title"><ShieldCheck size={18} /> <b>{t('REQUISITOS DE ELEGIBILIDAD')}</b></div><p>{t('Un invitado cuenta como elegible únicamente después de confirmar su billetera y completar el pago único de 0.10 GRAM, verificado de forma segura en la blockchain.')}</p></div>
   </section>
 }
 function WalletPage({ t, walletAddress, walletReady, onConnect, onDisconnect, onReconnect, onRefreshBalance, onVerifyPayment, walletAppName, paymentState, arnoldBalance, balanceLoading, balanceError }: { t: (phrase: string) => string; walletAddress: string | null; walletReady: boolean; onConnect: () => void; onDisconnect: () => void; onReconnect: () => void; onRefreshBalance: () => void; onVerifyPayment: () => void; walletAppName: string | null; paymentState: string; arnoldBalance: string | null; balanceLoading: boolean; balanceError: string | null }) {
@@ -379,10 +379,10 @@ function WalletPage({ t, walletAddress, walletReady, onConnect, onDisconnect, on
       <div className="profile-row"><span>{t('Verification fee')}</span><b>0.10 GRAM</b></div>
       <p className="helper helper-left">{t('Pay 0.10 GRAM from your connected wallet to complete the verification request.')}</p>
       <button className="primary-btn" type="button" disabled={!walletAddress || paymentState === 'sending' || paymentState === 'verified'} onClick={onVerifyPayment}>
-        <LockKeyhole size={17} /> {paymentState === 'sending' ? 'COMPROBANDO PAGO…' : paymentState === 'sent' ? 'COMPROBAR PAGO ANTERIOR' : paymentState === 'verified' ? '✅ VERIFICADO' : t('PAY 0.10 GRAM')}
+        <LockKeyhole size={17} /> {paymentState === 'sending' ? t('COMPROBANDO PAGO…') : paymentState === 'sent' ? t('COMPROBAR PAGO ANTERIOR') : paymentState === 'verified' ? '✅ ' + t('VERIFICADO') : t('PAY 0.10 GRAM')}
       </button>
-      {paymentState === 'sent' && <p className="balance-hint">Ya existe un pago enviado. Pulsa “COMPROBAR PAGO ANTERIOR”; no se abrirá otra transacción ni se realizará otro cobro.</p>}
-      {paymentState === 'verified' && <p className="balance-hint">Billetera verificada en la blockchain. Ya puedes iniciar minería y participar en referidos.</p>}
+      {paymentState === 'sent' && <p className="balance-hint">{t('Ya existe un pago enviado. Pulsa “COMPROBAR PAGO ANTERIOR”; no se abrirá otra transacción ni se realizará otro cobro.')}</p>}
+      {paymentState === 'verified' && <p className="balance-hint">{t('Billetera verificada en la blockchain. Ya puedes iniciar minería y participar en referidos.')}</p>}
       {paymentState === 'cancelled' && <p className="balance-hint">{t('Payment was cancelled in your wallet.')}</p>}
       {paymentState === 'error' && <p className="balance-error">{t('Payment could not be sent. Please reconnect and try again.')}</p>}
     </div>
@@ -407,7 +407,7 @@ function WalletPage({ t, walletAddress, walletReady, onConnect, onDisconnect, on
   </section>
 }
 
-function MarketPage({ walletAddress, onConnect, tonConnect }: { walletAddress: string | null; onConnect: () => void; tonConnect: TonConnectInstance | null }) {
+function MarketPage({ t, walletAddress, onConnect, tonConnect }: { t: (phrase: string) => string; walletAddress: string | null; onConnect: () => void; tonConnect: TonConnectInstance | null }) {
   const phases = [
     { number: 1, amount: '50,000', price: 0.003 },
     { number: 2, amount: '50,000', price: 0.0045 },
@@ -523,26 +523,26 @@ function MarketPage({ walletAddress, onConnect, tonConnect }: { walletAddress: s
   const quoteTime = quote?.timestamp ? new Date(quote.timestamp).toLocaleTimeString() : ''
   return <section className="inner-page market-sale-page">
     <div className="market-buy-header">
-      <div className="market-buy-brand"><div className="market-buy-logo"><Flame size={25} fill="currentColor" /></div><div><b>ARNOLD</b><span>OFFICIAL TOKEN SALE</span></div></div>
+      <div className="market-buy-brand"><div className="market-buy-logo"><Flame size={25} fill="currentColor" /></div><div><b>ARNOLD</b><span>{t('OFFICIAL TOKEN SALE')}</span></div></div>
       <div className="market-live-price"><span className={quote ? 'market-live-dot' : 'market-live-dot market-live-dot-off'} />{quote ? '$' + phasePrice.toFixed(quote.active_phase === 1 ? 3 : 4) : '—'}<small>USD / ARNOLD</small></div>
     </div>
     <section className="market-buy-card">
-      <div className="market-buy-title"><span>COMPRA $ARNOLD</span><small>{quote ? 'FASE ' + activePhase + ' ACTIVA' : 'VENTA EN PREPARACIÓN'}</small></div>
-      <label className="market-amount-label" htmlFor="arnold-gram-amount">Cantidad en GRAM · Elige un paquete</label>
+      <div className="market-buy-title"><span>{t('COMPRA $ARNOLD')}</span><small>{quote ? t('FASE') + ' ' + activePhase + ' ' + t('ACTIVA') : t('VENTA EN PREPARACIÓN')}</small></div>
+      <label className="market-amount-label" htmlFor="arnold-gram-amount">{t('Cantidad en GRAM · Elige un paquete')}</label>
       <div className="market-amount-input"><input id="arnold-gram-amount" type="number" min="0.1" max="50" step="0.1" value={grams} onChange={event => setGrams(Math.max(0.1, Math.min(50, Math.round((Number(event.target.value) || 0.1) * 10) / 10)))} /><span>GRAM</span></div>
       <div className="market-quick-amounts">{[0.1,1,3,5,10,50].map(amount => <button type="button" key={amount} className={grams === amount ? 'active' : ''} onClick={() => setGrams(amount)}>{amount}</button>)}</div>
       <div className="market-quote-rows">
-        <div><span>Pagas</span><b>{grams} GRAM</b></div>
-        <div><span>Precio de GRAM</span><b>{quote ? '$' + tonUsd.toFixed(4) + ' USD' : '—'}</b></div>
-        <div><span>Precio de ARNOLD</span><b>{quote ? '$' + phasePrice.toFixed(4) + ' USD' : '—'}</b></div>
-        <div className="market-receive-row"><span>Recibirías aproximadamente</span><b>{quote ? Math.floor(estimatedTokens).toLocaleString() + ' $ARNOLD' : '—'}</b></div>
+        <div><span>{t('Pagas')}</span><b>{grams} GRAM</b></div>
+        <div><span>{t('Precio de GRAM')}</span><b>{quote ? '$' + tonUsd.toFixed(4) + ' USD' : '—'}</b></div>
+        <div><span>{t('Precio de ARNOLD')}</span><b>{quote ? '$' + phasePrice.toFixed(4) + ' USD' : '—'}</b></div>
+        <div className="market-receive-row"><span>{t('Recibirías aproximadamente')}</span><b>{quote ? Math.floor(estimatedTokens).toLocaleString() + ' $ARNOLD' : '—'}</b></div>
       </div>
-      <p className="market-quote-note">{quoteLoading ? 'Consultando cotización…' : quote ? 'Cotización actualizada ' + quoteTime + '. El importe final se confirma al crear la orden.' : quoteError}</p>
+      <p className="market-quote-note">{quoteLoading ? t('Consultando cotización…') : quote ? t('Cotización actualizada ') + quoteTime + t('. El importe final se confirma al crear la orden.') : t(quoteError)}</p>
       <button className="market-connect-btn" type="button" onClick={onConnect} disabled={!!walletAddress}>
-        <Wallet size={18} /> {walletAddress ? 'BILLETERA CONECTADA' : 'CONECTAR BILLETERA'}
+        <Wallet size={18} /> {walletAddress ? t('BILLETERA CONECTADA') : t('CONECTAR BILLETERA')}
       </button>
       <button className="market-buy-disabled" type="button" disabled={!quote?.purchases_enabled || purchaseBusy || (!walletAddress && !tonConnect)} onClick={() => { if (activeOrder && paymentSubmitted) void verifyOrder(); else void startPurchase() }}>
-        <LockKeyhole size={17} /> {purchaseBusy ? 'PROCESANDO…' : activeOrder && paymentSubmitted ? 'VERIFICAR PAGO' : activeOrder ? 'CONTINUAR PAGO' : quote?.purchases_enabled ? 'COMPRAR $ARNOLD' : 'COMPRAS TODAVÍA CERRADAS'}
+        <LockKeyhole size={17} /> {purchaseBusy ? t('PROCESANDO…') : activeOrder && paymentSubmitted ? t('VERIFICAR PAGO') : activeOrder ? t('CONTINUAR PAGO') : quote?.purchases_enabled ? t('COMPRAR $ARNOLD') : t('COMPRAS TODAVÍA CERRADAS')}
       </button>
       {purchaseMessage && <p className="market-quote-note" role="status">{purchaseMessage}</p>}
       {purchaseError && <p className="market-quote-note" role="alert">{purchaseError}</p>}
@@ -550,25 +550,25 @@ function MarketPage({ walletAddress, onConnect, tonConnect }: { walletAddress: s
       <p className="market-buy-footnote">{walletAddress ? 'Billetera conectada. La compra solo solicitará la cantidad exacta que confirmes en tu wallet.' : 'Conecta tu billetera TON para poder comprar cuando la venta esté abierta.'}</p>
     </section>
     <div className="sale-inventory market-sale-inventory">
-      <div><span>ASIGNACIÓN TOTAL DE VENTA</span><b>200,000 <small>$ARNOLD</small></b></div>
+      <div><span>{t('ASIGNACIÓN TOTAL DE VENTA')}</span><b>200,000 <small>$ARNOLD</small></b></div>
       <div><span>FASES</span><b>4</b></div>
     </div>
-    <div className="market-phases-heading"><b>FASES DE LA VENTA</b><span>PROGRESIÓN AUTOMÁTICA</span></div>
+    <div className="market-phases-heading"><b>{t('FASES DE LA VENTA')}</b><span>{t('PROGRESIÓN AUTOMÁTICA')}</span></div>
     <div className="sale-phase-list">
       {phases.map((phase) => <article className={phase.number === activePhase ? 'sale-phase-card sale-phase-first' : 'sale-phase-card'} key={phase.number}>
-        <div className="sale-phase-top"><span>FASE {phase.number}</span><small>{phase.number === activePhase ? 'FASE ACTUAL' : phase.number < activePhase ? 'FASE ANTERIOR' : phase.number === 4 ? 'FASE FINAL' : 'SIGUIENTE FASE'}</small></div>
+        <div className="sale-phase-top"><span>{t('FASE')} {phase.number}</span><small>{phase.number === activePhase ? t('FASE ACTUAL') : phase.number < activePhase ? t('FASE ANTERIOR') : phase.number === 4 ? t('FASE FINAL') : t('SIGUIENTE FASE')}</small></div>
         <div className="sale-phase-price">{'$' + phase.price}<span>USD / ARNOLD</span></div>
-        <div className="sale-phase-allocation"><span>ASIGNACIÓN DE FASE</span><b>{phase.amount} $ARNOLD</b></div>
+        <div className="sale-phase-allocation"><span>{t('ASIGNACIÓN DE FASE')}</span><b>{phase.amount} $ARNOLD</b></div>
       </article>)}
     </div>
     <div className="listing-estimate">
-      <div className="listing-estimate-label">PRECIO ESTIMADO DE LISTADO</div>
+      <div className="listing-estimate-label">{t('PRECIO ESTIMADO DE LISTADO')}</div>
       <strong>$0.01 <small>USD</small></strong>
       <b>STON.fi</b>
-      <p>Referencia estimada, no representa un precio garantizado ni una promesa de listado.</p>
+      <p>{t('Referencia estimada, no representa un precio garantizado ni una promesa de listado.')}</p>
     </div>
-    <div className="sale-automation-note"><ShieldCheck size={17} /><p>La siguiente fase se activará automáticamente cuando se vendan y confirmen los 50,000 tokens de la fase actual.</p></div>
-    <div className="sale-security-note"><LockKeyhole size={15} /><span>La interfaz de compra está preparada, pero los pagos siguen deshabilitados hasta completar y validar todas las pruebas de extremo a extremo.</span></div>
+    <div className="sale-automation-note"><ShieldCheck size={17} /><p>{t('La siguiente fase se activará automáticamente cuando se vendan y confirmen los 50,000 tokens de la fase actual.')}</p></div>
+    <div className="sale-security-note"><LockKeyhole size={15} /><span>{t('La interfaz de compra está preparada, pero los pagos siguen deshabilitados hasta completar y validar todas las pruebas de extremo a extremo.')}</span></div>
   </section>
 }
 function P2PPage({ t }: { t: (phrase: string) => string }) {
@@ -810,7 +810,7 @@ export default function App() {
       {tab === 'tasks' && <TasksPage t={t} />}
       {tab === 'referrals' && <ReferralsPage t={t} />}
       {tab === 'wallet' && <WalletPage t={t} walletAddress={walletAddress} walletReady={walletReady} onConnect={connectWallet} onDisconnect={disconnectWallet} onReconnect={() => { void reconnectWallet() }} onRefreshBalance={refreshBalance} onVerifyPayment={verifyWalletPayment} walletAppName={walletAppName} paymentState={paymentState} arnoldBalance={arnoldBalance} balanceLoading={balanceLoading} balanceError={balanceError} />}
-      {tab === 'market' && <MarketPage walletAddress={walletAddress} onConnect={connectWallet} tonConnect={tonConnect.current} />}
+      {tab === 'market' && <MarketPage t={t} walletAddress={walletAddress} onConnect={connectWallet} tonConnect={tonConnect.current} />}
       {tab === 'p2p' && <P2PPage t={t} />}
     </div>
     <nav className="bottom-nav" aria-label="Main navigation">
