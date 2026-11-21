@@ -88,6 +88,8 @@ async function verifyJettonWallet(owner: Address, expected: Address) {
   const derived = await master.getWalletAddress(owner);
   if (!sameAddress(derived, expected)) throw new Error("JETTON_WALLET_DERIVATION_MISMATCH");
   const result = await ton.runMethod(derived, "get_wallet_data");
+  // get_wallet_data returns balance first, then owner and Jetton master.
+  result.stack.readBigNumber();
   const actualOwner = result.stack.readAddress();
   const actualMaster = result.stack.readAddress();
   if (!sameAddress(actualOwner, owner) || !sameAddress(actualMaster, Address.parse(MASTER))) {
