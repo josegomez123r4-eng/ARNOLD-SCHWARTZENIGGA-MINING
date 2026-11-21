@@ -213,6 +213,7 @@ const translations: Record<string, Record<string, string>> = {
     "CONNECT TON WALLET": "CONNECT TON WALLET",
     "LOADING WALLET CONNECT": "LOADING WALLET CONNECT",
     "CONNECTED ADDRESS": "CONNECTED ADDRESS",
+    "Cerrar": "Close",
 
   },
   es: {
