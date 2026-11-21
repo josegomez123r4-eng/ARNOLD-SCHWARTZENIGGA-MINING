@@ -99,6 +99,35 @@ Deno.serve(async (req: Request) => {
           { onConflict: "referred_telegram_id", ignoreDuplicates: true }
         );
         if (error) throw error;
+
+        // If the invited user had already verified before the referral sync,
+        // activate the reward relationship now; purchases are never involved.
+        const { data: verifiedWallet, error: verifiedWalletError } = await admin.from("telegram_wallet_links")
+          .select("telegram_user_id").eq("telegram_user_id", telegramId).maybeSingle();
+        if (verifiedWalletError) throw verifiedWalletError;
+        if (verifiedWallet) {
+          const { data: referredProfile, error: referredProfileError } = await admin.schema("arnold").from("user_profiles")
+            .select("user_id").eq("telegram_user_id", telegramId).maybeSingle();
+          if (referredProfileError) throw referredProfileError;
+          const { data: referrerProfile, error: referrerProfileError } = await admin.schema("arnold").from("user_profiles")
+            .upsert({ user_id: crypto.randomUUID(), telegram_user_id: referrer, updated_at: new Date().toISOString() },
+              { onConflict: "telegram_user_id", ignoreDuplicates: true }).select("user_id").maybeSingle();
+          if (referrerProfileError) throw referrerProfileError;
+          let referrerUserId = referrerProfile?.user_id;
+          if (!referrerUserId) {
+            const { data: existingReferrer, error: existingReferrerError } = await admin.schema("arnold").from("user_profiles")
+              .select("user_id").eq("telegram_user_id", referrer).single();
+            if (existingReferrerError) throw existingReferrerError;
+            referrerUserId = existingReferrer.user_id;
+          }
+          if (referredProfile?.user_id && referrerUserId && referredProfile.user_id !== referrerUserId) {
+            const { error: linkError } = await admin.schema("arnold").from("referral_links").upsert(
+              { referred_user_id: referredProfile.user_id, referrer_user_id: referrerUserId },
+              { onConflict: "referred_user_id", ignoreDuplicates: true }
+            );
+            if (linkError) throw linkError;
+          }
+        }
       }
       return json(200, { ok: true });
     }
