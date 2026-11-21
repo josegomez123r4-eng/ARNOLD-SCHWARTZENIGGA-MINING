@@ -416,7 +416,7 @@ function MarketPage({ t, walletAddress, onConnect, tonConnect }: { t: (phrase: s
   ]
   const [grams, setGrams] = useState(0.1)
   const [showSalePhases, setShowSalePhases] = useState(false)
-  const [quote, setQuote] = useState<{ ton_usd: string; arnold_usd: string; active_phase: number; purchases_enabled: boolean; timestamp: string } | null>(null)
+  const [quote, setQuote] = useState<{ ton_usd: string; arnold_usd: string; active_phase: number; purchases_enabled: boolean; timestamp: string; source: string } | null>(null)
   const [quoteError, setQuoteError] = useState('')
   const [quoteLoading, setQuoteLoading] = useState(true)
   const [activeOrder, setActiveOrder] = useState<{ order_id: string; gram_nano: string; recipient: string; memo: string; arnold_amount: string; expires_at: string } | null>(null)
@@ -450,14 +450,14 @@ function MarketPage({ t, walletAddress, onConnect, tonConnect }: { t: (phrase: s
     if (!tonConnect) { setPurchaseError('La conexión con TON Connect todavía no está lista.'); return }
     if (!WebApp.initData) { setPurchaseError('Abre ARNOLD desde el bot oficial de Telegram para validar tu sesión.'); return }
     if (!quote?.purchases_enabled) return
-    if (![0.1, 1, 3, 5, 10, 50].includes(grams)) { setPurchaseError('Selecciona uno de los paquetes disponibles: 0.10, 1, 3, 5, 10 o 50 GRAM.'); return }
+    if (!Number.isFinite(grams) || grams < 0.1) { setPurchaseError('El mínimo de compra es 0.10 GRAM. Puedes introducir cualquier cantidad superior.'); return }
     setPurchaseBusy(true)
     setPurchaseError('')
     setPurchaseMessage('')
     try {
       let order = activeOrder
       if (!order) {
-        const created = await saleRequest({ action: 'create_order', initData: WebApp.initData, grams: grams.toFixed(1), walletAddress })
+        const created = await saleRequest({ action: 'create_order', initData: WebApp.initData, grams: grams.toFixed(9).replace(/\.?0+$/, ''), walletAddress })
         order = {
           order_id: String(created.order_id),
           gram_nano: String(created.gram_nano),
@@ -503,7 +503,8 @@ function MarketPage({ t, walletAddress, onConnect, tonConnect }: { t: (phrase: s
             arnold_usd: String(data.arnold_usd),
             active_phase: Number(data.active_phase),
             purchases_enabled: data.purchases_enabled === true,
-            timestamp: String(data.ton_quote_timestamp || '')
+            timestamp: String(data.ton_quote_timestamp || ''),
+            source: String(data.quote_source || 'market data')
           })
           setQuoteError('')
         }
@@ -529,16 +530,16 @@ function MarketPage({ t, walletAddress, onConnect, tonConnect }: { t: (phrase: s
     </div>
     <section className="market-buy-card">
       <div className="market-buy-title"><span>{t('COMPRA $ARNOLD')}</span><small>{quote ? t('FASE') + ' ' + activePhase + ' ' + t('ACTIVA') : t('VENTA EN PREPARACIÓN')}</small></div>
-      <label className="market-amount-label" htmlFor="arnold-gram-amount">{t('Cantidad en GRAM · Elige un paquete')}</label>
-      <div className="market-amount-input"><input id="arnold-gram-amount" type="number" min="0.1" max="50" step="0.1" value={grams} onChange={event => setGrams(Math.max(0.1, Math.min(50, Math.round((Number(event.target.value) || 0.1) * 10) / 10)))} /><span>GRAM</span></div>
-      <div className="market-quick-amounts">{[0.1,1,3,5,10,50].map(amount => <button type="button" key={amount} className={grams === amount ? 'active' : ''} onClick={() => setGrams(amount)}>{amount}</button>)}</div>
+      <label className="market-amount-label" htmlFor="arnold-gram-amount">{t('Cantidad libre en GRAM (mínimo 0.10)')}</label>
+      <div className="market-amount-input"><input id="arnold-gram-amount" type="number" min="0.1" step="any" inputMode="decimal" value={grams} onChange={event => setGrams(Math.max(0.1, Number(event.target.value) || 0.1))} /><span>GRAM</span></div>
+      <div className="market-quick-amounts">{[1,3,5,10,50].map(amount => <button type="button" key={amount} className={grams === amount ? 'active' : ''} onClick={() => setGrams(amount)}>{amount}</button>)}</div>
       <div className="market-quote-rows">
         <div><span>{t('Pagas')}</span><b>{grams} GRAM</b></div>
-        <div><span>{t('Precio de GRAM')}</span><b>{quote ? '$' + tonUsd.toFixed(4) + ' USD' : '—'}</b></div>
+        <div><span>{t('Precio actual de GRAM')}</span><b>{quote ? '$' + tonUsd.toFixed(4) + ' USD' : '—'}</b></div>
         <div><span>{t('Precio de ARNOLD')}</span><b>{quote ? '$' + phasePrice.toFixed(4) + ' USD' : '—'}</b></div>
         <div className="market-receive-row"><span>{t('Recibirías aproximadamente')}</span><b>{quote ? Math.floor(estimatedTokens).toLocaleString() + ' $ARNOLD' : '—'}</b></div>
       </div>
-      <p className="market-quote-note">{quoteLoading ? t('Consultando cotización…') : quote ? t('Cotización actualizada ') + quoteTime + t('. El importe final se confirma al crear la orden.') : t(quoteError)}</p>
+      <p className="market-quote-note">{quoteLoading ? t('Consultando cotización…') : quote ? t('Cotización actualizada ') + quoteTime + ' · ' + quote.source + '. ' + t('Se actualiza automáticamente cada 30 segundos. El cálculo definitivo se fija al crear la orden.') : t(quoteError)}</p>
       <button className="market-connect-btn" type="button" onClick={onConnect} disabled={!!walletAddress}>
         <Wallet size={18} /> {walletAddress ? t('BILLETERA CONECTADA') : t('CONECTAR BILLETERA')}
       </button>
@@ -548,7 +549,7 @@ function MarketPage({ t, walletAddress, onConnect, tonConnect }: { t: (phrase: s
       {purchaseMessage && <p className="market-quote-note" role="status">{purchaseMessage}</p>}
       {purchaseError && <p className="market-quote-note" role="alert">{purchaseError}</p>}
       {activeOrder && <p className="market-buy-footnote">Orden {activeOrder.order_id.slice(0, 8)} · {activeOrder.arnold_amount} $ARNOLD · vence {new Date(activeOrder.expires_at).toLocaleTimeString()}.</p>}
-      <p className="market-buy-footnote">{walletAddress ? 'Billetera conectada. La compra solo solicitará la cantidad exacta que confirmes en tu wallet.' : 'Conecta tu billetera TON para poder comprar cuando la venta esté abierta.'}</p>
+      <p className="market-buy-footnote">{walletAddress ? 'Billetera conectada. La compra solo solicitará la cantidad exacta que confirmes en tu wallet.' : 'Conecta tu billetera para comprar GRAM desde 0.10. Puedes introducir cualquier importe o usar los paquetes sugeridos.'}</p>
     </section>
     <button className="sale-allocation-toggle" type="button" onClick={() => setShowSalePhases(value => !value)} aria-expanded={showSalePhases}>
       <span>{t('ASIGNACIÓN TOTAL DE VENTA')}</span>
