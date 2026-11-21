@@ -371,3 +371,5 @@ body{background:#050505}
 .boost-coming-btn{min-height:44px;font-size:10px}
 @media(max-width:370px){.mining-live-stats{gap:5px}.mining-live-stats article{padding:9px 6px}.mining-live-stats article>span{font-size:6.5px}.mining-live-stats article>em{font-size:6.5px}.mascot-copy b{font-size:10px}.mascot-copy span{font-size:8px}.mascot-art{width:55%}}
 @media(prefers-reduced-motion:reduce){.mascot-arm{animation:none!important}}
+
+.mascot-animation{object-fit:contain;display:block}
