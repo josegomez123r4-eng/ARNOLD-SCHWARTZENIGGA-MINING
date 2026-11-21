@@ -509,8 +509,8 @@ function MarketPage({ walletAddress, onConnect, tonConnect }: { walletAddress: s
       <button className="market-connect-btn" type="button" onClick={onConnect} disabled={!!walletAddress}>
         <Wallet size={18} /> {walletAddress ? 'BILLETERA CONECTADA' : 'CONECTAR BILLETERA'}
       </button>
-      <button className="market-buy-disabled" type="button" disabled={!quote?.purchases_enabled || purchaseBusy || (!walletAddress && !tonConnect)} onClick={() => { if (activeOrder && paymentSubmitted) void verifyOrder(); else void startPurchase() }}>
-        <LockKeyhole size={17} /> {purchaseBusy ? 'PROCESANDO…' : activeOrder && paymentSubmitted ? 'VERIFICAR PAGO' : activeOrder ? 'CONTINUAR PAGO' : quote?.purchases_enabled ? 'COMPRAR $ARNOLD' : 'COMPRAS TODAVÍA CERRADAS'}
+      <button className={quote?.purchases_enabled && !purchaseBusy ? 'market-buy-btn market-buy-btn-active' : 'market-buy-btn'} type="button" disabled={!quote?.purchases_enabled || quoteLoading || purchaseBusy} onClick={() => { if (activeOrder && paymentSubmitted) void verifyOrder(); else void startPurchase() }}>
+        <ShoppingBag size={17} /> {purchaseBusy ? 'PROCESANDO…' : activeOrder && paymentSubmitted ? 'VERIFICAR PAGO' : activeOrder ? 'CONTINUAR PAGO' : quote?.purchases_enabled ? 'BUY $ARNOLD' : 'COMPRAS TODAVÍA CERRADAS'}
       </button>
       {purchaseMessage && <p className="market-quote-note" role="status">{purchaseMessage}</p>}
       {purchaseError && <p className="market-quote-note" role="alert">{purchaseError}</p>}
@@ -536,7 +536,7 @@ function MarketPage({ walletAddress, onConnect, tonConnect }: { walletAddress: s
       <p>Referencia estimada, no representa un precio garantizado ni una promesa de listado.</p>
     </div>
     <div className="sale-automation-note"><ShieldCheck size={17} /><p>La siguiente fase se activará automáticamente cuando se vendan y confirmen los 50,000 tokens de la fase actual.</p></div>
-    <div className="sale-security-note"><LockKeyhole size={15} /><span>La interfaz de compra está preparada, pero los pagos siguen deshabilitados hasta completar y validar todas las pruebas de extremo a extremo.</span></div>
+    <div className="sale-security-note"><ShieldCheck size={15} /><span>La compra se inicia únicamente desde una orden activa y requiere confirmación de pago en la red antes de entregar los $ARNOLD.</span></div>
   </section>
 }
 function P2PPage({ t }: { t: (phrase: string) => string }) {
