@@ -38,9 +38,8 @@ function sameAddress(a: Address, b: Address) {
 function toJettonUnits(decimal: string, decimals: number): bigint {
   if (!/^\d+(\.\d+)?$/.test(decimal)) throw new Error("INVALID_ARNOLD_AMOUNT");
   const [whole, fraction = ""] = decimal.split(".");
-  if (fraction.length > decimals && /[1-9]/.test(fraction.slice(decimals))) {
-    throw new Error("ARNOLD_AMOUNT_EXCEEDS_TOKEN_PRECISION");
-  }
+  // Jettons only support the configured decimal precision. Truncate excess
+  // fractional digits instead of failing a paid order; never round upward.
   return BigInt(whole) * 10n ** BigInt(decimals) +
     BigInt((fraction.slice(0, decimals) + "0".repeat(decimals)).slice(0, decimals) || "0");
 }
