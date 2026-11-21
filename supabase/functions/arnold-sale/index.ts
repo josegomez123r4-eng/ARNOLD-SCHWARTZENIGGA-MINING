@@ -11,7 +11,7 @@ const PAYOUT_WORKER_TOKEN = Deno.env.get("ARNOLD_PAYOUT_WORKER_TOKEN") ?? "";
 const TREASURY = "UQCSeF2dCiBsO367d32y2OKPRCgbgSkTc5am-MU5K8EAlCWm";
 const PRICE_SOURCE = "coingecko:the-open-network";
 const QUOTE_MAX_AGE_MS = 60_000;
-const ORDER_TTL_MS = 10 * 60_000;
+const ORDER_TTL_MS = 15 * 60_000;
 const GRAM_OPTIONS_NANO = new Set(["100000000", "1000000000", "3000000000", "5000000000", "10000000000", "50000000000"]);
 const cors = {
   "Access-Control-Allow-Origin": "*",
