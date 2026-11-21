@@ -59,7 +59,7 @@ function Header({ language, onLanguageChange }: { language: LanguageCode; onLang
     <div className="brand"><img className="brand-logo" src="https://azure-high-cougar-588.mypinata.cloud/ipfs/bafybeid7ztv2vpc77hkdcuvsh7y3dbg54tqair2qvebpcxhgvqg7owhdl4" alt="Arnold Schwartzenigga Mining" />
       <div><div className="brand-name">ARNOLD</div><div className="brand-sub">SCHWARTZENIGGA MINING</div></div>
     </div>
-    <div className="header-actions"><label className="language-picker" aria-label={translate(language, 'Select language')}><span>{languages.find((item) => item.code === language)?.flag}</span><select value={language} onChange={(event) => { onLanguageChange(event.target.value as LanguageCode) }}>{languages.map((item) => <option key={item.code} value={item.code}>{item.flag} {item.name}</option>)}</select></label></div>
+    <div className="header-actions"><label className="language-picker" aria-label={translate(language, 'Select language')}><select value={language} onChange={(event) => { onLanguageChange(event.target.value as LanguageCode) }}>{languages.map((item) => <option key={item.code} value={item.code}>{item.flag} {item.name}</option>)}</select></label></div>
   </header>
 }
 
