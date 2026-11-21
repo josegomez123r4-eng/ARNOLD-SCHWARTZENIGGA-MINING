@@ -371,7 +371,8 @@ function WalletPage({ t, walletAddress, walletReady, onConnect, onDisconnect, on
       <div className="balance-caption"><Coins size={15} /> {t('ARNOLD TOKEN BALANCE')}</div>
       <div className="balance-amount">{balanceLoading ? t('LOADING BALANCE') : arnoldBalance !== null ? arnoldBalance : '—'}</div>
       <div className="balance-symbol">$ARNOLD</div>
-      {balanceError && <><p className="balance-error">{balanceError}</p><button className="wallet-switch-btn" type="button" onClick={onRefreshBalance}>{t('RETRY BALANCE')}</button></>}
+      {walletAddress && <button className="wallet-switch-btn" type="button" onClick={onRefreshBalance} disabled={balanceLoading}>{balanceLoading ? t('LOADING BALANCE') : t('RETRY BALANCE')}</button>}
+      {balanceError && <p className="balance-error" role="alert">{balanceError}</p>}
       {!walletAddress && <p className="balance-hint">{t('Connect your TON wallet to view your $ARNOLD balance.')}</p>}
     </div>
     <div className="verification-payment-card">
