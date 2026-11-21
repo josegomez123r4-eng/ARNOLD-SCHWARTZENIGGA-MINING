@@ -146,6 +146,32 @@ Deno.serve(async(req:Request)=>{
       if(linkError) throw linkError;
       const {error:markError}=await admin.from("telegram_wallet_verification_intents").update({used_at:new Date().toISOString()}).eq("id",id).is("used_at",null);
       if(markError) throw markError;
+
+      // Activate the referral only after this referred user's wallet is verified.
+      // The referral reward base is mining/task earnings only, never purchases.
+      const {data:attribution,error:attributionError}=await admin.from("referral_attributions")
+        .select("referrer_telegram_id").eq("referred_telegram_id",telegramId).maybeSingle();
+      if(attributionError) throw attributionError;
+      if(attribution?.referrer_telegram_id && attribution.referrer_telegram_id !== telegramId){
+        const referrerTelegramId=String(attribution.referrer_telegram_id);
+        const {data:referrerProfile,error:referrerProfileError}=await admin.schema("arnold").from("user_profiles")
+          .upsert({user_id:crypto.randomUUID(),telegram_user_id:referrerTelegramId,updated_at:new Date().toISOString()},
+            {onConflict:"telegram_user_id",ignoreDuplicates:true}).select("user_id").maybeSingle();
+        if(referrerProfileError) throw referrerProfileError;
+        let referrerUserId=referrerProfile?.user_id;
+        if(!referrerUserId){
+          const {data:existingReferrer,error:existingReferrerError}=await admin.schema("arnold").from("user_profiles")
+            .select("user_id").eq("telegram_user_id",referrerTelegramId).single();
+          if(existingReferrerError) throw existingReferrerError;
+          referrerUserId=existingReferrer.user_id;
+        }
+        if(referrerUserId && referrerUserId!==userId){
+          const {error:referralLinkError}=await admin.schema("arnold").from("referral_links").upsert(
+            {referred_user_id:userId,referrer_user_id:referrerUserId},
+            {onConflict:"referred_user_id",ignoreDuplicates:true});
+          if(referralLinkError) throw referralLinkError;
+        }
+      }
       return json(200,{verified:true,wallet_address:intent.wallet_address,transaction_hash:txHash});
     }
     return json(400,{error:"UNKNOWN_ACTION"});
