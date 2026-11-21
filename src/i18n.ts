@@ -198,6 +198,8 @@ const translations: Record<string, Record<string, string>> = {
     "Cerrar ranking": "Close ranking",
 
 
+    "VER FASES Y PRECIO STON.FI": "VIEW PHASES & STON.FI PRICE",
+    "OCULTAR FASES": "HIDE PHASES",
   },
   es: {
     Mining:'Minería',Tasks:'Tareas',Referrals:'Referidos',Wallet:'Billetera',Market:'Mercado',P2P:'P2P',
@@ -382,6 +384,8 @@ const translations: Record<string, Record<string, string>> = {
 
 
 
+    "VER FASES Y PRECIO STON.FI": "VER FASES Y PRECIO STON.FI",
+    "OCULTAR FASES": "OCULTAR FASES",
   },
   id: {
     Mining:'Penambangan',Tasks:'Tugas',Referrals:'Referral',Wallet:'Dompet',Market:'Pasar',P2P:'P2P',
