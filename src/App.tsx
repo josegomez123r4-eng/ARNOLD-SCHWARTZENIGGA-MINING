@@ -106,7 +106,6 @@ function startBackgroundMusic() {
     const limit = audio.currentTime + 1
     while (nextTime < limit) {
       const at = nextTime
-      const note = step % melody.length
       // Heavy kick on every beat, backbeat snare, crisp hats and short minor-key power stabs.
       if (step % 2 === 0) {
         tone(118, at, 0.17, 0.19, 'sine', 43)
