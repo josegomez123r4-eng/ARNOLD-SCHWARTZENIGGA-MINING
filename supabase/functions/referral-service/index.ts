@@ -75,7 +75,20 @@ Deno.serve(async (req: Request) => {
   try {
     if (!SERVICE_KEY) return json(500, { error: "SUPABASE_SERVICE_ROLE_KEY_MISSING" });
     const body = await req.json();
-    const telegramId = await verifyInitData(String(body.initData ?? ""));
+    const initData = String(body.initData ?? "");
+    const telegramId = await verifyInitData(initData);
+    const telegramUserRaw = new URLSearchParams(initData).get("user");
+    const telegramUser = telegramUserRaw ? JSON.parse(telegramUserRaw) : {};
+    const profileUpdate: Record<string, string> = {};
+    const username = String(telegramUser.username ?? "").trim().replace(/^@/, "");
+    const displayName = [telegramUser.first_name, telegramUser.last_name].filter(Boolean).join(" ").trim();
+    if (username) profileUpdate.telegram_username = username;
+    if (displayName) profileUpdate.display_name = displayName;
+    if (Object.keys(profileUpdate).length) {
+      const { error: profileUpdateError } = await admin.schema("arnold").from("user_profiles")
+        .update(profileUpdate).eq("telegram_user_id", telegramId);
+      if (profileUpdateError) throw profileUpdateError;
+    }
     const action = String(body.action ?? "");
 
     if (action === "sync") {
@@ -101,6 +114,74 @@ Deno.serve(async (req: Request) => {
       if (verificationError) throw verificationError;
       const eligible = new Set((verified ?? []).map((r: { telegram_user_id: string }) => r.telegram_user_id)).size;
       return json(200, { total: ids.length, eligible, ineligible: ids.length - eligible });
+    }
+
+
+    if (action === "earnings") {
+      const { data: profile, error: profileError } = await admin.schema("arnold").from("user_profiles")
+        .select("user_id").eq("telegram_user_id", telegramId).maybeSingle();
+      if (profileError) throw profileError;
+      if (!profile?.user_id) return json(200, { referrals: 0 });
+      const { data: rows, error: rewardsError } = await admin.schema("arnold").from("referral_rewards")
+        .select("amount,status").eq("referrer_user_id", profile.user_id).in("status", ["pending", "paid"]);
+      if (rewardsError) throw rewardsError;
+      const referrals = (rows ?? []).reduce((sum: number, row: any) => sum + (Number(row.amount) || 0), 0);
+      return json(200, { referrals: Number(referrals.toFixed(6)) });
+    }
+
+    if (action === "leaderboard") {
+      const { data: profiles, error: profileError } = await admin.schema("arnold").from("user_profiles")
+        .select("user_id,telegram_user_id,telegram_username,display_name").not("telegram_user_id", "is", null);
+      if (profileError) throw profileError;
+      const ids = (profiles ?? []).map((p: any) => p.user_id);
+      if (!ids.length) return json(200, { leaderboard: [], my_rank: null });
+
+      const [walletResult, miningResult, taskResult, referralResult] = await Promise.all([
+        admin.schema("arnold").from("wallet_links").select("user_id").in("user_id", ids).eq("is_verified", true).eq("is_primary", true),
+        admin.schema("arnold").from("reward_ledger").select("user_id,amount,status").in("user_id", ids).eq("status", "claimed"),
+        admin.from("user_earnings").select("telegram_user_id,amount,source").in("telegram_user_id", (profiles ?? []).map((p: any) => String(p.telegram_user_id))),
+        admin.schema("arnold").from("referral_rewards").select("referrer_user_id,amount,status").in("referrer_user_id", ids).in("status", ["pending", "paid"])
+      ]);
+      if (walletResult.error) throw walletResult.error;
+      if (miningResult.error) throw miningResult.error;
+      if (taskResult.error) throw taskResult.error;
+      if (referralResult.error) throw referralResult.error;
+
+      const verifiedIds = new Set((walletResult.data ?? []).map((r: any) => r.user_id));
+      const totals = new Map<string, { mining: number; tasks: number; referrals: number }>();
+      for (const id of ids) totals.set(id, { mining: 0, tasks: 0, referrals: 0 });
+      for (const row of miningResult.data ?? []) {
+        const item = totals.get(row.user_id); if (item) item.mining += Number(row.amount) || 0;
+      }
+      const profileByTelegram = new Map((profiles ?? []).map((p: any) => [String(p.telegram_user_id), p]));
+      for (const row of taskResult.data ?? []) {
+        const profile: any = profileByTelegram.get(String(row.telegram_user_id));
+        const item = profile ? totals.get(profile.user_id) : null;
+        const amount = Number(row.amount) || 0;
+        if (item && row.source === "task" && amount > 0) item.tasks += amount;
+        // Mining entries are read from the canonical claim ledger to avoid double counting.
+      }
+      for (const row of referralResult.data ?? []) {
+        const item = totals.get(row.referrer_user_id);
+        if (item) item.referrals += Number(row.amount) || 0;
+      }
+      const ranked = (profiles ?? []).filter((p: any) => verifiedIds.has(p.user_id)).map((p: any) => {
+        const item = totals.get(p.user_id)!;
+        const total = item.mining + item.tasks + item.referrals;
+        const username = String(p.telegram_username ?? "").replace(/^@/, "");
+        const display = String(p.display_name ?? "").trim();
+        const safeName = username ? "@" + username : display || "Miner";
+        return { telegram_id: String(p.telegram_user_id), name: safeName.slice(0, 24), total, mining: item.mining, tasks: item.tasks, referrals: item.referrals };
+      }).filter((p: any) => p.total > 0)
+        .sort((a: any, b: any) => b.total - a.total || a.telegram_id.localeCompare(b.telegram_id))
+        .slice(0, 100);
+      const leaderboard = ranked.map((p: any, index: number) => ({
+        rank: index + 1, name: p.name,
+        total: Number(p.total.toFixed(6)), mining: Number(p.mining.toFixed(6)),
+        tasks: Number(p.tasks.toFixed(6)), referrals: Number(p.referrals.toFixed(6))
+      }));
+      const myIndex = ranked.findIndex((p: any) => p.telegram_id === telegramId);
+      return json(200, { leaderboard, my_rank: myIndex >= 0 ? myIndex + 1 : null });
     }
 
     if (action === "pay") {
