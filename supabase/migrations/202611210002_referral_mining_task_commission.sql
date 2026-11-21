@@ -11,7 +11,6 @@ create unique index if not exists referral_rewards_source_earning_uidx
 create or replace function public.award_arnold_task_referral_commission()
 returns trigger
 language plpgsql
-security definer
 set search_path = ''
 as $$
 declare
@@ -71,3 +70,32 @@ execute function public.award_arnold_task_referral_commission();
 
 comment on function public.award_arnold_task_referral_commission() is
   'Credits 5% of verified referred users task earnings only; excludes all purchases.';
+
+
+-- Safety gate for both mining and task commissions: no reward can be created
+-- unless the referred user's primary wallet is verified. Returning NULL skips
+-- only the commission row and never blocks the referred user's own reward.
+create or replace function public.guard_arnold_referral_reward_eligibility()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if not exists (
+    select 1
+    from arnold.wallet_links wl
+    where wl.user_id = new.referred_user_id
+      and wl.is_verified = true
+      and wl.is_primary = true
+  ) then
+    return null;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists arnold_referral_reward_eligibility on arnold.referral_rewards;
+create trigger arnold_referral_reward_eligibility
+before insert on arnold.referral_rewards
+for each row
+execute function public.guard_arnold_referral_reward_eligibility();
