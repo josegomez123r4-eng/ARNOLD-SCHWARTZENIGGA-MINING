@@ -50,7 +50,8 @@ Deno.serve(async(req:Request)=>{
    const {data:ledger,error:le}=await db.schema("arnold").from("reward_ledger").select("amount,status").eq("user_id",profile.user_id);if(le)throw le;
    const earned=(ledger??[]).filter((x:any)=>x.status==="claimed").reduce((s:number,x:any)=>s+Number(x.amount),0);
    const pending=(ledger??[]).filter((x:any)=>x.status==="pending").reduce((s:number,x:any)=>s+Number(x.amount),0);
-   return json(200,{verified:wallet?.is_verified===true,wallet_address:wallet?.wallet_address??null,cycle:cycles?.[0]??null,earned:String(earned),pending:String(pending)});
+   const {data:purchaseBonus,error:purchaseBonusError}=await db.rpc("get_arnold_purchase_mining_bonus",{p_user_id:profile.user_id});if(purchaseBonusError)throw purchaseBonusError;
+   return json(200,{verified:wallet?.is_verified===true,wallet_address:wallet?.wallet_address??null,cycle:cycles?.[0]??null,earned:String(earned),pending:String(pending),purchase_bonus:purchaseBonus});
   }
   if(!profile)return json(403,{error:"WALLET_VERIFICATION_REQUIRED"});
   const {data:wallet,error:we}=await db.schema("arnold").from("wallet_links").select("wallet_address,is_verified").eq("user_id",profile.user_id).eq("is_primary",true).maybeSingle();if(we)throw we;
