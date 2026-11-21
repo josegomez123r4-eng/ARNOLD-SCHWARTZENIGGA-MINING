@@ -63,9 +63,8 @@ function isSuccessfulTransaction(tx: any): boolean {
 function toJettonUnits(decimal: string, decimals: number): bigint {
   if (!/^\d+(\.\d+)?$/.test(decimal)) throw new Error("INVALID_ARNOLD_AMOUNT");
   const [whole, fraction = ""] = decimal.split(".");
-  if (fraction.length > decimals && /[1-9]/.test(fraction.slice(decimals))) {
-    throw new Error("ARNOLD_AMOUNT_EXCEEDS_TOKEN_PRECISION");
-  }
+  // Match the payout worker exactly: truncate excess fractional digits to
+  // the Jetton's configured precision. Never round up during verification.
   return BigInt(whole) * 10n ** BigInt(decimals) +
     BigInt((fraction.slice(0, decimals) + "0".repeat(decimals)).slice(0, decimals) || "0");
 }
