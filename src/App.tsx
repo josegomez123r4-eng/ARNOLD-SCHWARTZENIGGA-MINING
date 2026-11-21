@@ -560,7 +560,18 @@ function MarketPage({ t, walletAddress, onConnect, tonConnect }: { t: (phrase: s
       <div className="sale-phase-list">
         {phases.map((phase) => <article className={phase.number === activePhase ? 'sale-phase-card sale-phase-first' : 'sale-phase-card'} key={phase.number}>
           <div className="sale-phase-top"><span>{t('FASE')} {phase.number}</span><small>{phase.number === activePhase ? t('FASE ACTUAL') : phase.number < activePhase ? t('FASE ANTERIOR') : phase.number === 4 ? t('FASE FINAL') : t('SIGUIENTE FASE')}</small></div>
-          <div className="sale-phase-price">{'
+          <div className="sale-phase-price">{'$' + phase.price}<span>USD / ARNOLD</span></div>
+          <div className="sale-phase-allocation"><span>{t('ASIGNACIÓN DE FASE')}</span><b>{phase.amount} $ARNOLD</b></div>
+        </article>)}
+      </div>
+      <div className="listing-estimate">
+        <div className="listing-estimate-label">{t('PRECIO ESTIMADO DE LISTADO')}</div>
+        <strong>$0.01 <small>USD</small></strong>
+        <b>STON.fi</b>
+        <p>{t('Referencia estimada, no representa un precio garantizado ni una promesa de listado.')}</p>
+      </div>
+      <div className="sale-automation-note"><ShieldCheck size={17} /><p>{t('La siguiente fase se activará automáticamente cuando se vendan y confirmen los 50,000 tokens de la fase actual.')}</p></div>
+    </>}
     <div className="sale-security-note"><LockKeyhole size={15} /><span>{t('La interfaz de compra está preparada, pero los pagos siguen deshabilitados hasta completar y validar todas las pruebas de extremo a extremo.')}</span></div>
   </section>
 }
