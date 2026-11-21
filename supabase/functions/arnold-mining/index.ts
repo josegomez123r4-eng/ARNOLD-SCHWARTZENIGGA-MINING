@@ -46,7 +46,7 @@ Deno.serve(async(req:Request)=>{
   if(action==="status"){
    if(!profile)return json(200,{verified:false,cycle:null,earned:"0",pending:"0"});
    const {data:wallet,error:we}=await db.schema("arnold").from("wallet_links").select("wallet_address,is_verified").eq("user_id",profile.user_id).eq("is_primary",true).maybeSingle();if(we)throw we;
-   const {data:cycles,error:ce}=await db.schema("arnold").from("mining_cycles").select("id,status,started_at,ends_at,total_reward").eq("user_id",profile.user_id).in("status",["active","claimable"]).order("created_at",{ascending:false}).limit(1);if(ce)throw ce;
+   const {data:cycles,error:ce}=await db.schema("arnold").from("mining_cycles").select("id,status,started_at,ends_at,total_reward,base_reward,holding_bonus,purchase_bonus").eq("user_id",profile.user_id).in("status",["active","claimable"]).order("created_at",{ascending:false}).limit(1);if(ce)throw ce;
    const {data:ledger,error:le}=await db.schema("arnold").from("reward_ledger").select("amount,status").eq("user_id",profile.user_id);if(le)throw le;
    const earned=(ledger??[]).filter((x:any)=>x.status==="claimed").reduce((s:number,x:any)=>s+Number(x.amount),0);
    const pending=(ledger??[]).filter((x:any)=>x.status==="pending").reduce((s:number,x:any)=>s+Number(x.amount),0);
