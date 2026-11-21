@@ -63,7 +63,7 @@ function Header({ language, onLanguageChange }: { language: LanguageCode; onLang
   </header>
 }
 
-type MiningStatus = { verified: boolean; wallet_address?: string | null; cycle: { id: string; status: string; started_at: string; ends_at: string; total_reward: string } | null; earned: string; pending: string }
+type MiningStatus = { verified: boolean; wallet_address?: string | null; cycle: { id: string; status: string; started_at: string; ends_at: string; total_reward: string; base_reward?: string; holding_bonus?: string; purchase_bonus?: string } | null; earned: string; pending: string; purchase_bonus?: { purchased_total: string; purchase_bonus_daily: string; base_reward: string; daily_reward: string; bonus_rate: number } }
 type LeaderboardEntry = { rank: number; name: string; total: number; mining: number; tasks: number; referrals: number }
 function ArnoldWorkoutMascot({ active, t }: { active: boolean; t: (phrase: string) => string }) {
   const animationUrl = 'https://gateway.pinata.cloud/ipfs/bafybeif3wxsbkq75ukpdk2xzomrgp4ph6i2sz3bggsmsyjjrov5y6sqsue'
@@ -693,9 +693,9 @@ function MarketPage({ t, walletAddress, onConnect, tonConnect }: { t: (phrase: s
         <section className="market-holdings-reward" aria-label="Beneficio de minería por compras">
       <div className="market-holdings-reward-icon"><Zap size={20} /></div>
       <div className="market-holdings-reward-copy">
-        <b>{t('GANA EL 1% DE TUS COMPRAS EN MINERÍA DIARIA')}</b>
-        <p>{t('Cada compra confirmada de $ARNOLD aumenta permanentemente tu producción diaria en un 1% de la cantidad comprada.')}</p>
-        <small>{t('Ejemplo: compra 1,000 $ARNOLD y suma +10 $ARNOLD al día. Tus bonificaciones se acumulan.')}</small>
+        <b>{t('GANA EL 0.10% DE TUS COMPRAS EN MINERÍA DIARIA')}</b>
+        <p>{t('Tus compras confirmadas de $ARNOLD aumentan permanentemente tu producción diaria en un 0.10% de la cantidad comprada.')}</p>
+        <small>{t('Ejemplo: compra 1,000 $ARNOLD y suma +1 $ARNOLD al día. Tus bonificaciones se acumulan.')}</small>
       </div>
     </section>
 <section className="market-buy-card">
