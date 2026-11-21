@@ -504,3 +504,9 @@ body{background:#050505}
 .sale-allocation-toggle>strong small{color:#d5a75d;font:800 9px 'DM Sans',sans-serif}
 .sale-allocation-action{display:flex;align-items:center;justify-content:space-between;width:100%;padding-top:9px;border-top:1px solid #ffffff18;color:#f2bd66;font-size:9px;font-weight:900;letter-spacing:.7px}
 .sale-allocation-action b{font-size:18px;line-height:12px}
+
+
+/* Separate recovery control: visible but locked until delivery needs intervention */
+.market-recovery-btn{width:100%;min-height:43px;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;padding:9px 12px;border:1px solid #a887554d;border-radius:11px;background:#17130e;color:#c4a875;font-size:9px;font-weight:900;letter-spacing:.65px;opacity:.62;cursor:not-allowed}
+.market-recovery-btn:disabled{opacity:.42;filter:saturate(.55);cursor:not-allowed}
+.market-recovery-btn:not(:disabled){border-color:#ffbd5b;background:linear-gradient(100deg,#59300f,#30200e);color:#ffe0a0;opacity:1;cursor:pointer;box-shadow:0 0 16px #ff9c2b22}
