@@ -179,8 +179,6 @@ const translations: Record<string, Record<string, string>> = {
     'Estimated reference only. This is not a guaranteed listing or future market price.':'Referencia estimada únicamente. No garantiza el listado ni el precio futuro de mercado.',
     'The next phase will activate automatically only after all 50,000 tokens in the current phase have been sold and confirmed on-chain.':'La siguiente fase se activará automáticamente solo cuando los 50,000 tokens de la fase actual se hayan vendido y confirmado en la blockchain.',
     'Purchases are not enabled yet. The payment verification and automatic token delivery system must be tested before the sale opens.':'Las compras aún no están habilitadas. El sistema de verificación de pagos y entrega automática de tokens debe probarse antes de abrir la venta.'
-    "INVITE.": "INVITE.",
-    "EARN.": "EARN.",
     "COMPRAR $ARNOLD": "BUY $ARNOLD",
     "TON Connect returned an invalid wallet address": "TON Connect returned an invalid wallet address",
     "The configured ARNOLD Jetton master address is invalid": "The configured ARNOLD Jetton master address is invalid",
