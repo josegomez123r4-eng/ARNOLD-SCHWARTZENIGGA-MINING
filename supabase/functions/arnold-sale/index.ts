@@ -109,7 +109,6 @@ async function verifyIncomingNativePayment(order: any): Promise<string | null> {
   const expectedMemo = "ARNOLD:" + order.id;
   const expectedValue = BigInt(order.gram_nano);
   const createdAt = Math.floor(new Date(order.created_at).getTime() / 1000);
-  const expiresAt = Math.floor(new Date(order.expires_at).getTime() / 1000);
   for (const tx of (payload?.transactions ?? [])) {
     const msg = tx?.in_msg;
     if (!msg || msg.bounced === true) continue;
