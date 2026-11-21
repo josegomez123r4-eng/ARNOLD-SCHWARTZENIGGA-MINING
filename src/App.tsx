@@ -340,7 +340,7 @@ function ReferralsPage({ t }: { t: (phrase: string) => string }) {
   }
   return <section className="inner-page">
     <div className="kicker">{t('GROW THE COMMUNITY')}</div><h1>{t('INVITE.')}<br /><span>{t('EARN.')}</span></h1>
-    <div className="feature-panel"><div className="feature-icon"><Gift size={22} /></div><div><b>{t('INVITE FRIENDS')}</b><span>{t('Share your personal invite link and help grow the ARNOLD community.')}</span></div></div>
+    <div className="feature-panel"><div className="feature-icon"><Gift size={22} /></div><div><b>{t('INVITE FRIENDS')}</b><span>{t('Gana el 5% de las recompensas de minería y tareas de cada referido elegible. Las compras de tus amigos no generan comisión.')}</span></div></div>
     <div className="referral-invite-card">
       <div className="referral-invite-heading"><Gift size={18} /><b>{t('YOUR INVITE LINK')}</b></div>
       {inviteUrl ? <>
