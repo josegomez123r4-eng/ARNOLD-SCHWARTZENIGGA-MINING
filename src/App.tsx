@@ -59,46 +59,57 @@ function startBackgroundMusic() {
   if (!AudioClass) return { resume: () => {}, stop: () => {}, isRunning: () => false }
   const audio = new AudioClass()
   const master = audio.createGain()
-  master.gain.value = 0.22
+  master.gain.value = 0.05
+  const gentleFilter = audio.createBiquadFilter()
+  gentleFilter.type = 'highpass'
+  gentleFilter.frequency.value = 175
+  gentleFilter.Q.value = 0.55
+  const softLowPass = audio.createBiquadFilter()
+  softLowPass.type = 'lowpass'
+  softLowPass.frequency.value = 4200
+  softLowPass.Q.value = 0.45
   const compressor = audio.createDynamicsCompressor()
-  compressor.threshold.value = -20
-  compressor.knee.value = 12
-  compressor.ratio.value = 6
-  compressor.attack.value = 0.004
-  compressor.release.value = 0.18
-  master.connect(compressor)
+  compressor.threshold.value = -30
+  compressor.knee.value = 18
+  compressor.ratio.value = 3
+  compressor.attack.value = 0.012
+  compressor.release.value = 0.24
+  master.connect(gentleFilter)
+  gentleFilter.connect(softLowPass)
+  softLowPass.connect(compressor)
   compressor.connect(audio.destination)
 
-  // Original high-energy gym beat: punchy four-on-the-floor kick, snare, hats and a driving low synth bass.
-  const bpm = 126
+  // Suave groove electrónico: sin subgrave ni golpes de bombo fuertes.
+  const bpm = 112
   const beat = 60 / bpm
-  const bassline = [55, 55, 73.42, 55, 65.41, 65.41, 82.41, 65.41]
-  const tone = (frequency: number, at: number, length: number, level: number, wave: OscillatorType, endFrequency?: number) => {
+  const notes = [261.63, 329.63, 392, 523.25, 392, 329.63, 293.66, 349.23,
+    440, 587.33, 440, 349.23, 246.94, 311.13, 369.99, 493.88]
+  const tone = (frequency: number, at: number, length: number, level: number, wave: OscillatorType) => {
     const osc = audio.createOscillator()
     const amp = audio.createGain()
     osc.type = wave
     osc.frequency.setValueAtTime(frequency, at)
-    if (endFrequency) osc.frequency.exponentialRampToValueAtTime(endFrequency, at + length)
     amp.gain.setValueAtTime(0.0001, at)
-    amp.gain.linearRampToValueAtTime(level, at + 0.008)
+    amp.gain.linearRampToValueAtTime(level, at + 0.025)
     amp.gain.exponentialRampToValueAtTime(0.0001, at + length)
     osc.connect(amp); amp.connect(master)
-    osc.start(at); osc.stop(at + length + 0.02)
+    osc.start(at); osc.stop(at + length + 0.03)
   }
-  const noiseHit = (at: number, length: number, level: number) => {
+  const softClick = (at: number, length: number, level: number) => {
     const buffer = audio.createBuffer(1, Math.floor(audio.sampleRate * length), audio.sampleRate)
     const data = buffer.getChannelData(0)
-    for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 2)
-    const src = audio.createBufferSource()
+    for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 3)
+    const source = audio.createBufferSource()
     const filter = audio.createBiquadFilter()
     const amp = audio.createGain()
-    src.buffer = buffer
+    source.buffer = buffer
     filter.type = 'highpass'
-    filter.frequency.value = 1600
-    amp.gain.setValueAtTime(level, at)
+    filter.frequency.value = 1900
+    amp.gain.setValueAtTime(0.0001, at)
+    amp.gain.linearRampToValueAtTime(level, at + 0.004)
     amp.gain.exponentialRampToValueAtTime(0.0001, at + length)
-    src.connect(filter); filter.connect(amp); amp.connect(master)
-    src.start(at); src.stop(at + length)
+    source.connect(filter); filter.connect(amp); amp.connect(master)
+    source.start(at); source.stop(at + length)
   }
   let step = 0
   let nextTime = audio.currentTime + 0.05
@@ -106,21 +117,15 @@ function startBackgroundMusic() {
     const limit = audio.currentTime + 1
     while (nextTime < limit) {
       const at = nextTime
-      // Heavy kick on every beat, backbeat snare, crisp hats and short minor-key power stabs.
       if (step % 2 === 0) {
-        tone(118, at, 0.17, 0.19, 'sine', 43)
-        tone(bassline[(step / 2) % bassline.length], at, beat * 0.82, 0.105, 'sawtooth')
+        tone(notes[(step / 2) % notes.length], at, beat * 0.58, 0.16, 'sine')
+        tone(notes[(step / 2 + 4) % notes.length] * 2, at + 0.015, beat * 0.34, 0.045, 'triangle')
       }
-      if (step % 4 === 2) noiseHit(at, 0.12, 0.055)
-      if (step % 2 === 1) noiseHit(at, 0.035, 0.018)
-      if (step % 8 === 0) {
-        tone(110, at, beat * 0.62, 0.035, 'sawtooth')
-        tone(164.81, at, beat * 0.62, 0.028, 'sawtooth')
-        tone(220, at, beat * 0.62, 0.022, 'sawtooth')
-      }
-      if (step % 16 === 14) {
-        tone(130.81, at, beat * 0.42, 0.045, 'sawtooth')
-        tone(196, at, beat * 0.42, 0.035, 'sawtooth')
+      if (step % 4 === 2) softClick(at, 0.075, 0.012)
+      if (step % 2 === 1) softClick(at, 0.022, 0.004)
+      if (step % 16 === 0) {
+        tone(523.25, at, beat * 1.7, 0.018, 'triangle')
+        tone(659.25, at, beat * 1.7, 0.014, 'sine')
       }
       step++
       nextTime += beat / 2
@@ -136,7 +141,7 @@ function startBackgroundMusic() {
       schedule()
       timer = window.setInterval(schedule, 100)
     } catch {
-      // The browser may require another direct user interaction before audio can start.
+      // El navegador puede exigir otra interacción directa para iniciar el audio.
     }
   }
   const stop = () => {
@@ -158,6 +163,7 @@ function Header({ language, onLanguageChange, musicOn, onMusicToggle }: { langua
 }
 
 type MiningStatus = { verified: boolean; wallet_address?: string | null; cycle: { id: string; status: string; started_at: string; ends_at: string; total_reward: string } | null; earned: string; pending: string }
+type LeaderboardEntry = { rank: number; name: string; total: number; mining: number; tasks: number; referrals: number }
 function ArnoldWorkoutMascot({ active }: { active: boolean }) {
   const animationUrl = 'https://gateway.pinata.cloud/ipfs/bafybeif3wxsbkq75ukpdk2xzomrgp4ph6i2sz3bggsmsyjjrov5y6sqsue'
   return <div className={active ? 'arnold-mascot is-training' : 'arnold-mascot is-resting'} aria-label={active ? 'Arnold entrenando mientras mina' : 'Arnold listo para minar'}>
@@ -171,6 +177,31 @@ function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMin
   const cycle = miningStatus?.cycle ?? null
   const [now, setNow] = useState(Date.now())
   const [boostOpen, setBoostOpen] = useState(false)
+  const [rankingOpen, setRankingOpen] = useState(false)
+  const [rankingLoading, setRankingLoading] = useState(false)
+  const [rankingError, setRankingError] = useState('')
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
+  const [myRank, setMyRank] = useState<number | null>(null)
+  const loadLeaderboard = async () => {
+    if (!WebApp.initData) { setRankingError('Abre ARNOLD desde el bot oficial de Telegram.'); return }
+    setRankingLoading(true)
+    setRankingError('')
+    try {
+      const response = await fetch('https://vnslzfivilgdqqgdyoxd.supabase.co/functions/v1/referral-service', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'leaderboard', initData: WebApp.initData })
+      })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(data?.error || 'No se pudo cargar el ranking')
+      setLeaderboard(Array.isArray(data.leaderboard) ? data.leaderboard : [])
+      setMyRank(typeof data.my_rank === 'number' ? data.my_rank : null)
+    } catch (error) {
+      setRankingError(error instanceof Error ? error.message : 'No se pudo cargar el ranking')
+    } finally {
+      setRankingLoading(false)
+    }
+  }
   useEffect(() => {
     if (!cycle || new Date(cycle.ends_at).getTime() <= Date.now()) return
     const timer = window.setInterval(() => setNow(Date.now()), 1000)
@@ -200,6 +231,11 @@ function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMin
       <p>{t('Mine $ARNOLD every 24 hours. Stay active, stack rewards.')}</p>
       <div className="hero-bottom-mark"><i /><span>$ARNOLD · 24H MINING CYCLE</span><i /></div>
     </div>
+    <button className="ranking-entry-card" type="button" onClick={() => { setRankingOpen(true); void loadLeaderboard() }} aria-haspopup="dialog">
+      <span className="ranking-entry-trophy" aria-hidden="true">🏆</span>
+      <span className="ranking-entry-copy"><b>{t('ARNOLD LEADERBOARD')}</b><small>{t('See top earners from mining, tasks and referrals')}</small></span>
+      <span className="ranking-entry-action">{t('VIEW')} <span>›</span></span>
+    </button>
     <section className="earnings-summary" aria-label="Resumen de ganancias">
       <div className="earnings-summary-head">
         <div><div className="kicker">{t('YOUR REWARDS')}</div><h2><Coins size={19} /> {t('EARNINGS SUMMARY')}</h2></div>
@@ -267,6 +303,26 @@ function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMin
         </div>
         <div className="boost-safety-note"><ShieldCheck size={16} /> Compras desactivadas por ahora. Ningún ARNOLD será cobrado hasta aprobar la economía del Boost.</div>
         <button className="primary-btn boost-coming-btn" type="button" disabled>COMING SOON</button>
+      </section>
+    </div>}
+    {rankingOpen && <div className="ranking-modal-backdrop" role="presentation" onClick={() => setRankingOpen(false)}>
+      <section className="ranking-modal" role="dialog" aria-modal="true" aria-labelledby="ranking-modal-title" onClick={event => event.stopPropagation()}>
+        <button className="ranking-modal-close" type="button" onClick={() => setRankingOpen(false)} aria-label="Cerrar ranking">×</button>
+        <div className="ranking-modal-trophy">🏆</div>
+        <div className="kicker">{t('ARNOLD COMMUNITY')}</div>
+        <h2 id="ranking-modal-title">{t('GLOBAL RANKING')}</h2>
+        <p className="ranking-modal-intro">{t('Ranked by confirmed ARNOLD rewards earned from mining, tasks and referrals.')}</p>
+        {myRank !== null && <div className="ranking-my-position"><span>{t('YOUR POSITION')}</span><b>#{myRank}</b></div>}
+        {rankingLoading ? <div className="ranking-state">{t('LOADING RANKING')}…</div>
+          : rankingError ? <div className="ranking-state ranking-error" role="alert">{rankingError}<button type="button" onClick={() => void loadLeaderboard()}>{t('TRY AGAIN')}</button></div>
+          : leaderboard.length === 0 ? <div className="ranking-state">{t('No confirmed rewards yet. Be among the first to earn ARNOLD!')}</div>
+          : <div className="ranking-list">{leaderboard.map(entry => <article className={'ranking-row' + (entry.rank <= 3 ? ' ranking-podium' : '')} key={entry.rank}>
+              <span className="ranking-place">{entry.rank === 1 ? '🥇' : entry.rank === 2 ? '🥈' : entry.rank === 3 ? '🥉' : '#' + entry.rank}</span>
+              <div className="ranking-person"><b>{entry.name}</b><small>{t('MINING')} {entry.mining.toLocaleString(undefined, {maximumFractionDigits: 3})} · {t('TASKS')} {entry.tasks.toLocaleString(undefined, {maximumFractionDigits: 3})} · {t('REFERRALS')} {entry.referrals.toLocaleString(undefined, {maximumFractionDigits: 3})}</small></div>
+              <strong>{entry.total.toLocaleString(undefined, {maximumFractionDigits: 3})}<small>$ARNOLD</small></strong>
+            </article>)}</div>}
+        <p className="ranking-modal-footnote">{t('Only server-recorded rewards are counted. Wallet token balances are not included.')}</p>
+        <button className="ranking-refresh-btn" type="button" disabled={rankingLoading} onClick={() => void loadLeaderboard()}>{t('REFRESH RANKING')}</button>
       </section>
     </div>}
   </section>
