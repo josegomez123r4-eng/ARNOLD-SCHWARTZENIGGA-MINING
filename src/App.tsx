@@ -154,8 +154,9 @@ type MiningStatus = { verified: boolean; wallet_address?: string | null; cycle: 
 function ArnoldWorkoutMascot({ active }: { active: boolean }) {
   const animationUrl = 'https://gateway.pinata.cloud/ipfs/bafybeif3wxsbkq75ukpdk2xzomrgp4ph6i2sz3bggsmsyjjrov5y6sqsue'
   return <div className={active ? 'arnold-mascot is-training' : 'arnold-mascot is-resting'} aria-label={active ? 'Arnold entrenando mientras mina' : 'Arnold listo para minar'}>
-    <div className="mascot-copy"><b>{active ? 'ARNOLD IS GRINDING' : 'READY TO GRIND'}</b><span>{active ? 'Cada segundo cuenta' : 'Activa tu próximo ciclo'}</span></div>
-    <img className="mascot-art mascot-animation" src={animationUrl} alt="Arnold haciendo curls con dos mancuernas" />
+    <div className="mascot-art-window">
+      <img className="mascot-art mascot-animation" src={animationUrl} alt="Arnold haciendo curls con dos mancuernas" />
+    </div>
     <span className="mascot-status"><i /> {active ? 'MINING ACTIVE' : 'MINING STANDBY'}</span>
   </div>
 }
@@ -171,11 +172,11 @@ function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMin
   const startedAt = cycle ? new Date(cycle.started_at).getTime() : 0
   const endsAt = cycle ? new Date(cycle.ends_at).getTime() : 0
   const duration = Math.max(1, endsAt - startedAt)
-  const remaining = cycle ? Math.max(0, endsAt - now) : 24 * 60 * 60 * 1000
+  const remaining = cycle ? Math.max(0, endsAt - now) : 0
   const elapsed = cycle ? Math.min(duration, Math.max(0, now - startedAt)) : 0
   const cycleFinished = !!cycle && remaining <= 0
   const totalReward = cycle ? Math.max(0, Number(cycle.total_reward) || 5) : 5
-  const hourlyReward = totalReward / 24
+  const hourlyReward = cycle ? totalReward / 24 : 0
   const estimatedMined = cycle ? totalReward * (elapsed / duration) : 0
   const formatClock = (milliseconds: number) => {
     const seconds = Math.floor(milliseconds / 1000)
@@ -204,15 +205,26 @@ function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMin
     </section>
     <section className="mining-card">
       <div className="card-head"><div><div className="kicker">{t('MINING STATION')}</div><h2><Pickaxe size={20} /> {t('MINING SESSION')}</h2></div><div className={cycle ? (cycleFinished ? 'status ready' : 'status active') : 'status'}><span /> {cycle ? (cycleFinished ? 'READY TO CLAIM' : 'ACTIVE') : 'NOT ACTIVE'}</div></div>
-      <ArnoldWorkoutMascot active={!!cycle && !cycleFinished} />
-      <div className="timer-panel"><div className="timer-label">{cycle ? (cycleFinished ? 'CYCLE COMPLETED' : 'TIME LEFT IN THIS CYCLE') : (miningStatus?.verified ? 'READY TO START' : 'WALLET VERIFICATION REQUIRED')}</div>
-        <div className="timer mining-countdown"><strong>{formatClock(remaining)}</strong></div>
-        <div className="progress"><div style={{ width: progressPercent + '%' }} /></div><div className="progress-meta"><span>{cycle ? new Date(cycle.started_at).toLocaleTimeString() : '0H'}</span><span>{cycle ? Math.round(progressPercent) + '% COMPLETE' : t('NOT STARTED')}</span><span>{cycle ? new Date(cycle.ends_at).toLocaleTimeString() : '24H'}</span></div>
-      </div>
-      <div className="mining-live-stats">
-        <article><span>MINED IN THIS CYCLE</span><b>{cycle ? estimatedMined.toFixed(6) : '0.000000'} <small>ARNOLD</small></b><em>Estimación en tiempo real</em></article>
-        <article><span>PER HOUR</span><b>{hourlyReward.toFixed(6)} <small>ARNOLD</small></b><em>Según recompensa del ciclo</em></article>
-        <article><span>24H REWARD</span><b>{totalReward.toFixed(4)} <small>ARNOLD</small></b><em>Al completar el ciclo</em></article>
+      <div className="mining-showcase">
+        <ArnoldWorkoutMascot active={!!cycle && !cycleFinished} />
+        <div className="mining-meters">
+          <article className="mining-meter mining-meter-time">
+            <span>{cycle ? (cycleFinished ? 'CYCLE COMPLETED' : 'TIME LEFT') : 'TIME LEFT'}</span>
+            <strong>{formatClock(remaining)}</strong>
+            <div className="progress"><div style={{ width: progressPercent + '%' }} /></div>
+            <small>{cycle ? Math.round(progressPercent) + '% COMPLETE' : 'NOT STARTED'}</small>
+          </article>
+          <article className="mining-meter mining-meter-earned">
+            <span>ARNOLD MINED</span>
+            <strong>{cycle ? estimatedMined.toFixed(6) : '0.000000'}</strong>
+            <small>ARNOLD · EN ESTE CICLO</small>
+          </article>
+          <article className="mining-meter mining-meter-rate">
+            <span>MINING RATE</span>
+            <strong>{hourlyReward.toFixed(6)}</strong>
+            <small>ARNOLD / HOUR</small>
+          </article>
+        </div>
       </div>
       <div className="reward-line"><div className="reward-icon"><Zap size={19} /></div><div className="reward-desc"><b>{t('BASE CYCLE REWARD')}</b><span>{t('Initial reward before holding bonuses')}</span></div><div className="reward-value">+{totalReward}<small>$ARNOLD</small></div></div>
       <div className="mining-action-buttons">
