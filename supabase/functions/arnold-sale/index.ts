@@ -272,7 +272,8 @@ Deno.serve(async (req: Request) => {
               : "Pago confirmado; la entrega requiere procesamiento o revisión.",
         });
       }
-      if (order.payment_status !== "pending" && order.payment_status !== "expired") {
+      // Expired/cancelled reservations are terminal: never verify or promote them to paid.
+      if (order.payment_status !== "pending") {
         return json(409, { error: "SALE_ORDER_NOT_PAYABLE" });
       }
       const txHash = await verifyIncomingNativePayment(order);
