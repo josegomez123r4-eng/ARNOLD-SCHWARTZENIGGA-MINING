@@ -654,7 +654,6 @@ export function detectLanguage(): LanguageCode {
     // Ignore unavailable Telegram WebApp context.
   }
   const browserLang = telegramLang || (typeof navigator !== 'undefined' ? navigator.language : 'en') || 'en'
-  if (browserLang.toLowerCase().startsWith('zh-tw') || browserLang.toLowerCase().startsWith('zh-hk') || browserLang.toLowerCase().startsWith('zh-hant')) return 'zh-TW'
   const match = languages.find((item) => browserLang.toLowerCase().startsWith(item.code.toLowerCase().split('-')[0]))
   return match?.code || 'en'
 }
