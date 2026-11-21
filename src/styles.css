@@ -399,3 +399,23 @@ body{background:#050505}
   .mining-meter>strong{font-size:clamp(15px,4.2vw,20px)}
   .mining-meter-time>strong{font-size:clamp(18px,4.8vw,23px)}
 }
+
+
+/* Updated Arnold identity and high-impact mining hero */
+.brand-logo{width:46px;height:46px;flex:none;display:block;object-fit:contain;border:1px solid #ffbd5077;border-radius:13px;background:radial-gradient(circle,#ffb52d22,#100b07);box-shadow:0 0 22px #ff851c30}
+.brand-symbol{display:none}
+.live-pill{display:none!important}
+.mining-brand-hero{position:relative;margin:7px -2px 18px;padding:30px 12px 22px;border:1px solid #ffad3952;border-radius:20px;overflow:hidden;background:radial-gradient(ellipse at 50% 0%,#8a3b0b70,transparent 58%),linear-gradient(145deg,#251307 0%,#100b08 68%,#090807 100%);box-shadow:0 15px 38px #0009,inset 0 1px #ffffff17}
+.mining-brand-hero:before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.22;background:repeating-linear-gradient(125deg,transparent 0 34px,#ff9b2720 35px,#ff9b2700 37px,transparent 70px);mask-image:linear-gradient(to bottom,#000,transparent 88%)}
+.mining-brand-hero:after{content:"";position:absolute;left:50%;top:44%;width:210px;height:210px;transform:translate(-50%,-50%);border:1px solid #ffb13a1c;border-radius:50%;box-shadow:0 0 0 17px #ffb13a09,0 0 0 36px #ffb13a07;pointer-events:none}
+.mining-brand-hero>*{position:relative;z-index:1}
+.mining-brand-hero .overline{font-size:9px;letter-spacing:2.4px;color:#ffd078}
+.hero-energy-tag{width:max-content;max-width:100%;display:flex;align-items:center;justify-content:center;gap:6px;margin:17px auto 0;padding:6px 10px;border:1px solid #ffb23c5c;border-radius:30px;background:#ff8b1b18;color:#ffca66;font-size:8px;font-weight:900;letter-spacing:1.6px}
+.mining-brand-hero h1{margin:17px 0 13px;font-size:clamp(54px,14.5vw,76px);line-height:.79;letter-spacing:1.2px;text-shadow:0 5px 24px #000,0 0 25px #ff751b28}
+.mining-brand-hero h1 em{background:linear-gradient(100deg,#fff3c6 0%,#ffd36a 34%,#ff8a24 76%,#ffdc8b 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 13px #ff8c2855)}
+.mining-brand-hero .hero-final-line{display:inline-block;margin-top:5px;color:#fff0d2;text-shadow:0 0 20px #ff8b2a55}
+.mining-brand-hero p{max-width:285px;color:#d1b58b;font-size:11px;line-height:1.65}
+.hero-bottom-mark{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:17px;color:#b58c53;font-size:7px;font-weight:900;letter-spacing:1.7px}
+.hero-bottom-mark i{width:24px;height:1px;background:linear-gradient(90deg,transparent,#d98e31)}
+.hero-bottom-mark i:last-child{transform:rotate(180deg)}
+@media(max-width:370px){.brand-logo{width:40px;height:40px}.mining-brand-hero{padding:26px 9px 19px}.mining-brand-hero h1{font-size:clamp(49px,14vw,62px)}.mining-brand-hero .overline{letter-spacing:1.6px}.hero-energy-tag{font-size:7px}}
