@@ -23,7 +23,7 @@ const translations: Record<string, Record<string, string>> = {
   en: {},
   es: {
     Mining:'Minería',Tasks:'Tareas',Referrals:'Referidos',Wallet:'Billetera',Market:'Mercado',P2P:'P2P',
-    'THE DAILY GRIND':'MINERÍA DIARIA','MAKE YOUR':'HAZ QUE TUS',HOLDINGS:'TENENCIAS','WORK.':'TRABAJEN.',
+    'THE DAILY GRIND':'MINERÍA DE ALTO RENDIMIENTO','MAKE YOUR':'FORJA TU',HOLDINGS:'POTENCIAL','WORK.':'CON $ARNOLD.',
     'Mine $ARNOLD every 24 hours. Stay active, stack rewards.':'Mina $ARNOLD cada 24 horas. Mantente activo y acumula recompensas.',
     'Mining is not active yet. Your rewards and wallet eligibility will be verified securely before the first cycle begins.':'La minería aún no está activa. Tus recompensas y la elegibilidad de tu billetera se verificarán de forma segura antes del primer ciclo.',
     'BASE REWARD':'RECOMPENSA BASE','Per completed 24-hour cycle':'Por cada ciclo completado de 24 horas','CYCLE':'CICLO','HOURS':'HORAS','MINUTES':'MINUTOS','SECONDS':'SEGUNDOS','One manual cycle at a time':'Un ciclo manual a la vez',
