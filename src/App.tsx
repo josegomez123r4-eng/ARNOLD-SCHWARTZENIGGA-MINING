@@ -486,7 +486,7 @@ function MarketPage({ t, walletAddress, onConnect, tonConnect }: { t: (phrase: s
     { number: 3, amount: '50,000', price: 0.0065 },
     { number: 4, amount: '50,000', price: 0.008 },
   ]
-  const [grams, setGrams] = useState(1)
+  const [grams, setGrams] = useState('1')
   const [showSalePhases, setShowSalePhases] = useState(false)
   const [quote, setQuote] = useState<{ ton_usd: string; arnold_usd: string; active_phase: number; purchases_enabled: boolean; timestamp: string; source: string } | null>(null)
   const [quoteError, setQuoteError] = useState('')
@@ -549,7 +549,8 @@ function MarketPage({ t, walletAddress, onConnect, tonConnect }: { t: (phrase: s
     if (!tonConnect) { setPurchaseError('La conexión con TON Connect todavía no está lista.'); return }
     if (!WebApp.initData) { setPurchaseError('Abre ARNOLD desde el bot oficial de Telegram para validar tu sesión.'); return }
     if (!quote?.purchases_enabled) return
-    if (!Number.isFinite(grams) || grams < 1) { setPurchaseError('El mínimo de compra es 1 GRAM. Puedes introducir cualquier cantidad superior.'); return }
+    const gramsValue = Number(grams.trim())
+    if (!/^\d+(\.\d{1,9})?$/.test(grams.trim()) || !Number.isFinite(gramsValue) || gramsValue < 1) { setPurchaseError('El mínimo de compra es 1 GRAM. Puedes introducir cualquier cantidad superior.'); return }
     setPurchaseBusy(true)
     setPurchaseError('')
     setPurchaseMessage('')
@@ -563,7 +564,7 @@ function MarketPage({ t, walletAddress, onConnect, tonConnect }: { t: (phrase: s
         throw new Error('La orden anterior venció sin confirmación de pago. Inicia una compra nueva.')
       }
       if (!order) {
-        const created = await saleRequest({ action: 'create_order', initData: WebApp.initData, grams: grams.toFixed(9).replace(/\.?0+$/, ''), walletAddress })
+        const created = await saleRequest({ action: 'create_order', initData: WebApp.initData, grams: gramsValue.toFixed(9).replace(/\.?0+$/, ''), walletAddress })
         order = {
           order_id: String(created.order_id),
           gram_nano: String(created.gram_nano),
@@ -683,7 +684,8 @@ function MarketPage({ t, walletAddress, onConnect, tonConnect }: { t: (phrase: s
   const activePhase = quote?.active_phase ?? 1
   const phasePrice = Number(quote?.arnold_usd ?? phases[activePhase - 1]?.price ?? phases[0].price)
   const tonUsd = Number(quote?.ton_usd ?? 0)
-  const estimatedTokens = tonUsd > 0 && phasePrice > 0 ? grams * tonUsd / phasePrice : 0
+  const gramsValue = Number(grams)
+  const estimatedTokens = tonUsd > 0 && phasePrice > 0 && Number.isFinite(gramsValue) ? gramsValue * tonUsd / phasePrice : 0
   const quoteTime = quote?.timestamp ? new Date(quote.timestamp).toLocaleTimeString() : ''
   return <section className="inner-page market-sale-page">
     <div className="market-buy-header">
@@ -701,11 +703,12 @@ function MarketPage({ t, walletAddress, onConnect, tonConnect }: { t: (phrase: s
     </div>
 <section className="market-buy-card">
       <div className="market-buy-title"><span>{t('COMPRA $ARNOLD')}</span><small>{quote ? t('FASE') + ' ' + activePhase + ' ' + t('ACTIVA') : t('VENTA EN PREPARACIÓN')}</small></div>
-      <label className="market-amount-label" htmlFor="arnold-gram-amount">{t('Cantidad libre en GRAM (mínimo 1)')}</label>
-      <div className="market-amount-input"><input id="arnold-gram-amount" type="number" min="1" step="any" inputMode="decimal" value={grams} onChange={event => setGrams(Math.max(1, Number(event.target.value) || 1))} /><span>GRAM</span></div>
-      <div className="market-quick-amounts">{[1,3,5,10,50].map(amount => <button type="button" key={amount} className={grams === amount ? 'active' : ''} onClick={() => setGrams(amount)}>{amount}</button>)}</div>
+      <label className="market-amount-label" htmlFor="arnold-gram-amount">{t('Cantidad a comprar en GRAM')}</label>
+      <div className="market-amount-input"><input id="arnold-gram-amount" type="number" min="1" step="0.000000001" inputMode="decimal" value={grams} onChange={event => setGrams(event.target.value)} aria-describedby="arnold-gram-help" /><span>GRAM</span></div>
+      <p id="arnold-gram-help" className="market-quote-note">{t('Mínimo 1 GRAM. Escribe cualquier cantidad igual o superior; los botones son solo accesos rápidos.')}</p>
+      <div className="market-quick-amounts">{[1,3,5,10,50].map(amount => <button type="button" key={amount} className={Number(grams) === amount ? 'active' : ''} onClick={() => setGrams(String(amount))}>{amount}</button>)}</div>
       <div className="market-quote-rows">
-        <div><span>{t('Pagas')}</span><b>{grams} GRAM</b></div>
+        <div><span>{t('Pagas')}</span><b>{grams || '0'} GRAM</b></div>
         <div><span>{t('Precio actual de GRAM')}</span><b>{quote ? '$' + tonUsd.toFixed(4) + ' USD' : '—'}</b></div>
         <div><span>{t('Precio de ARNOLD')}</span><b>{quote ? '$' + phasePrice.toFixed(4) + ' USD' : '—'}</b></div>
         <div className="market-receive-row"><span>{t('Recibirías aproximadamente')}</span><b>{quote ? Math.floor(estimatedTokens).toLocaleString() + ' $ARNOLD' : '—'}</b></div>
