@@ -63,9 +63,8 @@ function isSuccessfulTransaction(tx: any): boolean {
 function toJettonUnits(decimal: string, decimals: number): bigint {
   if (!/^\d+(\.\d+)?$/.test(decimal)) throw new Error("INVALID_ARNOLD_AMOUNT");
   const [whole, fraction = ""] = decimal.split(".");
-  if (fraction.length > decimals && /[1-9]/.test(fraction.slice(decimals))) {
-    throw new Error("ARNOLD_AMOUNT_EXCEEDS_TOKEN_PRECISION");
-  }
+  // Match the payout worker exactly: truncate excess fractional digits to
+  // the Jetton's configured precision. Never round up during verification.
   return BigInt(whole) * 10n ** BigInt(decimals) +
     BigInt((fraction.slice(0, decimals) + "0".repeat(decimals)).slice(0, decimals) || "0");
 }
@@ -89,6 +88,8 @@ async function verifyJettonWallet(owner: Address, expected: Address) {
   const derived = await master.getWalletAddress(owner);
   if (!sameAddress(derived, expected)) throw new Error("JETTON_WALLET_DERIVATION_MISMATCH");
   const result = await ton.runMethod(derived, "get_wallet_data");
+  // get_wallet_data returns balance first, then owner and Jetton master.
+  result.stack.readBigNumber();
   const actualOwner = result.stack.readAddress();
   const actualMaster = result.stack.readAddress();
   if (!sameAddress(actualOwner, owner) || !sameAddress(actualMaster, Address.parse(MASTER))) {
@@ -133,8 +134,10 @@ async function findVerifiedNotification(order: any, decimals: number): Promise<s
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return json(405, { error: "METHOD_NOT_ALLOWED" });
-  const bearer = req.headers.get("authorization") ?? "";
-  if (!WORKER_TOKEN || bearer !== "Bearer " + WORKER_TOKEN) return json(401, { error: "UNAUTHORIZED_WORKER" });
+  const authorization = req.headers.get("authorization") ?? "";
+  const workerHeader = req.headers.get("x-worker-token") ?? "";
+  const authorized = WORKER_TOKEN && (authorization === "Bearer " + WORKER_TOKEN || workerHeader === WORKER_TOKEN);
+  if (!authorized) return json(401, { error: "UNAUTHORIZED_WORKER" });
   if (!SUPABASE_URL || !SERVICE_KEY) return json(503, { error: "RECONCILER_BACKEND_NOT_CONFIGURED" });
 
   try {

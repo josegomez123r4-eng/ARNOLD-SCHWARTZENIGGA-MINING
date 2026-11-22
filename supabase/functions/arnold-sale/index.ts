@@ -11,8 +11,8 @@ const PAYOUT_WORKER_TOKEN = Deno.env.get("ARNOLD_PAYOUT_WORKER_TOKEN") ?? "";
 const TREASURY = "UQCSeF2dCiBsO367d32y2OKPRCgbgSkTc5am-MU5K8EAlCWm";
 const PRICE_SOURCE = "coingecko:the-open-network";
 const QUOTE_MAX_AGE_MS = 60_000;
-const ORDER_TTL_MS = 10 * 60_000;
-const GRAM_OPTIONS_NANO = new Set(["100000000", "1000000000", "3000000000", "5000000000", "10000000000", "50000000000"]);
+const ORDER_TTL_MS = 15 * 60_000;
+const MIN_PURCHASE_GRAM_NANO = 1_000_000_000n;
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -109,7 +109,6 @@ async function verifyIncomingNativePayment(order: any): Promise<string | null> {
   const expectedMemo = "ARNOLD:" + order.id;
   const expectedValue = BigInt(order.gram_nano);
   const createdAt = Math.floor(new Date(order.created_at).getTime() / 1000);
-  const expiresAt = Math.floor(new Date(order.expires_at).getTime() / 1000);
   for (const tx of (payload?.transactions ?? [])) {
     const msg = tx?.in_msg;
     if (!msg || msg.bounced === true) continue;
@@ -121,7 +120,7 @@ async function verifyIncomingNativePayment(order: any): Promise<string | null> {
     if (!tx.description || tx.description.aborted !== false) continue;
     if (tx.description.compute_ph?.success === false || tx.description.action?.success === false) continue;
     const txTime = Number(tx.now ?? msg.created_at ?? 0);
-    if (!txTime || txTime < createdAt || txTime > expiresAt) continue;
+    if (!txTime || txTime < createdAt) continue; // Exact order memo, buyer, destination and value allow safe late-payment recovery.
     if (typeof tx.hash !== "string" || tx.hash.length < 20) continue;
     return tx.hash;
   }
@@ -178,7 +177,7 @@ Deno.serve(async (req: Request) => {
         quote_source: PRICE_SOURCE,
         active_phase: active.phase,
         arnold_usd: active.price,
-        supported_amounts_gram: [0.1, 1, 3, 5, 10, 50],
+        supported_amounts_gram: [1, 3, 5, 10, 50],
         purchases_enabled: Deno.env.get("ARNOLD_SALE_ENABLED") === "true",
       });
     }
@@ -196,8 +195,8 @@ Deno.serve(async (req: Request) => {
       const [gramsWhole, gramsFraction = ""] = gramsText.split(".");
       const gramNano = BigInt(gramsWhole) * 1_000_000_000n + BigInt((gramsFraction + "000000000").slice(0, 9));
       const wallet = String(body.walletAddress ?? "").trim();
-      if (!GRAM_OPTIONS_NANO.has(gramNano.toString()) || wallet.length < 40 || wallet.length > 80) {
-        return json(400, { error: "INVALID_ORDER_INPUT" });
+      if (gramNano < MIN_PURCHASE_GRAM_NANO || wallet.length < 40 || wallet.length > 80) {
+        return json(400, { error: "INVALID_ORDER_INPUT", message: "El mínimo de compra es 1 GRAM." });
       }
       const [ton, active] = await Promise.all([getTonUsd(), getActiveArnoldPrice()]);
       const now = new Date();
@@ -247,9 +246,21 @@ Deno.serve(async (req: Request) => {
       if (orderError) throw orderError;
       if (!order) return json(404, { error: "SALE_ORDER_NOT_FOUND" });
       if (order.payment_status === "paid") {
-        const payout: { status: string; error?: string } = order.payout_status === "pending"
+        let payoutState = String(order.payout_status);
+        if (payoutState === "failed") {
+          const { error: resetError } = await admin.from("arnold_sale_orders")
+            .update({ payout_status: "pending", payout_error: null })
+            .eq("id", order.id).eq("payment_status", "paid").eq("payout_status", "failed")
+            .is("payout_tx_hash", null);
+          if (resetError) throw resetError;
+          const { data: refreshed, error: refreshError } = await admin.from("arnold_sale_orders")
+            .select("payout_status").eq("id", order.id).maybeSingle();
+          if (refreshError) throw refreshError;
+          payoutState = String(refreshed?.payout_status ?? "failed");
+        }
+        const payout: { status: string; error?: string } = payoutState === "pending"
           ? await triggerArnoldPayout(order.id)
-          : { status: String(order.payout_status) };
+          : { status: payoutState };
         return json(200, {
           payment_status: "paid",
           payout_status: payout.status,
@@ -261,6 +272,7 @@ Deno.serve(async (req: Request) => {
               : "Pago confirmado; la entrega requiere procesamiento o revisión.",
         });
       }
+      // Expired/cancelled reservations are terminal: never verify or promote them to paid.
       if (order.payment_status !== "pending") {
         return json(409, { error: "SALE_ORDER_NOT_PAYABLE" });
       }
@@ -289,6 +301,28 @@ Deno.serve(async (req: Request) => {
           ? "JETTON_PAYOUT_SUBMITTED"
           : "PAYOUT_REQUIRES_RETRY_OR_REVIEW",
       });
+    }
+    if (action === "recover_order") {
+      const { data: order, error } = await admin.from("arnold_sale_orders")
+        .select("id,gram_nano,arnold_amount,expires_at,payment_status,payout_status,created_at")
+        .eq("telegram_user_id", telegramId)
+        .eq("payment_status", "paid")
+        .in("payout_status", ["pending", "failed", "processing"])
+        .order("paid_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      if (!order) return json(404, { error: "NO_PAID_ORDER_NEEDS_RECOVERY" });
+      return json(200, { order: {
+        order_id: order.id,
+        gram_nano: String(order.gram_nano),
+        recipient: TREASURY,
+        memo: "ARNOLD:" + order.id,
+        arnold_amount: String(order.arnold_amount),
+        expires_at: order.expires_at,
+        payment_status: order.payment_status,
+        payout_status: order.payout_status
+      }});
     }
     if (action === "sale_status") {
       const orderId = String(body.orderId ?? "");

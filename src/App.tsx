@@ -20,8 +20,8 @@ declare global {
   }
 }
 import {
-  CircleHelp, Clock3, Coins, Flame, Gift, Handshake, ListChecks, LockKeyhole,
-  Pickaxe, ShoppingBag, ShieldCheck, Wallet, Zap, Volume2, VolumeX, ArrowDownToLine
+  Clock3, Coins, Flame, Gift, Handshake, ListChecks, LockKeyhole,
+  Pickaxe, ShoppingBag, ShieldCheck, Wallet, Zap, ArrowDownToLine
 } from 'lucide-react'
 
 
@@ -43,10 +43,6 @@ function normalizeTonAddress(address: string): string | null {
   } catch { return null }
 }
 
-type JettonBalanceResponse = {
-  balances?: Array<{ balance: string; jetton: { address: string; decimals?: number | string } }>
-}
-
 type Tab = 'mining' | 'tasks' | 'referrals' | 'wallet' | 'market' | 'p2p'
 
 const tabs = [
@@ -58,153 +54,284 @@ const tabs = [
   { id: 'p2p', label: 'P2P', icon: Handshake },
 ] satisfies { id: Tab; label: string; icon: typeof Pickaxe }[]
 
-function startBackgroundMusic() {
-  const AudioClass = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
-  if (!AudioClass) return { resume: () => {}, stop: () => {}, isRunning: () => false }
-  const audio = new AudioClass()
-  const master = audio.createGain()
-  master.gain.value = 0.22
-  const compressor = audio.createDynamicsCompressor()
-  compressor.threshold.value = -20
-  compressor.knee.value = 12
-  compressor.ratio.value = 6
-  compressor.attack.value = 0.004
-  compressor.release.value = 0.18
-  master.connect(compressor)
-  compressor.connect(audio.destination)
-
-  // Original retro arcade soundtrack: bright 8-bit lead, pulsing bass and game-like percussion.
-  const bpm = 112
-  const beat = 60 / bpm
-  const melody = [659.25, 783.99, 987.77, 783.99, 587.33, 659.25, 783.99, 523.25,
-    659.25, 783.99, 1046.5, 987.77, 783.99, 659.25, 587.33, 523.25]
-  const bassline = [130.81, 130.81, 196, 196, 174.61, 174.61, 146.83, 146.83]
-  const tone = (frequency: number, at: number, length: number, level: number, wave: OscillatorType, endFrequency?: number) => {
-    const osc = audio.createOscillator()
-    const amp = audio.createGain()
-    osc.type = wave
-    osc.frequency.setValueAtTime(frequency, at)
-    if (endFrequency) osc.frequency.exponentialRampToValueAtTime(endFrequency, at + length)
-    amp.gain.setValueAtTime(0.0001, at)
-    amp.gain.linearRampToValueAtTime(level, at + 0.008)
-    amp.gain.exponentialRampToValueAtTime(0.0001, at + length)
-    osc.connect(amp); amp.connect(master)
-    osc.start(at); osc.stop(at + length + 0.02)
-  }
-  const noiseHit = (at: number, length: number, level: number) => {
-    const buffer = audio.createBuffer(1, Math.floor(audio.sampleRate * length), audio.sampleRate)
-    const data = buffer.getChannelData(0)
-    for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 2)
-    const src = audio.createBufferSource()
-    const filter = audio.createBiquadFilter()
-    const amp = audio.createGain()
-    src.buffer = buffer
-    filter.type = 'highpass'
-    filter.frequency.value = 1600
-    amp.gain.setValueAtTime(level, at)
-    amp.gain.exponentialRampToValueAtTime(0.0001, at + length)
-    src.connect(filter); filter.connect(amp); amp.connect(master)
-    src.start(at); src.stop(at + length)
-  }
-  let step = 0
-  let nextTime = audio.currentTime + 0.05
-  const schedule = () => {
-    const limit = audio.currentTime + 1
-    while (nextTime < limit) {
-      const at = nextTime
-      const note = step % melody.length
-      // Eighth-note arcade melody and a steady pulsing low bass.
-      tone(melody[note], at, beat * 0.42, 0.095, 'square')
-      if (step % 2 === 0) tone(bassline[Math.floor(step / 2) % bassline.length], at, beat * 0.78, 0.12, 'triangle')
-      if (step % 4 === 0) tone(95, at, 0.11, 0.10, 'sine', 42)
-      if (step % 4 === 2) noiseHit(at, 0.075, 0.035)
-      if (step % 8 === 6) noiseHit(at, 0.045, 0.025)
-      step++
-      nextTime += beat / 2
-    }
-  }
-  let timer: number | null = null
-  let started = false
-  const resume = async () => {
-    try {
-      await audio.resume()
-      if (audio.state !== 'running' || started) return
-      started = true
-      schedule()
-      timer = window.setInterval(schedule, 100)
-    } catch {
-      // The browser may require another direct user interaction before audio can start.
-    }
-  }
-  const stop = () => {
-    if (timer !== null) window.clearInterval(timer)
-    timer = null
-    started = false
-    void audio.close()
-  }
-  return { resume, stop, isRunning: () => audio.state === 'running' }
-}
-
-function Header({ language, onLanguageChange, musicOn, onMusicToggle }: { language: LanguageCode; onLanguageChange: (language: LanguageCode) => void; musicOn: boolean; onMusicToggle: () => void }) {
+function Header({ language, onLanguageChange }: { language: LanguageCode; onLanguageChange: (language: LanguageCode) => void }) {
   return <header className="topbar">
-    <div className="brand"><div className="brand-symbol"><Flame size={21} fill="currentColor" /></div>
+    <div className="brand"><img className="brand-logo" src="https://azure-high-cougar-588.mypinata.cloud/ipfs/bafybeid7ztv2vpc77hkdcuvsh7y3dbg54tqair2qvebpcxhgvqg7owhdl4" alt={translate(language, "Arnold Schwartzenigga Mining")} />
       <div><div className="brand-name">ARNOLD</div><div className="brand-sub">SCHWARTZENIGGA MINING</div></div>
     </div>
-    <div className="header-actions"><button className="music-toggle" type="button" onClick={onMusicToggle} aria-label={musicOn ? "Mute music" : "Play music"}>{musicOn ? <Volume2 size={16} /> : <VolumeX size={16} />}<span>{musicOn ? "MUSIC ON" : "MUSIC OFF"}</span></button><label className="language-picker" aria-label={translate(language, 'Select language')}><span>{languages.find((item) => item.code === language)?.flag}</span><select value={language} onChange={(event) => { onLanguageChange(event.target.value as LanguageCode) }}>{languages.map((item) => <option key={item.code} value={item.code}>{item.flag} {item.name}</option>)}</select></label><div className="live-pill"><span /> MINI APP</div></div>
+    <div className="header-actions"><label className="language-picker" aria-label={translate(language, 'Select language')}><select value={language} onChange={(event) => { onLanguageChange(event.target.value as LanguageCode) }}>{languages.map((item) => <option key={item.code} value={item.code}>{item.flag} {item.name}</option>)}</select></label></div>
   </header>
 }
 
-function MiningPage({ t, onOpenReferrals, onOpenWallet }: { t: (phrase: string) => string; onOpenReferrals: () => void; onOpenWallet: () => void }) {
-  return <section className="page-section">
-    <div className="hero"><div className="overline"><span /> THE DAILY GRIND <span /></div>
-      <h1>{t('MAKE YOUR')}<br /><em>{t('HOLDINGS')}</em><br />{t('WORK.')}</h1>
-      <p>{t('Mine $ARNOLD every 24 hours. Stay active, stack rewards.')}</p>
+type MiningStatus = { verified: boolean; wallet_address?: string | null; cycle: { id: string; status: string; started_at: string; ends_at: string; total_reward: string; base_reward?: string; holding_bonus?: string; purchase_bonus?: string } | null; earned: string; pending: string; purchase_bonus?: { purchased_total: string; purchase_bonus_daily: string; base_reward: string; daily_reward: string; bonus_rate: number } }
+type LeaderboardEntry = { rank: number; name: string; total: number; mining: number; tasks: number; referrals: number }
+function ArnoldWorkoutMascot({ active, t }: { active: boolean; t: (phrase: string) => string }) {
+  const animationUrl = 'https://gateway.pinata.cloud/ipfs/bafybeif3wxsbkq75ukpdk2xzomrgp4ph6i2sz3bggsmsyjjrov5y6sqsue'
+  return <div className={active ? 'arnold-mascot is-training' : 'arnold-mascot is-resting'} aria-label={t(active ? 'Arnold entrenando mientras mina' : 'Arnold listo para minar')}>
+    <div className="mascot-art-window">
+      <img className="mascot-art mascot-animation" src={animationUrl} alt={t("Arnold haciendo curls con dos mancuernas")} />
     </div>
-    <section className="earnings-summary" aria-label="Resumen de ganancias">
+    <span className="mascot-status"><i /> {active ? t('MINING ACTIVE') : t('MINING STANDBY')}</span>
+  </div>
+}
+function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMining, onClaimMining, miningBusy }: { t: (phrase: string) => string; onOpenReferrals: () => void; onOpenWallet: () => void; miningStatus: MiningStatus | null; onStartMining: () => void; onClaimMining: () => void; miningBusy: boolean }) {
+  const cycle = miningStatus?.cycle ?? null
+  const [referralEarnings, setReferralEarnings] = useState<number | null>(null)
+  useEffect(() => {
+    if (!WebApp.initData) return
+    let cancelled = false
+    const loadReferralEarnings = async () => {
+      try {
+        const response = await fetch('https://vnslzfivilgdqqgdyoxd.supabase.co/functions/v1/referral-service', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'earnings', initData: WebApp.initData })
+        })
+        const data = await response.json().catch(() => ({}))
+        if (!response.ok) throw new Error(data?.error || t('No se pudieron cargar las recompensas por referidos'))
+        if (!cancelled) setReferralEarnings(Number(data.referrals) || 0)
+      } catch {
+        if (!cancelled) setReferralEarnings(null)
+      }
+    }
+    void loadReferralEarnings()
+    return () => { cancelled = true }
+  }, [])
+  const [now, setNow] = useState(Date.now())
+  const [boostOpen, setBoostOpen] = useState(false)
+  const [rankingOpen, setRankingOpen] = useState(false)
+  const [rankingLoading, setRankingLoading] = useState(false)
+  const [rankingError, setRankingError] = useState('')
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
+  const [myRank, setMyRank] = useState<number | null>(null)
+  const loadLeaderboard = async () => {
+    if (!WebApp.initData) { setRankingError(t('Abre ARNOLD desde el bot oficial de Telegram.')); return }
+    setRankingLoading(true)
+    setRankingError('')
+    try {
+      const response = await fetch('https://vnslzfivilgdqqgdyoxd.supabase.co/functions/v1/referral-service', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'leaderboard', initData: WebApp.initData })
+      })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(data?.error || t('No se pudo cargar el ranking'))
+      setLeaderboard(Array.isArray(data.leaderboard) ? data.leaderboard : [])
+      setMyRank(typeof data.my_rank === 'number' ? data.my_rank : null)
+    } catch (error) {
+      setRankingError(error instanceof Error ? error.message : t('No se pudo cargar el ranking'))
+    } finally {
+      setRankingLoading(false)
+    }
+  }
+  useEffect(() => {
+    if (!cycle || new Date(cycle.ends_at).getTime() <= Date.now()) return
+    const timer = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(timer)
+  }, [cycle?.id, cycle?.ends_at])
+  const startedAt = cycle ? new Date(cycle.started_at).getTime() : 0
+  const endsAt = cycle ? new Date(cycle.ends_at).getTime() : 0
+  const duration = Math.max(1, endsAt - startedAt)
+  const remaining = cycle ? Math.max(0, endsAt - now) : 0
+  const elapsed = cycle ? Math.min(duration, Math.max(0, now - startedAt)) : 0
+  const cycleFinished = !!cycle && remaining <= 0
+  const totalReward = cycle ? Math.max(0, Number(cycle.total_reward) || 5) : 5
+  const purchaseBonusDaily = Number(miningStatus?.purchase_bonus?.purchase_bonus_daily ?? cycle?.purchase_bonus ?? 0)
+  const nextDailyReward = Number(miningStatus?.purchase_bonus?.daily_reward ?? (Number(miningStatus?.purchase_bonus?.base_reward ?? 5) + Number(miningStatus?.purchase_bonus?.purchase_bonus_daily ?? 0)))
+  const hourlyReward = cycle ? totalReward / 24 : 0
+  const estimatedMined = cycle ? totalReward * (elapsed / duration) : 0
+  const formatClock = (milliseconds: number) => {
+    const seconds = Math.floor(milliseconds / 1000)
+    const hours = Math.floor(seconds / 3600)
+    const minutes = Math.floor((seconds % 3600) / 60)
+    const secs = seconds % 60
+    return [hours, minutes, secs].map(value => String(value).padStart(2, '0')).join(':')
+  }
+  const progressPercent = cycle ? Math.min(100, Math.max(0, elapsed / duration * 100)) : 0
+  return <section className="page-section">
+    <div className="mining-banner-wrap">
+      <img className="mining-banner-image" src="https://azure-high-cougar-588.mypinata.cloud/ipfs/bafybeibcbq7akhhr7nvlceupzbp7fdv6g4tt7fqliux6437242pkblpjva" alt="ARNOLD mining banner" fetchPriority="high" />
+    </div>
+    <button className="ranking-entry-card" type="button" onClick={() => { setRankingOpen(true); void loadLeaderboard() }} aria-haspopup="dialog">
+      <span className="ranking-entry-trophy" aria-hidden="true">🏆</span>
+      <span className="ranking-entry-copy"><b>{t('ARNOLD LEADERBOARD')}</b><small>{t('See top earners from mining, tasks and referrals')}</small></span>
+      <span className="ranking-entry-action">{t('VIEW')} <span>›</span></span>
+    </button>
+    <section className="earnings-summary" aria-label={t("EARNINGS SUMMARY")}>
       <div className="earnings-summary-head">
         <div><div className="kicker">{t('YOUR REWARDS')}</div><h2><Coins size={19} /> {t('EARNINGS SUMMARY')}</h2></div>
         <span className="earnings-live-label">{t('CONFIRMED')}</span>
       </div>
-      <div className="earnings-total"><span>{t('TOTAL EARNED')}</span><strong>— <small>$ARNOLD</small></strong></div>
+      <div className="earnings-total"><span>{t('TOTAL EARNED')}</span><strong>{miningStatus?.earned ?? '—'} <small>$ARNOLD</small></strong></div>
       <div className="earnings-sources">
         <div className="earnings-source"><span><ListChecks size={15} /> {t('TASK REWARDS')}</span><b>— <small>$ARNOLD</small></b></div>
-        <div className="earnings-source"><span><Pickaxe size={15} /> {t('MINING REWARDS')}</span><b>— <small>$ARNOLD</small></b></div>
+        <div className="earnings-source"><span><Pickaxe size={15} /> {t('MINING REWARDS')}</span><b>{miningStatus?.earned ?? '—'} <small>$ARNOLD</small></b></div>
+        <div className="earnings-source"><span><Gift size={15} /> {t('REFERRAL REWARDS')}</span><b>{referralEarnings === null ? '—' : referralEarnings.toFixed(6)} <small>$ARNOLD</small></b></div>
       </div>
-      <p className="earnings-note">{t('Only confirmed rewards will appear here. Earnings history is not connected yet.')}</p>
+      <p className="earnings-note">{t(miningStatus ? 'Recompensas confirmadas en el registro interno de ARNOLD.' : 'Only confirmed rewards will appear here.')}</p>
     </section>
     <section className="mining-card">
-      <div className="card-head"><div><div className="kicker">{t('MINING STATION')}</div><h2><Pickaxe size={20} /> {t('MINING SESSION')}</h2></div><div className="status"><span /> {t('NOT ACTIVE')}</div></div>
-      <div className="timer-panel"><div className="timer-label">{t('MINING WILL OPEN SOON')}</div>
-        <div className="timer"><div><strong>24</strong><span>{t('HOURS')}</span></div><i>:</i><div><strong>00</strong><span>{t('MINUTES')}</span></div><i>:</i><div><strong>00</strong><span>{t('SECONDS')}</span></div></div>
-        <div className="progress"><div style={{ width: '0%' }} /></div><div className="progress-meta"><span>0H</span><span>{t('NOT STARTED')}</span><span>24H</span></div>
+      <div className="card-head"><div><div className="kicker">{t('MINING STATION')}</div><h2><Pickaxe size={20} /> {t('MINING SESSION')}</h2></div><div className={cycle ? (cycleFinished ? 'status ready' : 'status active') : 'status'}><span /> {cycle ? (cycleFinished ? t('READY TO CLAIM') : t('ACTIVE')) : t('NOT ACTIVE')}</div></div>
+      <div className="mining-showcase">
+        <ArnoldWorkoutMascot active={!!cycle && !cycleFinished} t={t} />
+        <div className="mining-meters">
+          <article className="mining-meter mining-meter-time">
+            <span>{cycle ? (cycleFinished ? t('CYCLE COMPLETED') : t('TIME LEFT')) : t('TIME LEFT')}</span>
+            <strong>{formatClock(remaining)}</strong>
+            <div className="progress"><div style={{ width: progressPercent + '%' }} /></div>
+            <small>{cycle ? Math.round(progressPercent) + '% ' + t('COMPLETE') : t('NOT STARTED')}</small>
+          </article>
+          <article className="mining-meter mining-meter-earned">
+            <span>{t('ARNOLD MINED')}</span>
+            <strong>{cycle ? estimatedMined.toFixed(6) : '0.000000'}</strong>
+            <small>{t('ARNOLD · EN ESTE CICLO')}</small>
+          </article>
+          <article className="mining-meter mining-meter-rate">
+            <span>{t('MINING RATE')}</span>
+            <strong>{hourlyReward.toFixed(6)}</strong>
+            <small>{t('ARNOLD / HOUR')}</small>
+          </article>
+        </div>
       </div>
-      <div className="reward-line"><div className="reward-icon"><Zap size={19} /></div><div className="reward-desc"><b>{t('BASE CYCLE REWARD')}</b><span>{t('Initial reward before holding bonuses')}</span></div><div className="reward-value">+5<small>$ARNOLD</small></div></div>
+      <div className="reward-line"><div className="reward-icon"><Zap size={19} /></div><div className="reward-desc"><b>{t('DAILY MINING REWARD')}</b><span>{t('Includes permanent 0.10% purchase bonus')} · +{purchaseBonusDaily.toFixed(6)} $ARNOLD</span></div><div className="reward-value">+{(cycle ? totalReward : nextDailyReward).toFixed(6)}<small>$ARNOLD</small></div></div>
       <div className="mining-action-buttons">
-        <button className="primary-btn mining-start-btn" type="button" onClick={onOpenWallet}><Pickaxe size={17} /> {t('MINING')}</button>
-        <button className="claim-btn" type="button" disabled><Gift size={17} /> {t('CLAIM')}</button>
+        <button className="primary-btn mining-start-btn" type="button" disabled={miningBusy || !!cycle || !miningStatus?.verified} onClick={miningStatus?.verified ? onStartMining : onOpenWallet}><Pickaxe size={17} /> {miningBusy ? t('PROCESSING…') : cycle ? t('MINING ACTIVE') : miningStatus?.verified ? t('START MINING') : t('MINING')}</button>
+        <button className={'claim-btn' + (cycleFinished && !miningBusy ? ' claim-ready' : '')} type="button" disabled={miningBusy || !cycleFinished} aria-live="polite" aria-label={cycleFinished ? t('CLAIM REWARD NOW') : t('CLAIM')} onClick={onClaimMining}><Gift size={17} /> {miningBusy ? t('PROCESSING…') : cycleFinished ? t('CLAIM REWARD NOW') : t('CLAIM')}</button>
       </div>
-      <p className="helper">{t('Connect and verify your wallet with the one-time 0.10 TON payment to unlock mining. Claim becomes available when verified rewards can be claimed.')}</p>
+      <div className="mining-boost-row"><div><b>{t('BOOST YOUR MINING')}</b><span>{t('Potencia tu producción usando $ARNOLD')}</span></div><button type="button" onClick={() => setBoostOpen(true)}><Zap size={16} /> {t('BOOST')}</button></div>
+      <p className="helper">{t(cycle ? (cycleFinished ? 'Tu ciclo terminó. Reclama la recompensa registrada en tu saldo ARNOLD.' : 'Tu ciclo de 24 horas está activo. La cifra minada es una estimación; la recompensa final se confirma al reclamar.') : miningStatus?.verified ? 'Billetera verificada. Puedes iniciar un ciclo de 24 horas.' : 'Conecta y verifica tu billetera con el pago único de 0.10 GRAM para desbloquear la minería.')}</p>
     </section>
     <section className="stats">
-      <article className="stat-card featured"><div className="stat-label"><Coins size={14} /> {t('BASE REWARD')}</div><div className="stat-number">5 <small>$ARNOLD</small></div><div className="stat-caption">{t('Per completed 24-hour cycle')}</div></article>
+      <article className="stat-card featured"><div className="stat-label"><Coins size={14} /> {t('DAILY REWARD')}</div><div className="stat-number">{nextDailyReward.toFixed(6)} <small>$ARNOLD</small></div><div className="stat-caption">{t('Includes permanent 0.10% purchase bonus')}</div></article>
       <article className="stat-card"><div className="stat-label"><Clock3 size={14} /> {t('CYCLE')}</div><div className="stat-number">24 <small>{t('HOURS')}</small></div><div className="stat-caption">{t('One manual cycle at a time')}</div></article>
     </section>
-    <div className="community-counter"><span className="community-dot" /><div><b>10,200+</b><span>{t('COMMUNITY USERS · INITIAL BASELINE')}</span></div></div>
     <button className="home-referral-cta" type="button" onClick={onOpenReferrals}>
       <span className="home-referral-icon"><Gift size={19} /></span>
-      <span className="home-referral-copy"><b>PROGRAMA DE REFERIDOS</b><small>Invita amigos · Consulta elegibles y pendientes</small></span>
-      <span className="home-referral-arrow">VER <span>›</span></span>
+      <span className="home-referral-copy"><b>{t('PROGRAMA DE REFERIDOS')}</b><small>{t('Invita amigos · Consulta elegibles y pendientes')}</small></span>
+      <span className="home-referral-arrow">{t('VER')} <span>›</span></span>
     </button>
-    <div className="notice notice-large"><ShieldCheck size={17} /><span>{t('Mining is not active yet. Your rewards and wallet eligibility will be verified securely before the first cycle begins.')}</span></div>
+    <div className="notice notice-large"><ShieldCheck size={17} /><span>{t('La recompensa se confirma en el servidor al completar el ciclo. El contador es solo una estimación visual.')}</span></div>
     <div className="section-footnote">{t('Total supply: 1,000,000 $ARNOLD · Mining allocation: 500,000 $ARNOLD')}</div>
+    {boostOpen && <div className="boost-modal-backdrop" role="presentation" onClick={() => setBoostOpen(false)}>
+      <section className="boost-modal" role="dialog" aria-modal="true" aria-labelledby="boost-modal-title" onClick={event => event.stopPropagation()}>
+        <button className="boost-modal-close" type="button" onClick={() => setBoostOpen(false)} aria-label={t('Cerrar')}>×</button>
+        <div className="boost-modal-icon"><Zap size={24} /></div><div className="kicker">{t('ARNOLD BOOST STORE')}</div><h2 id="boost-modal-title">{t('BOOST YOUR POWER')}</h2>
+        <p>{t('Mejora tu producción pagando con $ARNOLD. Los precios y compras se habilitarán después de definir los límites de emisión y la reserva de recompensas.')}</p>
+        <div className="boost-options">
+          <article><b>BRONZE</b><strong>+5%</strong><span>{t('24 HORAS')}</span><small>{t('Precio por definir')}</small></article>
+          <article><b>SILVER</b><strong>+10%</strong><span>{t('24 HORAS')}</span><small>{t('Precio por definir')}</small></article>
+          <article><b>GOLD</b><strong>+15%</strong><span>{t('24 HORAS')}</span><small>{t('Precio por definir')}</small></article>
+        </div>
+        <div className="boost-safety-note"><ShieldCheck size={16} /> {t('Compras desactivadas por ahora. Ningún ARNOLD será cobrado hasta aprobar la economía del Boost.')}</div>
+        <button className="primary-btn boost-coming-btn" type="button" disabled>{t('COMING SOON')}</button>
+      </section>
+    </div>}
+    {rankingOpen && <div className="ranking-modal-backdrop" role="presentation" onClick={() => setRankingOpen(false)}>
+      <section className="ranking-modal" role="dialog" aria-modal="true" aria-labelledby="ranking-modal-title" onClick={event => event.stopPropagation()}>
+        <button className="ranking-modal-close" type="button" onClick={() => setRankingOpen(false)} aria-label={t('Cerrar ranking')}>×</button>
+        <div className="ranking-modal-trophy">🏆</div>
+        <div className="kicker">{t('ARNOLD COMMUNITY')}</div>
+        <h2 id="ranking-modal-title">{t('GLOBAL RANKING')}</h2>
+        <p className="ranking-modal-intro">{t('Ranked by confirmed ARNOLD rewards earned from mining, tasks and referrals.')}</p>
+        {myRank !== null && <div className="ranking-my-position"><span>{t('YOUR POSITION')}</span><b>#{myRank}</b></div>}
+        {rankingLoading ? <div className="ranking-state">{t('LOADING RANKING')}…</div>
+          : rankingError ? <div className="ranking-state ranking-error" role="alert">{rankingError}<button type="button" onClick={() => void loadLeaderboard()}>{t('TRY AGAIN')}</button></div>
+          : leaderboard.length === 0 ? <div className="ranking-state">{t('No confirmed rewards yet. Be among the first to earn ARNOLD!')}</div>
+          : <div className="ranking-list">{leaderboard.map(entry => <article className={'ranking-row' + (entry.rank <= 3 ? ' ranking-podium' : '')} key={entry.rank}>
+              <span className="ranking-place">{entry.rank === 1 ? '🥇' : entry.rank === 2 ? '🥈' : entry.rank === 3 ? '🥉' : '#' + entry.rank}</span>
+              <div className="ranking-person"><b>{entry.name}</b><small>{t('MINING')} {entry.mining.toLocaleString(undefined, {maximumFractionDigits: 3})} · {t('TASKS')} {entry.tasks.toLocaleString(undefined, {maximumFractionDigits: 3})} · {t('REFERRALS')} {entry.referrals.toLocaleString(undefined, {maximumFractionDigits: 3})}</small></div>
+              <strong>{entry.total.toLocaleString(undefined, {maximumFractionDigits: 3})}<small>$ARNOLD</small></strong>
+            </article>)}</div>}
+        <p className="ranking-modal-footnote">{t('Only server-recorded rewards are counted. Wallet token balances are not included.')}</p>
+        <button className="ranking-refresh-btn" type="button" disabled={rankingLoading} onClick={() => void loadLeaderboard()}>{t('REFRESH RANKING')}</button>
+      </section>
+    </div>}
   </section>
 }
 
 function TasksPage({ t }: { t: (phrase: string) => string }) {
-  return <section className="inner-page">
-    <div className="kicker">{t('EARN MORE $ARNOLD')}</div><h1>{t('DAILY')}<br /><span>{t('TASKS.')}</span></h1>
-    <div className="feature-panel"><div className="feature-icon"><ListChecks size={22} /></div><div><b>{t('REWARD TASKS')}</b><span>{t('Complete activities to earn additional rewards.')}</span></div></div>
-    <div className="empty-state"><CircleHelp size={34} /><b>{t('TASKS COMING SOON')}</b><span>{t('Available tasks and their rewards will be published here.')}</span></div>
+  const endpoint = 'https://vnslzfivilgdqqgdyoxd.supabase.co/functions/v1/task-rewards'
+  const [status, setStatus] = useState<{channel_member:boolean;channel_next_available_at:string|null;support_channel_member:boolean;support_channel_next_available_at:string|null;checkin_streak:number;checkin_claimed_today:boolean;checkin_next_available_at:string} | null>(null)
+  const [now, setNow] = useState(Date.now())
+  const [busy, setBusy] = useState<'channel'|'support'|'checkin'|null>(null)
+  const [channelJoinClicked, setChannelJoinClicked] = useState(false)
+  const [channelWaitUntil, setChannelWaitUntil] = useState<number | null>(null)
+  const [supportJoinClicked, setSupportJoinClicked] = useState(false)
+  const [supportWaitUntil, setSupportWaitUntil] = useState<number | null>(null)
+  const [message, setMessage] = useState('')
+  const [error, setError] = useState('')
+  const post = async (action: string) => {
+    if (!WebApp.initData) throw new Error(t('Abre ARNOLD desde el bot oficial de Telegram.'))
+    const response = await fetch(endpoint, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,initData:WebApp.initData})})
+    const data = await response.json().catch(()=>({}))
+    if (!response.ok) throw new Error(data.error === 'CHANNEL_MEMBERSHIP_REQUIRED' ? t('Primero únete al canal de noticias.') : data.error === 'SUPPORT_CHANNEL_MEMBERSHIP_REQUIRED' ? t('Primero únete al canal de soporte.') : t(data.error || 'No se pudo completar la tarea.'))
+    return data
+  }
+  const refresh = async () => {
+    try { const data = await post('status'); setStatus(data); setError('') }
+    catch (e) { setError(e instanceof Error ? t(e.message) : t('No se pudieron cargar las tareas.')) }
+  }
+  useEffect(() => { void refresh() }, [])
+  useEffect(() => { const timer = window.setInterval(()=>setNow(Date.now()),1000); return ()=>window.clearInterval(timer) }, [])
+  const clock = (until: string|null|undefined) => {
+    if (!until) return '00:00:00'
+    const seconds = Math.max(0,Math.floor((new Date(until).getTime()-now)/1000))
+    return [Math.floor(seconds/3600),Math.floor(seconds%3600/60),seconds%60].map(v=>String(v).padStart(2,'0')).join(':')
+  }
+  const channelReady = !status?.channel_next_available_at || new Date(status.channel_next_available_at).getTime() <= now
+  const channelJoinReady = channelJoinClicked && channelWaitUntil !== null && now >= channelWaitUntil && !!status?.channel_member
+  const supportReady = !status?.support_channel_next_available_at || new Date(status.support_channel_next_available_at).getTime() <= now
+  const supportJoinReady = supportJoinClicked && supportWaitUntil !== null && now >= supportWaitUntil && !!status?.support_channel_member
+  const checkinReady = !!status && !status.checkin_claimed_today
+  const nextCheckin = status?.checkin_next_available_at
+  const act = async (kind:'channel'|'support'|'checkin') => {
+    setBusy(kind);setMessage('');setError('')
+    try {
+      const data = await post(kind==='channel'?'claim_channel':kind==='support'?'claim_support':'claim_checkin')
+      setMessage(kind==='checkin' ? (data.claimed ? t('¡Check-in acreditado: +0.5 ARNOLD!') : t('Ya reclamaste el check-in de hoy.')) : (data.claimed ? t('¡Recompensa de 2 ARNOLD acreditada!') : t('La tarea todavía está en enfriamiento.')))
+      await refresh()
+    } catch(e) { setError(e instanceof Error ? t(e.message) : t('No se pudo reclamar.')) }
+    finally { setBusy(null) }
+  }
+  const days = Array.from({length:7},(_,i)=>i+1)
+  return <section className="inner-page tasks-page">
+    <div className="tasks-banner-wrap"><img className="tasks-banner-image" src="https://azure-high-cougar-588.mypinata.cloud/ipfs/bafybeih5epoypzce6oidj3w5ucf55b6b2otort2qaglzybs5f4kicpfpg4" alt="ARNOLD Daily Tasks" /></div>
+    <article className="checkin-card">
+      <div className="checkin-heading"><div><div className="kicker">{t('RECOMPENSA DIARIA')}</div><h2>{t('CHECK-IN DE 7 DÍAS')}</h2></div><strong>+0.5 <small>{t('ARNOLD / DÍA')}</small></strong></div>
+      <p>{t('Haz check-in cada día para mantener tu racha. Si pierdes un día, vuelves al día 1.')}</p>
+      <div className="checkin-days">{days.map(day=><div className={'checkin-day'+(day<=(status?.checkin_streak??0)?' completed':'')+(day===(status?.checkin_streak??0)+1 && !status?.checkin_claimed_today?' current':'')} key={day}><span>{day<=(status?.checkin_streak??0)?'✓':day}</span><small>{t('DÍA')}</small><b>0.5</b></div>)}</div>
+      <div className="checkin-total"><span>{t('PROGRESO SEMANAL')}</span><strong>{status?.checkin_streak??0}/7 · {((status?.checkin_streak??0)*0.5).toFixed(1)} / 3.5 ARNOLD</strong></div>
+      <button className="checkin-claim-btn" type="button" disabled={busy!==null || !checkinReady} onClick={()=>void act('checkin')}>{busy==='checkin'?t('GUARDANDO…'):checkinReady?t('HACER CHECK-IN · +0.5 ARNOLD'):t('CHECK-IN COMPLETADO HOY')}</button>
+      <div className="checkin-countdown">{t('Siguiente check-in en')} <strong>{clock(nextCheckin)}</strong> · {t('Reinicio diario UTC')}</div>
+    </article>
+    <div className="feature-panel"><div className="feature-icon"><ListChecks size={22} /></div><div><b>{t('REWARD TASKS')}</b><span>{t('Completa tareas y gana recompensas ARNOLD.')}</span></div></div>
+    <article className="task-reward-card">
+      <div className="task-card-top"><span className="task-card-icon"><Gift size={20}/></span><span className="task-reward-amount">+2 ARNOLD</span></div>
+      <h2>{t('Únete a nuestro canal de noticias')}</h2>
+      <p>{t('Forma parte de la comunidad y mantente al día con las novedades de ARNOLD.')}</p>
+      <a className="task-join-link" href="https://t.me/arnoldschwartzenigganews" target="_blank" rel="noreferrer" onClick={() => { setChannelJoinClicked(true); setChannelWaitUntil(Date.now() + 5000); window.setTimeout(() => { void refresh() }, 5000) }}>{t('IR A LA TAREA')} <span>↗</span></a>
+      <div className="task-claim-row">
+        <span>{!channelJoinClicked ? t('Pulsa “IR A LA TAREA” para unirte al canal') : channelWaitUntil !== null && now < channelWaitUntil ? t('Comprobando en 5 segundos…') : status?.channel_member ? t('Membresía verificada') : t('Aún no figuras como miembro del canal')}</span>
+        <button type="button" className={channelJoinReady && channelReady && busy===null ? 'task-claim-ready' : ''} style={channelJoinReady && channelReady && busy===null ? { background: 'linear-gradient(135deg, #f7d76b, #c99724)', color: '#17120a', borderColor: '#f7d76b', boxShadow: '0 0 16px rgba(247,215,107,.28)' } : undefined} disabled={busy!==null || !channelJoinReady || !channelReady} onClick={()=>void act('channel')}>{busy==='channel'?t('VERIFICANDO…'):!channelJoinClicked?t('BLOQUEADO'):channelWaitUntil !== null && now < channelWaitUntil?t('ESPERA 5 SEGUNDOS'):!status?.channel_member?t('ÚNETE AL CANAL'):channelReady?t('RECLAMAR 2 ARNOLD'):t('DISPONIBLE EN')+' '+clock(status?.channel_next_available_at)}</button>
+      </div>
+      {status?.channel_next_available_at && !channelReady && <div className="task-cooldown">{t('Próximo reclamo en')} <strong>{clock(status.channel_next_available_at)}</strong></div>}
+    </article>
+    <article className="task-reward-card">
+      <div className="task-card-top"><span className="task-card-icon"><Gift size={20}/></span><span className="task-reward-amount">+2 ARNOLD</span></div>
+      <h2>{t('Join our support channel')}</h2>
+      <p>{t('Join the ARNOLD support community and get help with your questions.')}</p>
+      <a className="task-join-link" href="https://t.me/arnoldchatsupport" target="_blank" rel="noreferrer" onClick={() => { setSupportJoinClicked(true); setSupportWaitUntil(Date.now() + 5000); window.setTimeout(() => { void refresh() }, 5000) }}>{t('JOIN CHANNEL')} <span>↗</span></a>
+      <div className="task-claim-row">
+        <span>{!supportJoinClicked ? t('Join the support channel to unlock the reward') : supportWaitUntil !== null && now < supportWaitUntil ? t('Checking in 5 seconds…') : status?.support_channel_member ? t('Membership verified') : t('You are not yet a member of the support channel')}</span>
+        <button type="button" className={supportJoinReady && supportReady && busy===null ? 'task-claim-ready' : ''} style={supportJoinReady && supportReady && busy===null ? { background: 'linear-gradient(135deg, #f7d76b, #c99724)', color: '#17120a', borderColor: '#f7d76b', boxShadow: '0 0 16px rgba(247,215,107,.28)' } : undefined} disabled={busy!==null || !supportJoinReady || !supportReady} onClick={()=>void act('support')}>
+          {busy==='support'?t('VERIFYING…'):!supportJoinClicked?t('LOCKED'):supportWaitUntil !== null && now < supportWaitUntil?t('WAIT 5 SECONDS'):!status?.support_channel_member?t('JOIN THE CHANNEL'):supportReady?t('CLAIM 2 ARNOLD'):t('AVAILABLE IN')+' '+clock(status?.support_channel_next_available_at)}
+        </button>
+      </div>
+      {status?.support_channel_next_available_at && !supportReady && <div className="task-cooldown">{t('Next claim in')} <strong>{clock(status.support_channel_next_available_at)}</strong></div>}
+    </article>
+
+    {message && <p className="task-feedback success" role="status">{message}</p>}
+    {error && <p className="task-feedback error" role="alert">{error}</p>}
   </section>
 }
 
@@ -216,11 +343,15 @@ function ReferralsPage({ t }: { t: (phrase: string) => string }) {
   const [stats, setStats] = useState({ total: 0, eligible: 0, ineligible: 0 })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [earnings, setEarnings] = useState({ available: 0, reserved: 0, credited: 0, paid: 0, lifetime: 0, mining: 0, tasks: 0 })
+  const [claiming, setClaiming] = useState(false)
+  const [claimMessage, setClaimMessage] = useState('')
+  const [claimError, setClaimError] = useState('')
   const inviteUrl = telegramId
     ? 'https://t.me/ArnoldMiningOfficialBot?startapp=' + encodeURIComponent('ref_' + String(telegramId))
     : ''
   const shareUrl = inviteUrl
-    ? 'https://t.me/share/url?url=' + encodeURIComponent(inviteUrl) + '&text=' + encodeURIComponent(t('Join ARNOLD and start earning $ARNOLD.'))
+    ? 'https://t.me/share/url?url=' + encodeURIComponent(inviteUrl) + '&text=' + encodeURIComponent('Join ARNOLD and start earning $ARNOLD.')
     : ''
   useEffect(() => {
     const initData = WebApp.initData
@@ -242,7 +373,7 @@ function ReferralsPage({ t }: { t: (phrase: string) => string }) {
           })
           if (!syncResponse.ok) {
             const syncData = await syncResponse.json().catch(() => ({}))
-            throw new Error(syncData?.error || 'No se pudo registrar la invitación')
+            throw new Error(syncData?.error || t('No se pudo registrar la invitación'))
           }
         }
         const response = await fetch(endpoint, {
@@ -251,14 +382,31 @@ function ReferralsPage({ t }: { t: (phrase: string) => string }) {
           body: JSON.stringify({ action: 'stats', initData })
         })
         const data = await response.json()
-        if (!response.ok) throw new Error(data?.error || 'No se pudieron cargar los referidos')
+        if (!response.ok) throw new Error(data?.error || t('No se pudieron cargar los referidos'))
         if (!cancelled) setStats({
           total: Number(data.total || 0),
           eligible: Number(data.eligible || 0),
           ineligible: Number(data.ineligible || 0)
         })
+        const earningsResponse = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'earnings', initData })
+        })
+        const earningsData = await earningsResponse.json()
+        if (!earningsResponse.ok) throw new Error(earningsData?.error || t('No se pudieron cargar las ganancias'))
+        if (!cancelled) setEarnings({
+          available: Number(earningsData.available || 0),
+          reserved: Number(earningsData.reserved || 0),
+          credited: Number(earningsData.credited || 0),
+          paid: Number(earningsData.paid || 0),
+          lifetime: Number(earningsData.lifetime || 0),
+          mining: Number(earningsData.mining || 0),
+          tasks: Number(earningsData.tasks || 0)
+        })
+
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : 'No se pudieron cargar los referidos')
+        if (!cancelled) setError(e instanceof Error ? e.message : t('No se pudieron cargar los referidos'))
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -266,6 +414,34 @@ function ReferralsPage({ t }: { t: (phrase: string) => string }) {
     void load()
     return () => { cancelled = true }
   }, [telegramId, startParam])
+  const requestClaim = async () => {
+    if (!WebApp.initData || claiming || earnings.available <= 0) return
+    setClaiming(true)
+    setClaimMessage('')
+    setClaimError('')
+    try {
+      const response = await fetch('https://vnslzfivilgdqqgdyoxd.supabase.co/functions/v1/referral-service', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'claim', initData: WebApp.initData })
+      })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(data?.error || t('No se pudo acreditar la comisión.'))
+      setClaimMessage(t('Comisión acreditada al tablero interno: ') + Number(data.amount || 0).toLocaleString(undefined, { maximumFractionDigits: 6 }) + ' $ARNOLD. ' + t('No se realizó ninguna transferencia.'))
+      const refresh = await fetch('https://vnslzfivilgdqqgdyoxd.supabase.co/functions/v1/referral-service', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'earnings', initData: WebApp.initData })
+      })
+      const updated = await refresh.json()
+      if (refresh.ok) setEarnings({
+        available: Number(updated.available || 0), reserved: Number(updated.reserved || 0),
+        credited: Number(updated.credited || 0), paid: Number(updated.paid || 0), lifetime: Number(updated.lifetime || 0),
+        mining: Number(updated.mining || 0), tasks: Number(updated.tasks || 0)
+      })
+    } catch (e) {
+      setClaimError(e instanceof Error ? e.message : t('No se pudo registrar la solicitud.'))
+    } finally { setClaiming(false) }
+  }
   const copyInvite = async () => {
     if (!inviteUrl) return
     setCopyError('')
@@ -288,68 +464,77 @@ function ReferralsPage({ t }: { t: (phrase: string) => string }) {
       window.setTimeout(() => setCopied(false), 2500)
     } catch {
       setCopied(false)
-      setCopyError('No se pudo copiar automáticamente. Mantén pulsado el enlace para copiarlo.')
+      setCopyError(t('No se pudo copiar automáticamente. Mantén pulsado el enlace para copiarlo.'))
     }
   }
   return <section className="inner-page">
-    <div className="kicker">{t('GROW THE COMMUNITY')}</div><h1>{t('INVITE.')}<br /><span>{t('EARN.')}</span></h1>
-    <div className="feature-panel"><div className="feature-icon"><Gift size={22} /></div><div><b>{t('INVITE FRIENDS')}</b><span>{t('Share your personal invite link and help grow the ARNOLD community.')}</span></div></div>
+    <img className="referral-banner" src="https://azure-high-cougar-588.mypinata.cloud/ipfs/bafybeicttszx7a5x7uth3nnjnapi2sou6zmhxmhlzbnrsb7xgzjd47p2xa" alt="Arnold referrals banner" style={{ display: 'block', width: '100%', height: 'auto', objectFit: 'contain', borderRadius: '16px', marginBottom: '18px' }} />
+    <div className="feature-panel"><div className="feature-icon"><Gift size={22} /></div><div><b>{t('INVITE FRIENDS')}</b><span>{t('Gana el 5% de las recompensas de minería y tareas de cada referido elegible. Las compras de tus amigos no generan comisión.')}</span></div></div>
     <div className="referral-invite-card">
       <div className="referral-invite-heading"><Gift size={18} /><b>{t('YOUR INVITE LINK')}</b></div>
       {inviteUrl ? <>
         <input className="referral-link-input" readOnly value={inviteUrl} onFocus={event => event.currentTarget.select()} aria-label={t('YOUR INVITE LINK')} />
-        <button className="primary-btn" type="button" onClick={() => { void copyInvite() }}>{copied ? '✓ ENLACE COPIADO' : 'COPIAR ENLACE'}</button>
-        <a className="referral-share-btn" href={shareUrl} target="_blank" rel="noreferrer"><Gift size={16} /> COMPARTIR POR TELEGRAM</a>
+        <button className="primary-btn" type="button" onClick={() => { void copyInvite() }}>{copied ? '✓ ' + t('ENLACE COPIADO') : t('COPIAR ENLACE')}</button>
+        <a className="referral-share-btn" href={shareUrl} target="_blank" rel="noreferrer"><Gift size={16} /> {t('COMPARTIR POR TELEGRAM')}</a>
         {copyError && <p className="balance-error" role="alert">{copyError}</p>}
-        <p className="referral-link-help">Cada amigo que abra este enlace desde Telegram quedará asociado a tu invitación.</p>
+        <p className="referral-link-help">{t('Cada amigo que abra este enlace desde Telegram quedará asociado a tu invitación.')}</p>
       </> : <>
-        <p className="referral-link-help">Abre la Mini App desde Telegram para generar tu enlace personal de invitación.</p>
-        <a className="referral-share-btn" href="https://t.me/ArnoldMiningOfficialBot" target="_blank" rel="noreferrer">ABRIR @ArnoldMiningOfficialBot</a>
+        <p className="referral-link-help">{t('Abre la Mini App desde Telegram para generar tu enlace personal de invitación.')}</p>
+        <a className="referral-share-btn" href="https://t.me/ArnoldMiningOfficialBot" target="_blank" rel="noreferrer">{t('ABRIR @ArnoldMiningOfficialBot')}</a>
       </>}
     </div>
+    <div className="referral-earnings-card">
+      <div className="referral-earnings-top">
+        <div><div className="referral-earnings-label">{t('GANANCIAS DE REFERIDOS')}</div><div className="referral-earnings-total">{earnings.available.toLocaleString(undefined, { maximumFractionDigits: 6 })} <small>$ARNOLD</small></div></div>
+        <span className="referral-lifetime-tag">{t('DE POR VIDA')}</span>
+      </div>
+      <div className="referral-earnings-breakdown">
+        <div><span>{t('POR MINERÍA')}</span><b>{earnings.mining.toLocaleString(undefined, { maximumFractionDigits: 6 })}</b></div>
+        <div><span>{t('POR TAREAS')}</span><b>{earnings.tasks.toLocaleString(undefined, { maximumFractionDigits: 6 })}</b></div>
+      </div>
+      <button className="primary-btn referral-claim-btn" type="button" disabled={claiming || earnings.available <= 0} onClick={() => { void requestClaim() }}>
+        {claiming ? t('ACREDITANDO…') : t('CLAIM')}
+      </button>
+      <div className="referral-claim-status">
+        <span>{t('EN PROCESO')}: {earnings.reserved.toLocaleString(undefined, { maximumFractionDigits: 6 })} $ARNOLD</span>
+        <span>{t('ACREDITADO AL TABLERO')}: {earnings.credited.toLocaleString(undefined, { maximumFractionDigits: 6 })} $ARNOLD</span>
+        <span>{t('PAGADO')}: {earnings.paid.toLocaleString(undefined, { maximumFractionDigits: 6 })} $ARNOLD</span>
+        <span>{t('TOTAL DE POR VIDA')}: {earnings.lifetime.toLocaleString(undefined, { maximumFractionDigits: 6 })} $ARNOLD</span>
+      </div>
+      {claimMessage && <p className="referral-claim-message" role="status">{claimMessage}</p>}
+      {claimError && <p className="balance-error" role="alert">{claimError}</p>}
+      <p className="referral-link-help">{t('Acumulas el 5% de cada recompensa de minería y tareas de tus referidos elegibles, sin límite de tiempo. Las compras no cuentan.')}</p>
+    </div>
     <div className="stats referral-stats">
-      <article className="stat-card"><div className="stat-label">TOTAL DE INVITADOS</div><div className="stat-number">{loading ? '…' : stats.total}</div><div className="stat-caption">Personas que se registraron con tu enlace</div></article>
-      <article className="stat-card"><div className="stat-label">ELEGIBLES</div><div className="stat-number">{loading ? '…' : stats.eligible}</div><div className="stat-caption">Billetera confirmada y tarifa verificada</div></article>
-      <article className="stat-card"><div className="stat-label">AÚN NO ELEGIBLES</div><div className="stat-number">{loading ? '…' : stats.ineligible}</div><div className="stat-caption">Pendientes de completar la verificación</div></article>
+      <article className="stat-card"><div className="stat-label">{t('TOTAL DE INVITADOS')}</div><div className="stat-number">{loading ? '…' : stats.total}</div><div className="stat-caption">{t('Personas que se registraron con tu enlace')}</div></article>
+      <article className="stat-card"><div className="stat-label">{t('ELEGIBLES')}</div><div className="stat-number">{loading ? '…' : stats.eligible}</div><div className="stat-caption">{t('Billetera confirmada y tarifa verificada')}</div></article>
+      <article className="stat-card"><div className="stat-label">{t('AÚN NO ELEGIBLES')}</div><div className="stat-number">{loading ? '…' : stats.ineligible}</div><div className="stat-caption">{t('Pendientes de completar la verificación')}</div></article>
     </div>
     {error && <p className="balance-error" role="alert">{error}</p>}
-    <div className="eligibility-panel"><div className="eligibility-title"><ShieldCheck size={18} /> <b>REQUISITOS DE ELEGIBILIDAD</b></div><p>Un invitado cuenta como elegible únicamente después de confirmar su billetera y completar el pago único de 0.10 GRAM, verificado de forma segura en la blockchain.</p></div>
-  </section>
-}
-function ArnoldMarketChart({ t }: { t: (phrase: string) => string }) {
-  const candles = [[30,74,66,82,58],[48,66,72,78,58],[66,72,61,77,55],[84,61,57,68,49],[102,57,64,70,51],[120,64,52,68,45],[138,52,48,59,41],[156,48,56,62,43],[174,56,44,61,38],[192,44,49,55,35],[210,49,38,53,31],[228,38,42,48,28],[246,42,33,47,25],[264,33,39,44,27],[282,39,29,46,21],[300,29,34,40,18],[318,34,25,39,15],[336,25,30,36,12],[354,30,21,35,10],[372,21,25,31,8]] as const
-  return <section className="arnold-market-panel">
-    <div className="market-panel-head"><div><div className="kicker">{t('ARNOLD MARKET')}</div><h2>$ARNOLD / USD</h2></div><span className="chart-preview-tag">{t('CHART PREVIEW')}</span></div>
-    <div className="chart-price">$0.000030 <small>{t('INITIAL PRICE')}</small></div>
-    <div className="chart-change">↗ {t('Illustrative upward trend with pullbacks')}</div>
-    <svg className="candle-chart" viewBox="0 0 410 100" role="img" aria-label="Illustrative candlestick chart starting at 0.00003 US dollars">
-      {[20,45,70,95].map(y => <line key={y} x1="0" y1={y} x2="410" y2={y} className="chart-gridline" />)}
-      {candles.map(([x,o,c,h,l],i) => { const up=c<o; const top=Math.min(o,c); const height=Math.max(4,Math.abs(o-c)); return <g key={i} className={up?'candle-up':'candle-down'}><line x1={x} y1={h} x2={x} y2={l} /><rect x={x-4} y={top} width="8" height={height} rx="1" /></g> })}
-    </svg>
-    <div className="chart-axis"><span>{t('START')}</span><span>{t('PRICE MOVEMENT PREVIEW')}</span><span>{t('LATEST')}</span></div>
-    <div className="market-metrics"><div><span>{t('MARKET CAP')}</span><b>$1,000,000</b></div><div><span>{t('LIQUIDITY')}</span><b>$250,000 USDT</b></div></div>
-    <p className="chart-disclaimer">{t('Illustrative chart only. Candles and market figures are not connected to a live exchange or verified on-chain liquidity yet.')}</p>
+    <div className="eligibility-panel"><div className="eligibility-title"><ShieldCheck size={18} /> <b>{t('REQUISITOS DE ELEGIBILIDAD')}</b></div><p>{t('Un invitado cuenta como elegible únicamente después de confirmar su billetera y completar el pago único de 0.10 GRAM, verificado de forma segura en la blockchain.')}</p></div>
   </section>
 }
 function WalletPage({ t, walletAddress, walletReady, onConnect, onDisconnect, onReconnect, onRefreshBalance, onVerifyPayment, walletAppName, paymentState, arnoldBalance, balanceLoading, balanceError }: { t: (phrase: string) => string; walletAddress: string | null; walletReady: boolean; onConnect: () => void; onDisconnect: () => void; onReconnect: () => void; onRefreshBalance: () => void; onVerifyPayment: () => void; walletAppName: string | null; paymentState: string; arnoldBalance: string | null; balanceLoading: boolean; balanceError: string | null }) {
   return <section className="inner-page">
-    <div className="kicker">{t('YOUR TON ACCOUNT')}</div><h1>{t('YOUR')}<br /><span>{t('WALLET.')}</span></h1>
+    <img className="wallet-banner" src="https://azure-high-cougar-588.mypinata.cloud/ipfs/bafybeie5ae7ma5er6ax546jn2ok3gsggpwmlm63zyxl4ry4xrauzdle7jm" alt="ARNOLD Wallet banner" style={{ display: 'block', width: '100%', height: 'auto', objectFit: 'contain', borderRadius: '16px', marginBottom: '18px' }} />
     <div className="wallet-connect-card"><div className="wallet-icon"><Wallet size={23} /></div><b>{t('TON WALLET')}</b><span>{t('Connect your TON wallet to verify $ARNOLD holdings and access eligible features.')}</span><button className="primary-btn wallet-connect-action" type="button" disabled={!walletReady} onClick={walletAddress ? onDisconnect : onConnect}>{walletAddress ? <Wallet size={17} /> : <LockKeyhole size={17} />} {walletAddress ? t("DISCONNECT WALLET") : walletReady ? t("CONNECT TON WALLET") : t("LOADING WALLET CONNECT")}</button>{walletAddress && <><div className="connected-address"><span>{t("CONNECTED ADDRESS")}{walletAppName ? ` · ${walletAppName}` : ''}</span><b title={walletAddress}>{walletAddress.slice(0, 10)}…{walletAddress.slice(-8)}</b></div><button className="wallet-switch-btn" type="button" onClick={onReconnect}>{t('CHANGE WALLET')}</button></>}</div>
     <div className="arnold-balance-card">
       <div className="balance-caption"><Coins size={15} /> {t('ARNOLD TOKEN BALANCE')}</div>
       <div className="balance-amount">{balanceLoading ? t('LOADING BALANCE') : arnoldBalance !== null ? arnoldBalance : '—'}</div>
       <div className="balance-symbol">$ARNOLD</div>
-      {balanceError && <><p className="balance-error">{balanceError}</p><button className="wallet-switch-btn" type="button" onClick={onRefreshBalance}>{t('RETRY BALANCE')}</button></>}
+      {walletAddress && <button className="wallet-switch-btn" type="button" onClick={onRefreshBalance} disabled={balanceLoading}>{balanceLoading ? t('LOADING BALANCE') : t('UPDATE BALANCE')}</button>}
+      {balanceError && <p className="balance-error" role="alert">{balanceError}</p>}
       {!walletAddress && <p className="balance-hint">{t('Connect your TON wallet to view your $ARNOLD balance.')}</p>}
     </div>
     <div className="verification-payment-card">
       <div className="wallet-withdraw-heading"><Coins size={19} /><div><b>{t('WALLET VERIFICATION')}</b><span>{t('One-time payment')}</span></div></div>
       <div className="profile-row"><span>{t('Verification fee')}</span><b>0.10 GRAM</b></div>
       <p className="helper helper-left">{t('Pay 0.10 GRAM from your connected wallet to complete the verification request.')}</p>
-      <button className="primary-btn" type="button" disabled={!walletAddress || paymentState === 'sending'} onClick={onVerifyPayment}>
-        <LockKeyhole size={17} /> {paymentState === 'sending' ? t('WAITING FOR WALLET') : t('PAY 0.10 GRAM')}
+      <button className="primary-btn" type="button" disabled={!walletAddress || paymentState === 'sending' || paymentState === 'verified'} onClick={onVerifyPayment}>
+        <LockKeyhole size={17} /> {paymentState === 'sending' ? t('COMPROBANDO PAGO…') : paymentState === 'sent' ? t('COMPROBAR PAGO ANTERIOR') : paymentState === 'verified' ? '✅ ' + t('VERIFICADO') : t('PAY 0.10 GRAM')}
       </button>
-      {paymentState === 'sent' && <p className="balance-hint">{t('Payment submitted. Verification will be completed after on-chain confirmation.')}</p>}
+      {paymentState === 'sent' && <p className="balance-hint">{t('Ya existe un pago enviado. Pulsa “COMPROBAR PAGO ANTERIOR”; no se abrirá otra transacción ni se realizará otro cobro.')}</p>}
+      {paymentState === 'verified' && <p className="balance-hint">{t('Billetera verificada en la blockchain. Ya puedes iniciar minería y participar en referidos.')}</p>}
       {paymentState === 'cancelled' && <p className="balance-hint">{t('Payment was cancelled in your wallet.')}</p>}
       {paymentState === 'error' && <p className="balance-error">{t('Payment could not be sent. Please reconnect and try again.')}</p>}
     </div>
@@ -358,7 +543,6 @@ function WalletPage({ t, walletAddress, walletReady, onConnect, onDisconnect, on
       <div className="staking-coming-label">{t('COMING SOON')}</div>
       <p className="helper helper-left">{t('Staking pools, lock periods and reward rates will be announced before launch.')}</p>
     </section>
-    <ArnoldMarketChart t={t} />
     <section className="positions-panel">
       <div className="wallet-withdraw-heading"><ListChecks size={19} /><div><b>{t('USER POSITIONS')}</b><span>{t('Wallet ranking')}</span></div></div>
       <div className="positions-table-wrap"><table className="positions-table"><thead><tr><th>{t('RANK')}</th><th>{t('WALLET')}</th><th>$ARNOLD</th></tr></thead><tbody><tr><td>—</td><td>{walletAddress ? walletAddress.slice(0,7)+'…'+walletAddress.slice(-5) : t('NOT CONNECTED')}</td><td>{arnoldBalance ?? '—'}</td></tr></tbody></table></div>
@@ -375,19 +559,25 @@ function WalletPage({ t, walletAddress, walletReady, onConnect, onDisconnect, on
   </section>
 }
 
-function MarketPage({ walletAddress, onConnect, tonConnect }: { walletAddress: string | null; onConnect: () => void; tonConnect: TonConnectInstance | null }) {
+function MarketPage({ t, walletAddress, onConnect, tonConnect }: { t: (phrase: string) => string; walletAddress: string | null; onConnect: () => void; tonConnect: TonConnectInstance | null }) {
   const phases = [
     { number: 1, amount: '50,000', price: 0.003 },
     { number: 2, amount: '50,000', price: 0.0045 },
     { number: 3, amount: '50,000', price: 0.0065 },
     { number: 4, amount: '50,000', price: 0.008 },
   ]
-  const [grams, setGrams] = useState(0.1)
-  const [quote, setQuote] = useState<{ ton_usd: string; arnold_usd: string; active_phase: number; purchases_enabled: boolean; timestamp: string } | null>(null)
+  const [grams, setGrams] = useState('1')
+  const [showSalePhases, setShowSalePhases] = useState(false)
+  const [quote, setQuote] = useState<{ ton_usd: string; arnold_usd: string; active_phase: number; purchases_enabled: boolean; timestamp: string; source: string } | null>(null)
   const [quoteError, setQuoteError] = useState('')
   const [quoteLoading, setQuoteLoading] = useState(true)
   const [activeOrder, setActiveOrder] = useState<{ order_id: string; gram_nano: string; recipient: string; memo: string; arnold_amount: string; expires_at: string } | null>(null)
+  const [recoveringOrder, setRecoveringOrder] = useState(true)
   const [paymentSubmitted, setPaymentSubmitted] = useState(false)
+  const [paymentStatus, setPaymentStatus] = useState<'pending' | 'paid' | 'fulfilled'>('pending')
+  const [payoutStatus, setPayoutStatus] = useState('not_started')
+  const [paymentSubmittedAt, setPaymentSubmittedAt] = useState<number | null>(null)
+  const [recoveryAvailable, setRecoveryAvailable] = useState(false)
   const [purchaseBusy, setPurchaseBusy] = useState(false)
   const [purchaseMessage, setPurchaseMessage] = useState('')
   const [purchaseError, setPurchaseError] = useState('')
@@ -398,13 +588,35 @@ function MarketPage({ walletAddress, onConnect, tonConnect }: { walletAddress: s
     if (!response.ok) throw new Error(data?.message || data?.error || 'No se pudo completar la operación')
     return data
   }
+  const applyOrderVerification = (result: any) => {
+    const paid = result.payment_status === 'paid'
+    const fulfilled = result.payout_status === 'fulfilled'
+    setPaymentStatus(fulfilled ? 'fulfilled' : paid ? 'paid' : 'pending')
+    setPayoutStatus(String(result.payout_status ?? (paid ? 'pending' : 'not_started')))
+    if (fulfilled) {
+      setActiveOrder(null)
+      setPaymentSubmitted(false)
+      setPaymentSubmittedAt(null)
+      setRecoveryAvailable(false)
+      setPurchaseMessage('¡Compra completada! Los $ARNOLD llegaron y la entrega fue verificada. Ya puedes realizar otra compra.')
+      setPurchaseError('')
+      return
+    }
+    if (paid) {
+      const submittedAt = paymentSubmittedAt ?? Date.now()
+      setRecoveryAvailable(Date.now() - submittedAt >= 90_000 || result.payout_status === 'failed')
+      setPurchaseMessage(result.message || 'Pago confirmado. Estamos verificando automáticamente la llegada de tus $ARNOLD.')
+    } else {
+      setPurchaseMessage(result.message || 'Pago aún pendiente de confirmación en TON.')
+    }
+  }
   const verifyOrder = async () => {
     if (!activeOrder || !WebApp.initData || purchaseBusy) return
     setPurchaseBusy(true)
     setPurchaseError('')
     try {
       const result = await saleRequest({ action: 'verify_payment', initData: WebApp.initData, orderId: activeOrder.order_id })
-      setPurchaseMessage(result.message || (result.payment_status === 'paid' ? 'Pago confirmado. La entrega está siendo verificada.' : 'Pago aún pendiente de confirmación en TON.'))
+      applyOrderVerification(result)
     } catch (error) {
       setPurchaseError(error instanceof Error ? error.message : 'No se pudo verificar el pago')
     } finally {
@@ -414,17 +626,25 @@ function MarketPage({ walletAddress, onConnect, tonConnect }: { walletAddress: s
   const startPurchase = async () => {
     if (purchaseBusy) return
     if (!walletAddress) { onConnect(); return }
-    if (!tonConnect) { setPurchaseError('La conexión con TON Connect todavía no está lista.'); return }
-    if (!WebApp.initData) { setPurchaseError('Abre ARNOLD desde el bot oficial de Telegram para validar tu sesión.'); return }
+    if (!tonConnect) { setPurchaseError(t('La conexión con TON Connect todavía no está lista.')); return }
+    if (!WebApp.initData) { setPurchaseError(t('Abre ARNOLD desde el bot oficial de Telegram para validar tu sesión.')); return }
     if (!quote?.purchases_enabled) return
-    if (![0.1, 1, 3, 5, 10, 50].includes(grams)) { setPurchaseError('Selecciona uno de los paquetes disponibles: 0.10, 1, 3, 5, 10 o 50 GRAM.'); return }
+    const gramsValue = Number(grams.trim())
+    if (!/^\d+(\.\d{1,9})?$/.test(grams.trim()) || !Number.isFinite(gramsValue) || gramsValue < 1) { setPurchaseError(t('El mínimo de compra es 1 GRAM. Puedes introducir cualquier cantidad superior.')); return }
     setPurchaseBusy(true)
     setPurchaseError('')
     setPurchaseMessage('')
     try {
       let order = activeOrder
+      if (order && new Date(order.expires_at).getTime() <= Date.now()) {
+        setActiveOrder(null)
+        setPaymentSubmitted(false)
+        setPaymentSubmittedAt(null)
+        setRecoveryAvailable(false)
+        throw new Error(t('La orden anterior venció sin confirmación de pago. Inicia una compra nueva.'))
+      }
       if (!order) {
-        const created = await saleRequest({ action: 'create_order', initData: WebApp.initData, grams: grams.toFixed(1), walletAddress })
+        const created = await saleRequest({ action: 'create_order', initData: WebApp.initData, grams: gramsValue.toFixed(9).replace(/\.?0+$/, ''), walletAddress })
         order = {
           order_id: String(created.order_id),
           gram_nano: String(created.gram_nano),
@@ -444,15 +664,71 @@ function MarketPage({ walletAddress, onConnect, tonConnect }: { walletAddress: s
         messages: [{ address: order.recipient, amount: order.gram_nano, payload }]
       })
       setPaymentSubmitted(true)
-      setPurchaseMessage('Transferencia enviada. Estamos comprobando su confirmación en la red TON.')
+      setPaymentStatus('pending')
+      setPayoutStatus('pending')
+      setPaymentSubmittedAt(Date.now())
+      setRecoveryAvailable(false)
+      setPurchaseMessage(t('Transferencia enviada. Verificando automáticamente el pago y la entrega de ARNOLD…'))
       const result = await saleRequest({ action: 'verify_payment', initData: WebApp.initData, orderId: order.order_id })
-      setPurchaseMessage(result.message || (result.payment_status === 'paid' ? 'Pago confirmado. La entrega está siendo verificada.' : 'Transferencia detectada o pendiente de indexación. Pulsa “Verificar pago” en unos instantes.'))
+      applyOrderVerification(result)
     } catch (error) {
-      setPurchaseError(error instanceof Error ? error.message : 'No se pudo iniciar la compra')
+      setPurchaseError(error instanceof Error ? error.message : t('No se pudo iniciar la compra'))
     } finally {
       setPurchaseBusy(false)
     }
   }
+  useEffect(() => {
+    let cancelled = false
+    const recoverLatestOrder = async () => {
+      if (!WebApp.initData) { if (!cancelled) setRecoveringOrder(false); return }
+      try {
+        const result = await saleRequest({ action: 'recover_order', initData: WebApp.initData })
+        const recovered = result?.order
+        if (!cancelled && recovered?.order_id) {
+          setActiveOrder({
+            order_id: String(recovered.order_id),
+            gram_nano: String(recovered.gram_nano),
+            recipient: String(recovered.recipient),
+            memo: String(recovered.memo),
+            arnold_amount: String(recovered.arnold_amount),
+            expires_at: String(recovered.expires_at)
+          })
+          setPaymentSubmitted(true)
+          setPaymentStatus('paid')
+          setPayoutStatus(String(recovered.payout_status ?? 'pending'))
+          setPaymentSubmittedAt(Date.now())
+          setRecoveryAvailable(false)
+          setPurchaseMessage(t('Encontramos una compra pagada. Estamos comprobando automáticamente si los tokens ya llegaron.'))
+        }
+      } catch (error) {
+        if (error instanceof Error && !error.message.includes('NO_RECOVERABLE_ORDER') && !cancelled) {
+          setPurchaseError(t('No pudimos recuperar automáticamente tu orden. Inténtalo de nuevo en unos momentos.'))
+        }
+      } finally {
+        if (!cancelled) setRecoveringOrder(false)
+      }
+    }
+    void recoverLatestOrder()
+    return () => { cancelled = true }
+  }, [])
+  useEffect(() => {
+    if (!activeOrder || !paymentSubmitted || !WebApp.initData || paymentStatus === 'fulfilled') return
+    let cancelled = false
+    const checkDelivery = async () => {
+      try {
+        const result = await saleRequest({ action: 'verify_payment', initData: WebApp.initData, orderId: activeOrder.order_id })
+        if (!cancelled) applyOrderVerification(result)
+      } catch {
+        if (!cancelled && paymentStatus === 'paid' && paymentSubmittedAt && Date.now() - paymentSubmittedAt >= 90_000) {
+          setRecoveryAvailable(true)
+        }
+      }
+    }
+    void checkDelivery()
+    const timer = window.setInterval(() => { void checkDelivery() }, 6000)
+    return () => { cancelled = true; window.clearInterval(timer) }
+  }, [activeOrder?.order_id, paymentSubmitted, paymentStatus, paymentSubmittedAt])
+
   useEffect(() => {
     let cancelled = false
     const loadQuote = async () => {
@@ -463,19 +739,20 @@ function MarketPage({ walletAddress, onConnect, tonConnect }: { walletAddress: s
           body: JSON.stringify({ action: 'quote' })
         })
         const data = await response.json()
-        if (!response.ok) throw new Error(data?.error || 'No se pudo obtener la cotización')
+        if (!response.ok) throw new Error(data?.error || t('No se pudo obtener la cotización'))
         if (!cancelled) {
           setQuote({
             ton_usd: String(data.ton_usd),
             arnold_usd: String(data.arnold_usd),
             active_phase: Number(data.active_phase),
             purchases_enabled: data.purchases_enabled === true,
-            timestamp: String(data.ton_quote_timestamp || '')
+            timestamp: String(data.ton_quote_timestamp || ''),
+            source: String(data.quote_source || 'market data')
           })
           setQuoteError('')
         }
       } catch {
-        if (!cancelled) setQuoteError('Cotización en vivo no disponible. Inténtalo de nuevo más tarde.')
+        if (!cancelled) setQuoteError(t('Cotización en vivo no disponible. Inténtalo de nuevo más tarde.'))
       } finally {
         if (!cancelled) setQuoteLoading(false)
       }
@@ -487,56 +764,73 @@ function MarketPage({ walletAddress, onConnect, tonConnect }: { walletAddress: s
   const activePhase = quote?.active_phase ?? 1
   const phasePrice = Number(quote?.arnold_usd ?? phases[activePhase - 1]?.price ?? phases[0].price)
   const tonUsd = Number(quote?.ton_usd ?? 0)
-  const estimatedTokens = tonUsd > 0 && phasePrice > 0 ? grams * tonUsd / phasePrice : 0
+  const gramsValue = Number(grams)
+  const estimatedTokens = tonUsd > 0 && phasePrice > 0 && Number.isFinite(gramsValue) ? gramsValue * tonUsd / phasePrice : 0
   const quoteTime = quote?.timestamp ? new Date(quote.timestamp).toLocaleTimeString() : ''
   return <section className="inner-page market-sale-page">
     <div className="market-buy-header">
-      <div className="market-buy-brand"><div className="market-buy-logo"><Flame size={25} fill="currentColor" /></div><div><b>ARNOLD</b><span>OFFICIAL TOKEN SALE</span></div></div>
+      <div className="market-buy-brand"><div className="market-buy-logo"><Flame size={25} fill="currentColor" /></div><div><b>ARNOLD</b><span>{t('OFFICIAL TOKEN SALE')}</span></div></div>
       <div className="market-live-price"><span className={quote ? 'market-live-dot' : 'market-live-dot market-live-dot-off'} />{quote ? '$' + phasePrice.toFixed(quote.active_phase === 1 ? 3 : 4) : '—'}<small>USD / ARNOLD</small></div>
     </div>
-    <section className="market-buy-card">
-      <div className="market-buy-title"><span>COMPRA $ARNOLD</span><small>{quote ? 'FASE ' + activePhase + ' ACTIVA' : 'VENTA EN PREPARACIÓN'}</small></div>
-      <label className="market-amount-label" htmlFor="arnold-gram-amount">Cantidad en GRAM · Elige un paquete</label>
-      <div className="market-amount-input"><input id="arnold-gram-amount" type="number" min="0.1" max="50" step="0.1" value={grams} onChange={event => setGrams(Math.max(0.1, Math.min(50, Math.round((Number(event.target.value) || 0.1) * 10) / 10)))} /><span>GRAM</span></div>
-      <div className="market-quick-amounts">{[0.1,1,3,5,10,50].map(amount => <button type="button" key={amount} className={grams === amount ? 'active' : ''} onClick={() => setGrams(amount)}>{amount}</button>)}</div>
+        <div className="market-feature-art">
+      <img
+        className="market-feature-image"
+        src="https://azure-high-cougar-588.mypinata.cloud/ipfs/bafybeicjfptyteaxsypwtluvhwgfhrugekpqt6jfgtbar43o26474ab57m"
+        alt="ARNOLD Market"
+        loading="lazy"
+        decoding="async"
+      />
+    </div>
+<section className="market-buy-card">
+      <div className="market-buy-title"><span>{t('COMPRA $ARNOLD')}</span><small>{quote ? t('FASE') + ' ' + activePhase + ' ' + t('ACTIVA') : t('VENTA EN PREPARACIÓN')}</small></div>
+      <label className="market-amount-label" htmlFor="arnold-gram-amount">{t('Cantidad a comprar en GRAM')}</label>
+      <div className="market-amount-input"><input id="arnold-gram-amount" type="number" min="1" step="0.000000001" inputMode="decimal" value={grams} onChange={event => setGrams(event.target.value)} aria-describedby="arnold-gram-help" /><span>GRAM</span></div>
+      <p id="arnold-gram-help" className="market-quote-note">{t('Mínimo 1 GRAM. Escribe cualquier cantidad igual o superior; los botones son solo accesos rápidos.')}</p>
+      <div className="market-quick-amounts">{[1,3,5,10,50].map(amount => <button type="button" key={amount} className={Number(grams) === amount ? 'active' : ''} onClick={() => setGrams(String(amount))}>{amount}</button>)}</div>
       <div className="market-quote-rows">
-        <div><span>Pagas</span><b>{grams} GRAM</b></div>
-        <div><span>Precio de GRAM</span><b>{quote ? '$' + tonUsd.toFixed(4) + ' USD' : '—'}</b></div>
-        <div><span>Precio de ARNOLD</span><b>{quote ? '$' + phasePrice.toFixed(4) + ' USD' : '—'}</b></div>
-        <div className="market-receive-row"><span>Recibirías aproximadamente</span><b>{quote ? Math.floor(estimatedTokens).toLocaleString() + ' $ARNOLD' : '—'}</b></div>
+        <div><span>{t('Pagas')}</span><b>{grams || '0'} GRAM</b></div>
+        <div><span>{t('Precio actual de GRAM')}</span><b>{quote ? '$' + tonUsd.toFixed(4) + ' USD' : '—'}</b></div>
+        <div><span>{t('Precio de ARNOLD')}</span><b>{quote ? '$' + phasePrice.toFixed(4) + ' USD' : '—'}</b></div>
+        <div className="market-receive-row"><span>{t('Recibirías aproximadamente')}</span><b>{quote ? Math.floor(estimatedTokens).toLocaleString() + ' $ARNOLD' : '—'}</b></div>
       </div>
-      <p className="market-quote-note">{quoteLoading ? 'Consultando cotización…' : quote ? 'Cotización actualizada ' + quoteTime + '. El importe final se confirma al crear la orden.' : quoteError}</p>
+      <p className="market-quote-note">{quoteLoading ? t('Consultando cotización…') : quote ? t('Cotización actualizada ') + quoteTime + ' · ' + quote.source + '. ' + t('Se actualiza automáticamente cada 30 segundos. El cálculo definitivo se fija al crear la orden.') : t(quoteError)}</p>
       <button className="market-connect-btn" type="button" onClick={onConnect} disabled={!!walletAddress}>
-        <Wallet size={18} /> {walletAddress ? 'BILLETERA CONECTADA' : 'CONECTAR BILLETERA'}
+        <Wallet size={18} /> {walletAddress ? t('BILLETERA CONECTADA') : t('CONECTAR BILLETERA')}
       </button>
-      <button className={quote?.purchases_enabled && !purchaseBusy ? 'market-buy-btn market-buy-btn-active' : 'market-buy-btn'} type="button" disabled={!quote?.purchases_enabled || quoteLoading || purchaseBusy} onClick={() => { if (activeOrder && paymentSubmitted) void verifyOrder(); else void startPurchase() }}>
-        <ShoppingBag size={17} /> {purchaseBusy ? 'PROCESANDO…' : activeOrder && paymentSubmitted ? 'VERIFICAR PAGO' : activeOrder ? 'CONTINUAR PAGO' : quote?.purchases_enabled ? 'BUY $ARNOLD' : 'COMPRAS TODAVÍA CERRADAS'}
+      <button className={quote?.purchases_enabled && !(activeOrder && paymentSubmitted) && !purchaseBusy && !recoveringOrder ? 'market-buy-btn market-buy-btn-active' : 'market-buy-btn'} type="button" disabled={purchaseBusy || recoveringOrder || (!!activeOrder && paymentSubmitted) || quoteLoading || !quote?.purchases_enabled} onClick={() => void startPurchase()}>
+        <ShoppingBag size={17} /> {purchaseBusy ? t('PROCESANDO…') : recoveringOrder ? t('COMPROBANDO COMPRA…') : activeOrder && paymentSubmitted ? t('COMPRA EN VERIFICACIÓN…') : activeOrder ? 'CONTINUAR PAGO' : quote?.purchases_enabled ? t('BUY $ARNOLD') : t('COMPRAS TODAVÍA CERRADAS')}
+      </button>
+      <button className="market-recovery-btn" type="button" disabled={!recoveryAvailable || purchaseBusy || !activeOrder} onClick={() => void verifyOrder()}>
+        <ShieldCheck size={16} /> {purchaseBusy ? t('VERIFICANDO…') : t('RECUPERAR / VERIFICAR ENTREGA')}
       </button>
       {purchaseMessage && <p className="market-quote-note" role="status">{purchaseMessage}</p>}
       {purchaseError && <p className="market-quote-note" role="alert">{purchaseError}</p>}
-      {activeOrder && <p className="market-buy-footnote">Orden {activeOrder.order_id.slice(0, 8)} · {activeOrder.arnold_amount} $ARNOLD · vence {new Date(activeOrder.expires_at).toLocaleTimeString()}.</p>}
-      <p className="market-buy-footnote">{walletAddress ? 'Billetera conectada. La compra solo solicitará la cantidad exacta que confirmes en tu wallet.' : 'Conecta tu billetera TON para poder comprar cuando la venta esté abierta.'}</p>
+      {activeOrder && <p className="market-buy-footnote">Orden {activeOrder.order_id.slice(0, 8)} · {activeOrder.arnold_amount} $ARNOLD · pago: {paymentStatus} · entrega: {payoutStatus}.</p>}
+      <p className="market-buy-footnote">{walletAddress ? t('Billetera conectada. La compra solo solicitará la cantidad exacta que confirmes en tu wallet.') : t('Conecta tu billetera para comprar GRAM desde 1. Puedes introducir cualquier importe o usar los paquetes sugeridos.')}</p>
     </section>
-    <div className="sale-inventory market-sale-inventory">
-      <div><span>ASIGNACIÓN TOTAL DE VENTA</span><b>200,000 <small>$ARNOLD</small></b></div>
-      <div><span>FASES</span><b>4</b></div>
-    </div>
-    <div className="market-phases-heading"><b>FASES DE LA VENTA</b><span>PROGRESIÓN AUTOMÁTICA</span></div>
-    <div className="sale-phase-list">
-      {phases.map((phase) => <article className={phase.number === activePhase ? 'sale-phase-card sale-phase-first' : 'sale-phase-card'} key={phase.number}>
-        <div className="sale-phase-top"><span>FASE {phase.number}</span><small>{phase.number === activePhase ? 'FASE ACTUAL' : phase.number < activePhase ? 'FASE ANTERIOR' : phase.number === 4 ? 'FASE FINAL' : 'SIGUIENTE FASE'}</small></div>
-        <div className="sale-phase-price">{'$' + phase.price}<span>USD / ARNOLD</span></div>
-        <div className="sale-phase-allocation"><span>ASIGNACIÓN DE FASE</span><b>{phase.amount} $ARNOLD</b></div>
-      </article>)}
-    </div>
-    <div className="listing-estimate">
-      <div className="listing-estimate-label">PRECIO ESTIMADO DE LISTADO</div>
-      <strong>$0.01 <small>USD</small></strong>
-      <b>STON.fi</b>
-      <p>Referencia estimada, no representa un precio garantizado ni una promesa de listado.</p>
-    </div>
-    <div className="sale-automation-note"><ShieldCheck size={17} /><p>La siguiente fase se activará automáticamente cuando se vendan y confirmen los 50,000 tokens de la fase actual.</p></div>
-    <div className="sale-security-note"><ShieldCheck size={15} /><span>La compra se inicia únicamente desde una orden activa y requiere confirmación de pago en la red antes de entregar los $ARNOLD.</span></div>
+    <button className="sale-allocation-toggle" type="button" onClick={() => setShowSalePhases(value => !value)} aria-expanded={showSalePhases}>
+      <span>{t('ASIGNACIÓN TOTAL DE VENTA')}</span>
+      <strong>200,000 <small>$ARNOLD</small></strong>
+      <span className="sale-allocation-action">{showSalePhases ? t('OCULTAR FASES') : t('VER FASES Y PRECIO STON.FI')} <b>{showSalePhases ? '−' : '+'}</b></span>
+    </button>
+    {showSalePhases && <>
+      <div className="market-phases-heading"><b>{t('FASES DE LA VENTA')}</b><span>{t('PROGRESIÓN AUTOMÁTICA')}</span></div>
+      <div className="sale-phase-list">
+        {phases.map((phase) => <article className={phase.number === activePhase ? 'sale-phase-card sale-phase-first' : 'sale-phase-card'} key={phase.number}>
+          <div className="sale-phase-top"><span>{t('FASE')} {phase.number}</span><small>{phase.number === activePhase ? t('FASE ACTUAL') : phase.number < activePhase ? t('FASE ANTERIOR') : phase.number === 4 ? t('FASE FINAL') : t('SIGUIENTE FASE')}</small></div>
+          <div className="sale-phase-price">{'$' + phase.price}<span>USD / ARNOLD</span></div>
+          <div className="sale-phase-allocation"><span>{t('ASIGNACIÓN DE FASE')}</span><b>{phase.amount} $ARNOLD</b></div>
+        </article>)}
+      </div>
+      <div className="listing-estimate">
+        <div className="listing-estimate-label">{t('PRECIO ESTIMADO DE LISTADO')}</div>
+        <strong>$0.03 <small>USD</small></strong>
+        <b>STON.fi</b>
+        <p>Listed on December 22nd on stonfi</p>
+      </div>
+      <div className="sale-automation-note"><ShieldCheck size={17} /><p>{t('La siguiente fase se activará automáticamente cuando se vendan y confirmen los 50,000 tokens de la fase actual.')}</p></div>
+    </>}
+    <div className="sale-security-note"><ShieldCheck size={15} /><span>{t('La compra se inicia únicamente desde una orden activa y requiere confirmación de pago en la red antes de entregar los $ARNOLD.')}</span></div>
   </section>
 }
 function P2PPage({ t }: { t: (phrase: string) => string }) {
@@ -552,16 +846,18 @@ function P2PPage({ t }: { t: (phrase: string) => string }) {
 export default function App() {
   const [tab, setTab] = useState<Tab>('mining')
   const [language, setLanguage] = useState<LanguageCode>(detectLanguage)
-  const [musicOn, setMusicOn] = useState(false)
   const [walletAddress, setWalletAddress] = useState<string | null>(null)
   const [walletAppName, setWalletAppName] = useState<string | null>(null)
-  const [paymentState, setPaymentState] = useState<'idle' | 'sending' | 'sent' | 'cancelled' | 'error'>('idle')
+  const [paymentState, setPaymentState] = useState<'idle' | 'sending' | 'sent' | 'cancelled' | 'error' | 'verified'>('idle')
+  const [verificationIntent, setVerificationIntent] = useState<{ intent_id: string; memo: string; recipient: string; amount_nano: string } | null>(null)
+  const [verificationSent, setVerificationSent] = useState(false)
+  const [miningStatus, setMiningStatus] = useState<MiningStatus | null>(null)
+  const [miningBusy, setMiningBusy] = useState(false)
   const [walletReady, setWalletReady] = useState(false)
   const [arnoldBalance, setArnoldBalance] = useState<string | null>(null)
   const [balanceLoading, setBalanceLoading] = useState(false)
   const [balanceError, setBalanceError] = useState<string | null>(null)
   const [balanceRefresh, setBalanceRefresh] = useState(0)
-  const stopMusic = useRef<ReturnType<typeof startBackgroundMusic> | null>(null)
   const tonConnect = useRef<TonConnectInstance | null>(null)
   const t = (phrase: string) => translate(language, phrase)
   useEffect(() => {
@@ -611,23 +907,27 @@ export default function App() {
 
         // Ask TonAPI for this exact owner + ARNOLD master first. This avoids
         // depending on the default page size/order of the owner's Jetton list.
-        const specificUrl = 'https://tonapi.io/v2/accounts/' +
-          encodeURIComponent(ownerAddress) + '/jettons/' + encodeURIComponent(expectedMaster)
-        let token: { balance: string; jetton?: { decimals?: number | string } } | null = null
-        const specificResponse = await fetch(specificUrl, { headers: { accept: 'application/json' } })
-        if (specificResponse.ok) {
-          const specificData = await specificResponse.json() as { balance?: string; jetton?: { decimals?: number | string } }
-          if (typeof specificData.balance === 'string') token = { balance: specificData.balance, jetton: specificData.jetton }
+        const balanceUrl = '/api/arnold-balance?owner=' +
+          encodeURIComponent(walletAddress) + '&master=' + encodeURIComponent(ARNOLD_JETTON_MASTER)
+        const balanceResponse = await fetch(balanceUrl, { headers: { accept: 'application/json' } })
+        if (!balanceResponse.ok) {
+          let reason = 'HTTP ' + balanceResponse.status
+          try {
+            const errorData = await balanceResponse.json() as { error?: string }
+            if (errorData.error) reason = errorData.error
+          } catch { /* keep HTTP status */ }
+          throw new Error(reason)
         }
-
-        // Fallback to the complete Jetton list for API versions/indexer cases
-        // where the exact-balance endpoint does not return a balance.
-        if (!token) {
-          const listUrl = 'https://tonapi.io/v2/accounts/' + encodeURIComponent(ownerAddress) + '/jettons?limit=1000'
-          const listResponse = await fetch(listUrl, { headers: { accept: 'application/json' } })
-          if (!listResponse.ok) throw new Error('TonAPI balance lookup failed (' + listResponse.status + ')')
-          const data = await listResponse.json() as JettonBalanceResponse
-          const match = (data.balances ?? []).find(item =>
+        const result = await balanceResponse.json() as {
+          balance?: string
+          decimals?: number
+          balances?: Array<{ balance: string; jetton: { address: string; decimals?: number | string } }>
+        }
+        let token: { balance: string; jetton?: { decimals?: number | string } } | null = null
+        if (typeof result.balance === 'string') {
+          token = { balance: result.balance, jetton: { decimals: result.decimals ?? 9 } }
+        } else {
+          const match = (result.balances ?? []).find(item =>
             normalizeTonAddress(item.jetton.address) === expectedMaster
           )
           if (match) token = { balance: match.balance, jetton: match.jetton }
@@ -659,19 +959,6 @@ export default function App() {
     const interval = window.setInterval(loadBalance, 30000)
     return () => { cancelled = true; window.clearInterval(interval) }
   }, [walletAddress, language, balanceRefresh])
-  useEffect(() => () => { stopMusic.current?.stop(); stopMusic.current = null }, [])
-  const toggleMusic = () => {
-    if (musicOn) {
-      stopMusic.current?.stop()
-      stopMusic.current = null
-      setMusicOn(false)
-      return
-    }
-    const player = startBackgroundMusic()
-    stopMusic.current = player
-    void player.resume()
-    setMusicOn(true)
-  }
   const connectWallet = () => { void tonConnect.current?.openModal() }
   const disconnectWallet = () => { void tonConnect.current?.disconnect() }
   const reconnectWallet = async () => {
@@ -680,36 +967,112 @@ export default function App() {
     await tonConnect.current.openModal()
   }
   const refreshBalance = () => setBalanceRefresh((value) => value + 1)
+  const walletVerificationEndpoint = 'https://vnslzfivilgdqqgdyoxd.supabase.co/functions/v1/wallet-verification'
+  const miningEndpoint = 'https://vnslzfivilgdqqgdyoxd.supabase.co/functions/v1/arnold-mining'
+  const postTelegramAction = async (endpoint: string, body: Record<string, unknown>) => {
+    if (!WebApp.initData) throw new Error(t('Abre ARNOLD desde el bot oficial de Telegram.'))
+    const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...body, initData: WebApp.initData }) })
+    const data = await response.json().catch(() => ({}))
+    if (!response.ok && response.status !== 202) throw new Error(data?.message || data?.error || 'No se pudo completar la operación')
+    return { status: response.status, data }
+  }
+  const loadMiningStatus = async () => {
+    try {
+      const result = await postTelegramAction(miningEndpoint, { action: 'status' })
+      setMiningStatus(result.data as MiningStatus)
+    } catch (error) {
+      console.warn('Mining status unavailable:', error)
+      setMiningStatus(null)
+    }
+  }
+  const runMiningAction = async (action: 'start' | 'claim') => {
+    if (miningBusy) return
+    setMiningBusy(true)
+    try {
+      const body: Record<string, unknown> = { action }
+      if (action === 'claim' && miningStatus?.cycle?.id) body.cycleId = miningStatus.cycle.id
+      await postTelegramAction(miningEndpoint, body)
+      await loadMiningStatus()
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : 'No se pudo completar la operación')
+    } finally {
+      setMiningBusy(false)
+    }
+  }
   const verifyWalletPayment = async () => {
-    if (!walletAddress || !tonConnect.current || paymentState === 'sending') return
+    if (!walletAddress || !tonConnect.current || paymentState === 'sending' || paymentState === 'verified') return
     setPaymentState('sending')
     try {
-      await tonConnect.current.sendTransaction({
-        validUntil: Math.floor(Date.now() / 1000) + 300,
-        messages: [{ address: 'UQDuU4KpCx7KsjwXJa4N9XizHF9k1s7pfyfzCvftFwofEgGk', amount: '100000000' }]
-      })
-      setPaymentState('sent')
+      let intent = verificationIntent
+      if (!intent) {
+        const created = await postTelegramAction(walletVerificationEndpoint, { action: 'create_intent', walletAddress })
+        intent = created.data as typeof verificationIntent
+        if (!intent?.intent_id || !intent.memo || !intent.recipient || !intent.amount_nano) throw new Error('No se pudo crear la orden de verificación.')
+        setVerificationIntent(intent)
+      }
+      if (!verificationSent) {
+        const payloadCell = beginCell().storeUint(0, 32).storeStringTail(intent.memo).endCell().toBoc()
+        let binary = ''
+        for (let i = 0; i < payloadCell.length; i++) binary += String.fromCharCode(payloadCell[i])
+        await tonConnect.current.sendTransaction({
+          validUntil: Math.floor(Date.now() / 1000) + 300,
+          messages: [{ address: intent.recipient, amount: intent.amount_nano, payload: btoa(binary) }]
+        })
+        setVerificationSent(true)
+      }
+      const checked = await postTelegramAction(walletVerificationEndpoint, { action: 'verify_payment', intentId: intent.intent_id })
+      if (checked.data.verified === true) {
+        setPaymentState('verified')
+        setVerificationIntent(null)
+        setVerificationSent(false)
+        await loadMiningStatus()
+      } else {
+        setPaymentState('sent')
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message.toLowerCase() : ''
       setPaymentState(message.includes('reject') || message.includes('cancel') ? 'cancelled' : 'error')
     }
   }
-  const changeLanguage = (next: LanguageCode) => { localStorage.setItem('arnold-language', next); setLanguage(next); document.documentElement.lang = next; document.documentElement.dir = next === 'ar' ? 'rtl' : 'ltr' }
+  useEffect(() => {
+    if (!WebApp.initData) return
+    let cancelled = false
+    const checkWalletVerification = async () => {
+      try {
+        const result = await postTelegramAction(walletVerificationEndpoint, { action: 'status' })
+        if (cancelled) return
+        if (result.data.verified && normalizeTonAddress(String(result.data.wallet_address)) === normalizeTonAddress(walletAddress ?? '')) {
+          setPaymentState('verified')
+          setVerificationIntent(null)
+          setVerificationSent(false)
+          await loadMiningStatus()
+        } else if (result.data.pending_intent && normalizeTonAddress(String(result.data.pending_intent.wallet_address)) === normalizeTonAddress(walletAddress ?? '')) {
+          setVerificationIntent(result.data.pending_intent)
+          setVerificationSent(true)
+          setPaymentState('sent')
+        }
+      } catch { /* Telegram session or network may not be ready yet */ }
+    }
+    void checkWalletVerification()
+    return () => { cancelled = true }
+  }, [walletAddress])
+  useEffect(() => { if (WebApp.initData) void loadMiningStatus() }, [])
+  const changeLanguage = (next: LanguageCode) => { localStorage.setItem('arnold-language', next); setLanguage(next); document.documentElement.lang = next; document.documentElement.dir = 'ltr' }
   useEffect(() => {
     document.documentElement.lang = language
-    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr'
+    document.documentElement.dir = 'ltr'
     try { WebApp.ready(); WebApp.expand(); WebApp.setHeaderColor('#090909'); WebApp.setBackgroundColor('#090909') } catch { /* Browser preview */ }
   }, [])
 
   return <main className="app-shell">
     <div className="glow glow-a" /><div className="glow glow-b" />
-    <Header language={language} onLanguageChange={changeLanguage} musicOn={musicOn} onMusicToggle={toggleMusic} />
+    <Header language={language} onLanguageChange={changeLanguage} />
     <div className="content">
-      {tab === 'mining' && <MiningPage t={t} onOpenReferrals={() => setTab('referrals')} onOpenWallet={() => setTab('wallet')} />}
+      {tab === 'mining' && <MiningPage t={t} onOpenReferrals={() => setTab('referrals')} onOpenWallet={() => setTab('wallet')} miningStatus={miningStatus} onStartMining={() => { void runMiningAction('start') }} onClaimMining={() => { void runMiningAction('claim') }} miningBusy={miningBusy} />}
       {tab === 'tasks' && <TasksPage t={t} />}
       {tab === 'referrals' && <ReferralsPage t={t} />}
       {tab === 'wallet' && <WalletPage t={t} walletAddress={walletAddress} walletReady={walletReady} onConnect={connectWallet} onDisconnect={disconnectWallet} onReconnect={() => { void reconnectWallet() }} onRefreshBalance={refreshBalance} onVerifyPayment={verifyWalletPayment} walletAppName={walletAppName} paymentState={paymentState} arnoldBalance={arnoldBalance} balanceLoading={balanceLoading} balanceError={balanceError} />}
-      {tab === 'market' && <MarketPage walletAddress={walletAddress} onConnect={connectWallet} tonConnect={tonConnect.current} />}
+      {tab === 'market' && <MarketPage t={t} walletAddress={walletAddress} onConnect={connectWallet} tonConnect={tonConnect.current} />}
       {tab === 'p2p' && <P2PPage t={t} />}
     </div>
     <nav className="bottom-nav" aria-label="Main navigation">
@@ -717,6 +1080,5 @@ export default function App() {
         <Icon size={18} strokeWidth={tab === id ? 2.4 : 1.8} /><span>{t(label)}</span>
       </button>)}
     </nav>
-    <div className="demo-tag">{t('EARLY BUILD · LIVE FEATURES DISABLED')}</div>
   </main>
 }
