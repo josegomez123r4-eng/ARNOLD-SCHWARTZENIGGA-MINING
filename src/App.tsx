@@ -63,7 +63,7 @@ function Header({ language, onLanguageChange }: { language: LanguageCode; onLang
   </header>
 }
 
-type MiningStatus = { verified: boolean; wallet_address?: string | null; cycle: { id: string; status: string; started_at: string; ends_at: string; total_reward: string; base_reward?: string; holding_bonus?: string; purchase_bonus?: string } | null; earned: string; pending: string; purchase_bonus?: { purchased_total: string; purchase_bonus_daily: string; base_reward: string; daily_reward: string; bonus_rate: number } }
+type MiningStatus = { verified: boolean; wallet_address?: string | null; cycle: { id: string; status: string; started_at: string; ends_at: string; total_reward: string; base_reward?: string; holding_bonus?: string; purchase_bonus?: string } | null; earned: string; task_earned?: string; pending: string; purchase_bonus?: { purchased_total: string; purchase_bonus_daily: string; base_reward: string; daily_reward: string; bonus_rate: number } }
 type LeaderboardEntry = { rank: number; name: string; total: number; mining: number; tasks: number; referrals: number }
 function ArnoldWorkoutMascot({ active, t }: { active: boolean; t: (phrase: string) => string }) {
   const animationUrl = 'https://gateway.pinata.cloud/ipfs/bafybeif3wxsbkq75ukpdk2xzomrgp4ph6i2sz3bggsmsyjjrov5y6sqsue'
@@ -76,6 +76,9 @@ function ArnoldWorkoutMascot({ active, t }: { active: boolean; t: (phrase: strin
 }
 function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMining, onClaimMining, miningBusy }: { t: (phrase: string) => string; onOpenReferrals: () => void; onOpenWallet: () => void; miningStatus: MiningStatus | null; onStartMining: () => void; onClaimMining: () => void; miningBusy: boolean }) {
   const cycle = miningStatus?.cycle ?? null
+  const taskEarnings = Number(miningStatus?.task_earned ?? 0)
+  const miningEarnings = Number(miningStatus?.earned ?? 0)
+  const totalConfirmedEarnings = miningEarnings + taskEarnings + (referralEarnings ?? 0)
   const [referralEarnings, setReferralEarnings] = useState<number | null>(null)
   useEffect(() => {
     if (!WebApp.initData) return
@@ -162,10 +165,10 @@ function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMin
         <div><div className="kicker">{t('YOUR REWARDS')}</div><h2><Coins size={19} /> {t('EARNINGS SUMMARY')}</h2></div>
         <span className="earnings-live-label">{t('CONFIRMED')}</span>
       </div>
-      <div className="earnings-total"><span>{t('TOTAL EARNED')}</span><strong>{miningStatus?.earned ?? '—'} <small>$ARNOLD</small></strong></div>
+      <div className="earnings-total"><span>{t('TOTAL EARNED')}</span><strong>{miningStatus && referralEarnings !== null ? totalConfirmedEarnings.toFixed(6) : '—'} <small>$ARNOLD</small></strong></div>
       <div className="earnings-sources">
-        <div className="earnings-source"><span><ListChecks size={15} /> {t('TASK REWARDS')}</span><b>— <small>$ARNOLD</small></b></div>
-        <div className="earnings-source"><span><Pickaxe size={15} /> {t('MINING REWARDS')}</span><b>{miningStatus?.earned ?? '—'} <small>$ARNOLD</small></b></div>
+        <div className="earnings-source"><span><ListChecks size={15} /> {t('TASK REWARDS')}</span><b>{miningStatus ? taskEarnings.toFixed(6) : '—'} <small>$ARNOLD</small></b></div>
+        <div className="earnings-source"><span><Pickaxe size={15} /> {t('MINING REWARDS')}</span><b>{miningStatus ? miningEarnings.toFixed(6) : '—'} <small>$ARNOLD</small></b></div>
         <div className="earnings-source"><span><Gift size={15} /> {t('REFERRAL REWARDS')}</span><b>{referralEarnings === null ? '—' : referralEarnings.toFixed(6)} <small>$ARNOLD</small></b></div>
       </div>
       <p className="earnings-note">{t(miningStatus ? 'Recompensas confirmadas en el registro interno de ARNOLD.' : 'Only confirmed rewards will appear here.')}</p>
@@ -195,8 +198,10 @@ function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMin
       </div>
       <div className="reward-line"><div className="reward-icon"><Zap size={19} /></div><div className="reward-desc"><b>{t('DAILY MINING REWARD')}</b><span>{t('Includes permanent 0.10% purchase bonus')} · +{purchaseBonusDaily.toFixed(6)} $ARNOLD</span></div><div className="reward-value">+{(cycle ? totalReward : nextDailyReward).toFixed(6)}<small>$ARNOLD</small></div></div>
       <div className="mining-action-buttons">
-        <button className="primary-btn mining-start-btn" type="button" disabled={miningBusy || !!cycle || !miningStatus?.verified} onClick={miningStatus?.verified ? onStartMining : onOpenWallet}><Pickaxe size={17} /> {miningBusy ? t('PROCESSING…') : cycle ? t('MINING ACTIVE') : miningStatus?.verified ? t('START MINING') : t('MINING')}</button>
-        <button className={'claim-btn' + (cycleFinished && !miningBusy ? ' claim-ready' : '')} type="button" disabled={miningBusy || !cycleFinished} aria-live="polite" aria-label={cycleFinished ? t('CLAIM REWARD NOW') : t('CLAIM')} onClick={onClaimMining}><Gift size={17} /> {miningBusy ? t('PROCESSING…') : cycleFinished ? t('CLAIM REWARD NOW') : t('CLAIM')}</button>
+        {!miningStatus?.verified ? <button className="primary-btn mining-start-btn" type="button" disabled={miningBusy} onClick={onOpenWallet}><ShieldCheck size={17} /> {t('VERIFICAR BILLETERA')}</button> : <>
+          <button className="primary-btn mining-start-btn" type="button" disabled={miningBusy || !!cycle} onClick={onStartMining}><Pickaxe size={17} /> {miningBusy ? t('PROCESSING…') : cycle ? t('MINING ACTIVE') : t('START MINING')}</button>
+          <button className={'claim-btn' + (cycleFinished && !miningBusy ? ' claim-ready' : '')} type="button" disabled={miningBusy || !cycleFinished} aria-live="polite" aria-label={cycleFinished ? t('CLAIM REWARD NOW') : t('CLAIM')} onClick={onClaimMining}><Gift size={17} /> {miningBusy ? t('PROCESSING…') : cycleFinished ? t('CLAIM REWARD NOW') : t('CLAIM')}</button>
+        </>}
       </div>
       <div className="mining-boost-row"><div><b>{t('BOOST YOUR MINING')}</b><span>{t('Potencia tu producción usando $ARNOLD')}</span></div><button type="button" onClick={() => setBoostOpen(true)}><Zap size={16} /> {t('BOOST')}</button></div>
       <p className="helper">{t(cycle ? (cycleFinished ? 'Tu ciclo terminó. Reclama la recompensa registrada en tu saldo ARNOLD.' : 'Tu ciclo de 24 horas está activo. La cifra minada es una estimación; la recompensa final se confirma al reclamar.') : miningStatus?.verified ? 'Billetera verificada. Puedes iniciar un ciclo de 24 horas.' : 'Conecta y verifica tu billetera con el pago único de 0.10 GRAM para desbloquear la minería.')}</p>
