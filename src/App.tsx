@@ -446,7 +446,7 @@ function ReferralsPage({ t }: { t: (phrase: string) => string }) {
     }
   }
   return <section className="inner-page">
-    <div className="kicker">{t('GROW THE COMMUNITY')}</div><h1>{t('INVITE.')}<br /><span>{t('EARN.')}</span></h1>
+    <img className="referral-banner" src="https://azure-high-cougar-588.mypinata.cloud/ipfs/bafybeicttszx7a5x7uth3nnjnapi2sou6zmhxmhlzbnrsb7xgzjd47p2xa" alt="Arnold referrals banner" style={{ display: 'block', width: '100%', height: 'auto', objectFit: 'contain', borderRadius: '16px', marginBottom: '18px' }} />
     <div className="feature-panel"><div className="feature-icon"><Gift size={22} /></div><div><b>{t('INVITE FRIENDS')}</b><span>{t('Gana el 5% de las recompensas de minería y tareas de cada referido elegible. Las compras de tus amigos no generan comisión.')}</span></div></div>
     <div className="referral-invite-card">
       <div className="referral-invite-heading"><Gift size={18} /><b>{t('YOUR INVITE LINK')}</b></div>
