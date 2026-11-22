@@ -76,10 +76,10 @@ function ArnoldWorkoutMascot({ active, t }: { active: boolean; t: (phrase: strin
 }
 function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMining, onClaimMining, miningBusy }: { t: (phrase: string) => string; onOpenReferrals: () => void; onOpenWallet: () => void; miningStatus: MiningStatus | null; onStartMining: () => void; onClaimMining: () => void; miningBusy: boolean }) {
   const cycle = miningStatus?.cycle ?? null
+  const [referralEarnings, setReferralEarnings] = useState<number | null>(null)
   const taskEarnings = Number(miningStatus?.task_earned ?? 0)
   const miningEarnings = Number(miningStatus?.earned ?? 0)
   const totalConfirmedEarnings = miningEarnings + taskEarnings + (referralEarnings ?? 0)
-  const [referralEarnings, setReferralEarnings] = useState<number | null>(null)
   useEffect(() => {
     if (!WebApp.initData) return
     let cancelled = false
@@ -165,7 +165,7 @@ function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMin
         <div><div className="kicker">{t('YOUR REWARDS')}</div><h2><Coins size={19} /> {t('EARNINGS SUMMARY')}</h2></div>
         <span className="earnings-live-label">{t('CONFIRMED')}</span>
       </div>
-      <div className="earnings-total"><span>{t('TOTAL EARNED')}</span><strong>{miningStatus && referralEarnings !== null ? totalConfirmedEarnings.toFixed(6) : '—'} <small>$ARNOLD</small></strong></div>
+      <div className="earnings-total"><span>{t('TOTAL EARNED')}</span><strong>{miningStatus ? totalConfirmedEarnings.toFixed(6) : '—'} <small>$ARNOLD</small></strong></div>
       <div className="earnings-sources">
         <div className="earnings-source"><span><ListChecks size={15} /> {t('TASK REWARDS')}</span><b>{miningStatus ? taskEarnings.toFixed(6) : '—'} <small>$ARNOLD</small></b></div>
         <div className="earnings-source"><span><Pickaxe size={15} /> {t('MINING REWARDS')}</span><b>{miningStatus ? miningEarnings.toFixed(6) : '—'} <small>$ARNOLD</small></b></div>
