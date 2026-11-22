@@ -193,8 +193,8 @@ function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMin
       </div>
       <div className="reward-line"><div className="reward-icon"><Zap size={19} /></div><div className="reward-desc"><b>{t('BASE CYCLE REWARD')}</b><span>{t('Initial reward before holding bonuses')}</span></div><div className="reward-value">+{totalReward}<small>$ARNOLD</small></div></div>
       <div className="mining-action-buttons">
-        <button className="primary-btn mining-start-btn" type="button" disabled={miningBusy || !!cycle || !miningStatus?.verified} onClick={miningStatus?.verified ? onStartMining : onOpenWallet}><Pickaxe size={17} /> {miningBusy ? t(t('PROCESSING…')) : cycle ? t('MINING ACTIVE') : miningStatus?.verified ? t('START MINING') : t('MINING')}</button>
-        <button className={'claim-btn' + (cycleFinished && !miningBusy ? ' claim-ready' : '')} type="button" disabled={miningBusy || !cycleFinished} aria-live="polite" aria-label={cycleFinished ? t('CLAIM REWARD NOW') : t(t('CLAIM'))} onClick={onClaimMining}><Gift size={17} /> {miningBusy ? t('PROCESSING…') : cycleFinished ? t('CLAIM REWARD NOW') : t(t('CLAIM'))}</button>
+        <button className="primary-btn mining-start-btn" type="button" disabled={miningBusy || !!cycle || !miningStatus?.verified} onClick={miningStatus?.verified ? onStartMining : onOpenWallet}><Pickaxe size={17} /> {miningBusy ? t('PROCESSING…') : cycle ? t('MINING ACTIVE') : miningStatus?.verified ? t('START MINING') : t('MINING')}</button>
+        <button className={'claim-btn' + (cycleFinished && !miningBusy ? ' claim-ready' : '')} type="button" disabled={miningBusy || !cycleFinished} aria-live="polite" aria-label={cycleFinished ? t('CLAIM REWARD NOW') : t('CLAIM')} onClick={onClaimMining}><Gift size={17} /> {miningBusy ? t('PROCESSING…') : cycleFinished ? t('CLAIM REWARD NOW') : t('CLAIM')}</button>
       </div>
       <div className="mining-boost-row"><div><b>{t('BOOST YOUR MINING')}</b><span>{t('Potencia tu producción usando $ARNOLD')}</span></div><button type="button" onClick={() => setBoostOpen(true)}><Zap size={16} /> {t('BOOST')}</button></div>
       <p className="helper">{t(cycle ? (cycleFinished ? 'Tu ciclo terminó. Reclama la recompensa registrada en tu saldo ARNOLD.' : 'Tu ciclo de 24 horas está activo. La cifra minada es una estimación; la recompensa final se confirma al reclamar.') : miningStatus?.verified ? 'Billetera verificada. Puedes iniciar un ciclo de 24 horas.' : 'Conecta y verifica tu billetera con el pago único de 0.10 GRAM para desbloquear la minería.')}</p>
@@ -255,7 +255,7 @@ function TasksPage({ t }: { t: (phrase: string) => string }) {
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const post = async (action: string) => {
-    if (!WebApp.initData) throw new Error(t(t('Abre ARNOLD desde el bot oficial de Telegram.')))
+    if (!WebApp.initData) throw new Error(t('Abre ARNOLD desde el bot oficial de Telegram.'))
     const response = await fetch(endpoint, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,initData:WebApp.initData})})
     const data = await response.json().catch(()=>({}))
     if (!response.ok) throw new Error(data.error === 'CHANNEL_MEMBERSHIP_REQUIRED' ? t('Primero únete al canal de noticias.') : t(data.error || 'No se pudo completar la tarea.'))
@@ -303,7 +303,7 @@ function TasksPage({ t }: { t: (phrase: string) => string }) {
       <a className="task-join-link" href="https://t.me/arnoldschwartzenigganews" target="_blank" rel="noreferrer">{t('IR A LA TAREA')} <span>↗</span></a>
       <div className="task-claim-row">
         <span>{status?.channel_member ? t('Membresía verificada') : t('Únete al canal para desbloquear el reclamo')}</span>
-        <button type="button" disabled={busy!==null || !status?.channel_member || !channelReady} onClick={()=>void act('channel')}>{busy==='channel'?t(t('VERIFICANDO…')):channelReady?t('RECLAMAR 2 ARNOLD'):t('DISPONIBLE EN')+' '+clock(status?.channel_next_available_at)}</button>
+        <button type="button" disabled={busy!==null || !status?.channel_member || !channelReady} onClick={()=>void act('channel')}>{busy==='channel'?t('VERIFICANDO…'):channelReady?t('RECLAMAR 2 ARNOLD'):t('DISPONIBLE EN')+' '+clock(status?.channel_next_available_at)}</button>
       </div>
       {status?.channel_next_available_at && !channelReady && <div className="task-cooldown">{t('Próximo reclamo en')} <strong>{clock(status.channel_next_available_at)}</strong></div>}
     </article>
@@ -329,7 +329,7 @@ function ReferralsPage({ t }: { t: (phrase: string) => string }) {
     ? 'https://t.me/ArnoldMiningOfficialBot?startapp=' + encodeURIComponent('ref_' + String(telegramId))
     : ''
   const shareUrl = inviteUrl
-    ? 'https://t.me/share/url?url=' + encodeURIComponent(inviteUrl) + '&text=' + encodeURIComponent(t('Join ARNOLD and start earning $ARNOLD.'))
+    ? 'https://t.me/share/url?url=' + encodeURIComponent(inviteUrl) + '&text=' + encodeURIComponent('Join ARNOLD and start earning $ARNOLD.')
     : ''
   useEffect(() => {
     const initData = WebApp.initData
@@ -509,7 +509,7 @@ function WalletPage({ t, walletAddress, walletReady, onConnect, onDisconnect, on
       <div className="profile-row"><span>{t('Verification fee')}</span><b>0.10 GRAM</b></div>
       <p className="helper helper-left">{t('Pay 0.10 GRAM from your connected wallet to complete the verification request.')}</p>
       <button className="primary-btn" type="button" disabled={!walletAddress || paymentState === 'sending' || paymentState === 'verified'} onClick={onVerifyPayment}>
-        <LockKeyhole size={17} /> {paymentState === 'sending' ? t(t('COMPROBANDO PAGO…')) : paymentState === 'sent' ? t('COMPROBAR PAGO ANTERIOR') : paymentState === 'verified' ? '✅ ' + t('VERIFICADO') : t('PAY 0.10 GRAM')}
+        <LockKeyhole size={17} /> {paymentState === 'sending' ? t('COMPROBANDO PAGO…') : paymentState === 'sent' ? t('COMPROBAR PAGO ANTERIOR') : paymentState === 'verified' ? '✅ ' + t('VERIFICADO') : t('PAY 0.10 GRAM')}
       </button>
       {paymentState === 'sent' && <p className="balance-hint">{t('Ya existe un pago enviado. Pulsa “COMPROBAR PAGO ANTERIOR”; no se abrirá otra transacción ni se realizará otro cobro.')}</p>}
       {paymentState === 'verified' && <p className="balance-hint">{t('Billetera verificada en la blockchain. Ya puedes iniciar minería y participar en referidos.')}</p>}
@@ -779,7 +779,7 @@ function MarketPage({ t, walletAddress, onConnect, tonConnect }: { t: (phrase: s
         <ShoppingBag size={17} /> {purchaseBusy ? t('PROCESANDO…') : recoveringOrder ? t('COMPROBANDO COMPRA…') : activeOrder && paymentSubmitted ? t('COMPRA EN VERIFICACIÓN…') : activeOrder ? 'CONTINUAR PAGO' : quote?.purchases_enabled ? t('BUY $ARNOLD') : t('COMPRAS TODAVÍA CERRADAS')}
       </button>
       <button className="market-recovery-btn" type="button" disabled={!recoveryAvailable || purchaseBusy || !activeOrder} onClick={() => void verifyOrder()}>
-        <ShieldCheck size={16} /> {purchaseBusy ? t('VERIFICANDO…') : t(t('RECUPERAR / VERIFICAR ENTREGA'))}
+        <ShieldCheck size={16} /> {purchaseBusy ? t('VERIFICANDO…') : t('RECUPERAR / VERIFICAR ENTREGA')}
       </button>
       {purchaseMessage && <p className="market-quote-note" role="status">{purchaseMessage}</p>}
       {purchaseError && <p className="market-quote-note" role="alert">{purchaseError}</p>}
