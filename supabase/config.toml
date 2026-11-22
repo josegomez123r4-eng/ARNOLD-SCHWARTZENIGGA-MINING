@@ -9,3 +9,6 @@ verify_jwt = false
 
 [functions.arnold-treasury-check]
 verify_jwt = false
+
+[functions.task-rewards]
+verify_jwt = false
