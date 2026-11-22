@@ -353,10 +353,10 @@ function ReferralsPage({ t }: { t: (phrase: string) => string }) {
   const [claimMessage, setClaimMessage] = useState('')
   const [claimError, setClaimError] = useState('')
   const inviteUrl = telegramId
-    ? 'https://t.me/ArnoldMiningOfficialBot?startapp=' + encodeURIComponent('ref_' + String(telegramId))
+    ? 'https://arnold-schwartzenigga-mining.vercel.app/invite/?startapp=' + encodeURIComponent('ref_' + String(telegramId))
     : ''
   const shareUrl = inviteUrl
-    ? 'https://t.me/share/url?url=' + encodeURIComponent(inviteUrl) + '&text=' + encodeURIComponent('Join ARNOLD and start earning $ARNOLD.')
+    ? 'https://t.me/share/url?url=' + encodeURIComponent(inviteUrl) + '&text=' + encodeURIComponent('Join ARNOLD SCHWARTZENIGGA and start earning $ARNOLD.')
     : ''
   useEffect(() => {
     const initData = WebApp.initData
