@@ -533,3 +533,39 @@ body{background:#050505}
 .market-feature-art{width:100%;margin:14px 0 16px;overflow:hidden;border:1px solid #c58c4566;border-radius:18px;background:radial-gradient(ellipse at 50% 0%,#70451455,transparent 72%),linear-gradient(145deg,#1d160e,#090806);box-shadow:0 12px 28px #0007}
 .market-feature-image{display:block;width:100%;height:auto;max-height:210px;object-fit:contain;object-position:center;margin:0 auto}
 @media (max-width:420px){.market-feature-art{margin:12px 0 14px;border-radius:15px}.market-feature-image{max-height:175px}}
+
+/* Tasks: channel reward and seven-day consecutive check-in */
+.tasks-page{gap:18px}
+.task-reward-card,.checkin-card{background:linear-gradient(145deg,#171717,#0d0d0d);border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:18px;box-shadow:0 12px 32px rgba(0,0,0,.22)}
+.task-card-top,.checkin-heading,.task-claim-row,.checkin-total{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.task-card-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:13px;background:rgba(240,177,65,.13);color:#f0b141}
+.task-reward-amount{font-weight:900;color:#f0b141;font-size:18px}
+.task-reward-card h2,.checkin-heading h2{font-size:19px;margin:14px 0 7px;color:#fff}
+.task-reward-card p,.checkin-card p{color:#aaa;font-size:13px;line-height:1.55;margin:0 0 15px}
+.task-join-link{display:flex;align-items:center;justify-content:center;gap:8px;padding:13px;border-radius:12px;background:#f0b141;color:#111;font-weight:900;text-decoration:none;font-size:12px;letter-spacing:.05em}
+.task-claim-row{margin-top:14px;align-items:flex-start;flex-direction:column}
+.task-claim-row>span,.checkin-countdown{font-size:11px;color:#aaa}
+.task-claim-row button,.checkin-claim-btn{width:100%;border:0;border-radius:11px;padding:13px;background:#282828;color:#f0b141;font-weight:900;font-size:12px}
+.task-claim-row button:disabled,.checkin-claim-btn:disabled{opacity:.58}
+.task-cooldown,.checkin-countdown{margin-top:11px;text-align:center;color:#aaa;font-size:11px}
+.task-cooldown strong,.checkin-countdown strong{font-variant-numeric:tabular-nums;color:#f0b141}
+.checkin-heading{align-items:flex-start}
+.checkin-heading .kicker{font-size:10px;color:#f0b141}
+.checkin-heading h2{margin-top:5px}
+.checkin-heading>strong{color:#f0b141;font-size:17px;white-space:nowrap}
+.checkin-heading>strong small{display:block;font-size:9px;color:#aaa;text-align:right}
+.checkin-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin:17px 0}
+.checkin-day{display:flex;flex-direction:column;align-items:center;gap:5px;background:#1b1b1b;border:1px solid #303030;border-radius:10px;padding:9px 2px;color:#888}
+.checkin-day>span{width:25px;height:25px;border-radius:50%;display:grid;place-items:center;background:#292929;font-size:11px;font-weight:900}
+.checkin-day small{font-size:8px}
+.checkin-day b{font-size:10px}
+.checkin-day.completed{border-color:rgba(240,177,65,.45);color:#f0b141}
+.checkin-day.completed>span{background:#f0b141;color:#111}
+.checkin-day.current{border-color:#f0b141;color:#fff}
+.checkin-day.current>span{outline:2px solid rgba(240,177,65,.35)}
+.checkin-total{font-size:10px;color:#aaa;margin-bottom:12px;flex-wrap:wrap}
+.checkin-total strong{color:#f0b141;font-variant-numeric:tabular-nums}
+.checkin-claim-btn{background:#f0b141;color:#111}
+.task-feedback{padding:12px;border-radius:10px;font-size:12px}
+.task-feedback.success{background:rgba(46,160,90,.12);color:#77d99b}
+.task-feedback.error{background:rgba(220,70,70,.12);color:#ff9292}
