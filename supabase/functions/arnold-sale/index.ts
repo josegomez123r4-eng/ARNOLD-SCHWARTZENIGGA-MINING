@@ -12,7 +12,7 @@ const TREASURY = "UQCSeF2dCiBsO367d32y2OKPRCgbgSkTc5am-MU5K8EAlCWm";
 const PRICE_SOURCE = "coingecko:the-open-network";
 const QUOTE_MAX_AGE_MS = 60_000;
 const ORDER_TTL_MS = 15 * 60_000;
-const GRAM_OPTIONS_NANO = new Set(["1000000000", "3000000000", "5000000000", "10000000000", "50000000000"]);
+const MIN_PURCHASE_GRAM_NANO = 1_000_000_000n;
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -195,8 +195,8 @@ Deno.serve(async (req: Request) => {
       const [gramsWhole, gramsFraction = ""] = gramsText.split(".");
       const gramNano = BigInt(gramsWhole) * 1_000_000_000n + BigInt((gramsFraction + "000000000").slice(0, 9));
       const wallet = String(body.walletAddress ?? "").trim();
-      if (!GRAM_OPTIONS_NANO.has(gramNano.toString()) || wallet.length < 40 || wallet.length > 80) {
-        return json(400, { error: "INVALID_ORDER_INPUT" });
+      if (gramNano < MIN_PURCHASE_GRAM_NANO || wallet.length < 40 || wallet.length > 80) {
+        return json(400, { error: "INVALID_ORDER_INPUT", message: "El mínimo de compra es 1 GRAM." });
       }
       const [ton, active] = await Promise.all([getTonUsd(), getActiveArnoldPrice()]);
       const now = new Date();
