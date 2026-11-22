@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ARNOLD · Private analytics</title>
+<style>
+:root{color-scheme:dark;font-family:Inter,system-ui,sans-serif;background:#090909;color:#f5f5f5}*{box-sizing:border-box}body{margin:0;padding:24px;max-width:1100px;margin-inline:auto;background:radial-gradient(ellipse at 50% -20%,#33220b 0,transparent 55%),#090909;min-height:100vh}.brand{color:#e9a23b;letter-spacing:.18em;font-weight:900;font-size:13px}.sub{color:#999;margin:8px 0 28px}.panel{background:#151515;border:1px solid #30291e;border-radius:16px;padding:20px;margin:14px 0}.row{display:flex;gap:10px;flex-wrap:wrap}input{flex:1;min-width:210px;background:#090909;border:1px solid #48413a;color:white;border-radius:9px;padding:13px}button{background:#d58a28;color:#17100a;border:0;border-radius:9px;padding:13px 18px;font-weight:800;cursor:pointer}button:disabled{opacity:.5}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}.metric{background:#1b1b1b;border:1px solid #34302a;border-radius:13px;padding:17px}.metric small{color:#aaa;display:block}.metric strong{font-size:30px;display:block;margin-top:9px}.hidden{display:none}.status{color:#e8b56d;font-size:13px;min-height:20px}.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:520px}td,th{text-align:left;padding:12px;border-bottom:1px solid #333;font-size:14px}th{color:#d9a45c}.barrow{display:grid;grid-template-columns:100px 1fr 50px;align-items:center;gap:12px;margin:12px 0;font-size:13px;color:#bbb}.bar{height:9px;border-radius:9px;background:#30291f;overflow:hidden}.bar i{height:100%;display:block;background:#d58a28;border-radius:9px}.note{font-size:12px;color:#888;line-height:1.5}h1{font-size:26px;margin:10px 0}h2{font-size:16px;color:#e4ae63;margin:0 0 16px}@media(max-width:600px){body{padding:16px}.metric strong{font-size:25px}}
+</style></head><body>
+<div class="brand">ARNOLD SCHWARTZENIGGA · ADMIN</div><h1>Analytics dashboard</h1><p class="sub">Private statistics · rolling 30-day activity</p>
+<section class="panel" id="login"><h2>Administrator access</h2><div class="row"><input id="secret" type="password" autocomplete="off" placeholder="Admin access key"><button id="load">Unlock dashboard</button></div><p class="status" id="status" role="status"></p><p class="note">The access key is used only for this request and is not saved in browser storage.</p></section>
+<div id="dashboard" class="hidden">
+<div class="row" style="justify-content:space-between;align-items:center"><p class="status" id="updated"></p><button id="refresh">Refresh</button></div>
+<div class="grid">
+<div class="metric"><small>Unique Telegram accounts · 30d</small><strong id="unique">—</strong></div>
+<div class="metric"><small>Bot /start users · 30d</small><strong id="starts">—</strong></div>
+<div class="metric"><small>Mini App users · 30d</small><strong id="opens">—</strong></div>
+<div class="metric"><small>Returning users · 30d</small><strong id="returning">—</strong></div>
+<div class="metric"><small>Registered profiles · all time</small><strong id="registered">—</strong></div>
+<div class="metric"><small>Verified wallets · all time</small><strong id="wallets">—</strong></div>
+</div>
+<section class="panel"><h2>Daily activity</h2><div id="bars"></div></section>
+<section class="panel"><h2>Daily details</h2><div class="tablewrap"><table><thead><tr><th>Date (UTC)</th><th>Unique users</th><th>/start events</th><th>Mini App opens</th></tr></thead><tbody id="daily"></tbody></table></div></section>
+<p class="note">Bot /start figures will remain zero until the official bot webhook is connected. Historical visits before analytics activation cannot be reconstructed. Counts use Telegram account IDs internally; this dashboard does not display those IDs.</p>
+</div>
+<script>
+const endpoint='https://vnslzfivilgdqqgdyoxd.supabase.co/functions/v1/arnold-analytics';
+const $=id=>document.getElementById(id);let adminKey='';
+async function load(){const button=$('load');button.disabled=true;$('status').textContent='Checking access…';try{const response=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json','x-arnold-analytics-admin':adminKey},body:JSON.stringify({action:'stats'})});const data=await response.json();if(!response.ok)throw new Error(response.status===401?'Access denied. Check the admin key.':data.error||'Could not load statistics');render(data);$('login').classList.add('hidden');$('dashboard').classList.remove('hidden');$('updated').textContent='Updated '+new Date().toLocaleString()}catch(e){$('status').textContent=e.message;adminKey=''}finally{button.disabled=false}}
+function render(d){$('unique').textContent=d.unique_users_seen??0;$('starts').textContent=d.bot_start_users??0;$('opens').textContent=d.mini_app_users??0;$('returning').textContent=d.returning_users??0;$('registered').textContent=d.registrations_total??0;$('wallets').textContent=d.verified_wallets_total??0;const rows=d.daily||[];const max=Math.max(1,...rows.map(x=>x.unique_users));$('bars').innerHTML=rows.slice(-14).map(x=>'<div class="barrow"><span>'+x.date.slice(5)+'</span><div class="bar"><i style="width:'+Math.round(x.unique_users/max*100)+'%"></i></div><b>'+x.unique_users+'</b></div>').join('')||'<p class="note">No tracked visits yet.</p>';$('daily').innerHTML=rows.slice().reverse().map(x=>'<tr><td>'+x.date+'</td><td>'+x.unique_users+'</td><td>'+x.bot_starts+'</td><td>'+x.mini_app_opens+'</td></tr>').join('')||'<tr><td colspan="4">No tracked visits yet.</td></tr>'}
+$('load').addEventListener('click',()=>{adminKey=$('secret').value.trim();if(adminKey)load();else $('status').textContent='Enter your admin key.'});
+$('secret').addEventListener('keydown',e=>{if(e.key==='Enter')$('load').click()});
+$('refresh').addEventListener('click',load);
+</script></body></html>
