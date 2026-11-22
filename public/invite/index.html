@@ -36,7 +36,7 @@
     (function(){
       var params=new URLSearchParams(window.location.search);
       var startapp=params.get('startapp')||'';
-      if(/^ref_\\d{1,20}$/.test(startapp)){
+      if(/^ref_\d{1,20}$/.test(startapp)){
         document.getElementById('join').href='https://t.me/ArnoldMiningOfficialBot?startapp='+encodeURIComponent(startapp);
       }
     })();
