@@ -254,6 +254,8 @@ function TasksPage({ t }: { t: (phrase: string) => string }) {
   const [status, setStatus] = useState<{channel_member:boolean;channel_next_available_at:string|null;checkin_streak:number;checkin_claimed_today:boolean;checkin_next_available_at:string} | null>(null)
   const [now, setNow] = useState(Date.now())
   const [busy, setBusy] = useState<'channel'|'checkin'|null>(null)
+  const [channelJoinClicked, setChannelJoinClicked] = useState(false)
+  const [channelWaitUntil, setChannelWaitUntil] = useState<number | null>(null)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const post = async (action: string) => {
@@ -275,6 +277,7 @@ function TasksPage({ t }: { t: (phrase: string) => string }) {
     return [Math.floor(seconds/3600),Math.floor(seconds%3600/60),seconds%60].map(v=>String(v).padStart(2,'0')).join(':')
   }
   const channelReady = !status?.channel_next_available_at || new Date(status.channel_next_available_at).getTime() <= now
+  const channelJoinReady = channelJoinClicked && channelWaitUntil !== null && now >= channelWaitUntil && !!status?.channel_member
   const checkinReady = !!status && !status.checkin_claimed_today
   const nextCheckin = status?.checkin_next_available_at
   const act = async (kind:'channel'|'checkin') => {
@@ -302,10 +305,10 @@ function TasksPage({ t }: { t: (phrase: string) => string }) {
       <div className="task-card-top"><span className="task-card-icon"><Gift size={20}/></span><span className="task-reward-amount">+2 ARNOLD</span></div>
       <h2>{t('Únete a nuestro canal de noticias')}</h2>
       <p>{t('Forma parte de la comunidad y mantente al día con las novedades de ARNOLD.')}</p>
-      <a className="task-join-link" href="https://t.me/arnoldschwartzenigganews" target="_blank" rel="noreferrer">{t('IR A LA TAREA')} <span>↗</span></a>
+      <a className="task-join-link" href="https://t.me/arnoldschwartzenigganews" target="_blank" rel="noreferrer" onClick={() => { setChannelJoinClicked(true); setChannelWaitUntil(Date.now() + 5000); window.setTimeout(() => { void refresh() }, 5000) }}>{t('IR A LA TAREA')} <span>↗</span></a>
       <div className="task-claim-row">
-        <span>{status?.channel_member ? t('Membresía verificada') : t('Únete al canal para desbloquear el reclamo')}</span>
-        <button type="button" disabled={busy!==null || !status?.channel_member || !channelReady} onClick={()=>void act('channel')}>{busy==='channel'?t('VERIFICANDO…'):channelReady?t('RECLAMAR 2 ARNOLD'):t('DISPONIBLE EN')+' '+clock(status?.channel_next_available_at)}</button>
+        <span>{!channelJoinClicked ? t('Pulsa “IR A LA TAREA” para unirte al canal') : channelWaitUntil !== null && now < channelWaitUntil ? t('Comprobando en 5 segundos…') : status?.channel_member ? t('Membresía verificada') : t('Aún no figuras como miembro del canal')}</span>
+        <button type="button" className={channelJoinReady && channelReady && busy===null ? 'task-claim-ready' : ''} style={channelJoinReady && channelReady && busy===null ? { background: 'linear-gradient(135deg, #f7d76b, #c99724)', color: '#17120a', borderColor: '#f7d76b', boxShadow: '0 0 16px rgba(247,215,107,.28)' } : undefined} disabled={busy!==null || !channelJoinReady || !channelReady} onClick={()=>void act('channel')}>{busy==='channel'?t('VERIFICANDO…'):!channelJoinClicked?t('BLOQUEADO'):channelWaitUntil !== null && now < channelWaitUntil?t('ESPERA 5 SEGUNDOS'):!status?.channel_member?t('ÚNETE AL CANAL'):channelReady?t('RECLAMAR 2 ARNOLD'):t('DISPONIBLE EN')+' '+clock(status?.channel_next_available_at)}</button>
       </div>
       {status?.channel_next_available_at && !channelReady && <div className="task-cooldown">{t('Próximo reclamo en')} <strong>{clock(status.channel_next_available_at)}</strong></div>}
     </article>
