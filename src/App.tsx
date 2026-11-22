@@ -56,7 +56,7 @@ const tabs = [
 
 function Header({ language, onLanguageChange }: { language: LanguageCode; onLanguageChange: (language: LanguageCode) => void }) {
   return <header className="topbar">
-    <div className="brand"><img className="brand-logo" src="https://azure-high-cougar-588.mypinata.cloud/ipfs/bafybeid7ztv2vpc77hkdcuvsh7y3dbg54tqair2qvebpcxhgvqg7owhdl4" alt="Arnold Schwartzenigga Mining" />
+    <div className="brand"><img className="brand-logo" src="https://azure-high-cougar-588.mypinata.cloud/ipfs/bafybeid7ztv2vpc77hkdcuvsh7y3dbg54tqair2qvebpcxhgvqg7owhdl4" alt={t("Arnold Schwartzenigga Mining")} />
       <div><div className="brand-name">ARNOLD</div><div className="brand-sub">SCHWARTZENIGGA MINING</div></div>
     </div>
     <div className="header-actions"><label className="language-picker" aria-label={translate(language, 'Select language')}><select value={language} onChange={(event) => { onLanguageChange(event.target.value as LanguageCode) }}>{languages.map((item) => <option key={item.code} value={item.code}>{item.flag} {item.name}</option>)}</select></label></div>
@@ -69,7 +69,7 @@ function ArnoldWorkoutMascot({ active, t }: { active: boolean; t: (phrase: strin
   const animationUrl = 'https://gateway.pinata.cloud/ipfs/bafybeif3wxsbkq75ukpdk2xzomrgp4ph6i2sz3bggsmsyjjrov5y6sqsue'
   return <div className={active ? 'arnold-mascot is-training' : 'arnold-mascot is-resting'} aria-label={t(active ? 'Arnold entrenando mientras mina' : 'Arnold listo para minar')}>
     <div className="mascot-art-window">
-      <img className="mascot-art mascot-animation" src={animationUrl} alt="Arnold haciendo curls con dos mancuernas" />
+      <img className="mascot-art mascot-animation" src={animationUrl} alt={t("Arnold haciendo curls con dos mancuernas")} />
     </div>
     <span className="mascot-status"><i /> {active ? t('MINING ACTIVE') : t('MINING STANDBY')}</span>
   </div>
@@ -88,7 +88,7 @@ function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMin
           body: JSON.stringify({ action: 'earnings', initData: WebApp.initData })
         })
         const data = await response.json().catch(() => ({}))
-        if (!response.ok) throw new Error(data?.error || 'No se pudieron cargar las recompensas por referidos')
+        if (!response.ok) throw new Error(data?.error || t('No se pudieron cargar las recompensas por referidos'))
         if (!cancelled) setReferralEarnings(Number(data.referrals) || 0)
       } catch {
         if (!cancelled) setReferralEarnings(null)
@@ -105,7 +105,7 @@ function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMin
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
   const [myRank, setMyRank] = useState<number | null>(null)
   const loadLeaderboard = async () => {
-    if (!WebApp.initData) { setRankingError('Abre ARNOLD desde el bot oficial de Telegram.'); return }
+    if (!WebApp.initData) { setRankingError(t('Abre ARNOLD desde el bot oficial de Telegram.')); return }
     setRankingLoading(true)
     setRankingError('')
     try {
@@ -115,11 +115,11 @@ function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMin
         body: JSON.stringify({ action: 'leaderboard', initData: WebApp.initData })
       })
       const data = await response.json().catch(() => ({}))
-      if (!response.ok) throw new Error(data?.error || 'No se pudo cargar el ranking')
+      if (!response.ok) throw new Error(data?.error || t('No se pudo cargar el ranking'))
       setLeaderboard(Array.isArray(data.leaderboard) ? data.leaderboard : [])
       setMyRank(typeof data.my_rank === 'number' ? data.my_rank : null)
     } catch (error) {
-      setRankingError(error instanceof Error ? error.message : 'No se pudo cargar el ranking')
+      setRankingError(error instanceof Error ? error.message : t('No se pudo cargar el ranking'))
     } finally {
       setRankingLoading(false)
     }
@@ -155,7 +155,7 @@ function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMin
       <span className="ranking-entry-copy"><b>{t('ARNOLD LEADERBOARD')}</b><small>{t('See top earners from mining, tasks and referrals')}</small></span>
       <span className="ranking-entry-action">{t('VIEW')} <span>›</span></span>
     </button>
-    <section className="earnings-summary" aria-label="Resumen de ganancias">
+    <section className="earnings-summary" aria-label={t("EARNINGS SUMMARY")}>
       <div className="earnings-summary-head">
         <div><div className="kicker">{t('YOUR REWARDS')}</div><h2><Coins size={19} /> {t('EARNINGS SUMMARY')}</h2></div>
         <span className="earnings-live-label">{t('CONFIRMED')}</span>
@@ -193,8 +193,8 @@ function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMin
       </div>
       <div className="reward-line"><div className="reward-icon"><Zap size={19} /></div><div className="reward-desc"><b>{t('BASE CYCLE REWARD')}</b><span>{t('Initial reward before holding bonuses')}</span></div><div className="reward-value">+{totalReward}<small>$ARNOLD</small></div></div>
       <div className="mining-action-buttons">
-        <button className="primary-btn mining-start-btn" type="button" disabled={miningBusy || !!cycle || !miningStatus?.verified} onClick={miningStatus?.verified ? onStartMining : onOpenWallet}><Pickaxe size={17} /> {miningBusy ? t('PROCESSING…') : cycle ? t('MINING ACTIVE') : miningStatus?.verified ? t('START MINING') : t('MINING')}</button>
-        <button className={'claim-btn' + (cycleFinished && !miningBusy ? ' claim-ready' : '')} type="button" disabled={miningBusy || !cycleFinished} aria-live="polite" aria-label={cycleFinished ? t('CLAIM REWARD NOW') : t('CLAIM')} onClick={onClaimMining}><Gift size={17} /> {miningBusy ? 'PROCESSING…' : cycleFinished ? t('CLAIM REWARD NOW') : t('CLAIM')}</button>
+        <button className="primary-btn mining-start-btn" type="button" disabled={miningBusy || !!cycle || !miningStatus?.verified} onClick={miningStatus?.verified ? onStartMining : onOpenWallet}><Pickaxe size={17} /> {miningBusy ? t(t('PROCESSING…')) : cycle ? t('MINING ACTIVE') : miningStatus?.verified ? t('START MINING') : t('MINING')}</button>
+        <button className={'claim-btn' + (cycleFinished && !miningBusy ? ' claim-ready' : '')} type="button" disabled={miningBusy || !cycleFinished} aria-live="polite" aria-label={cycleFinished ? t('CLAIM REWARD NOW') : t(t('CLAIM'))} onClick={onClaimMining}><Gift size={17} /> {miningBusy ? t('PROCESSING…') : cycleFinished ? t('CLAIM REWARD NOW') : t(t('CLAIM'))}</button>
       </div>
       <div className="mining-boost-row"><div><b>{t('BOOST YOUR MINING')}</b><span>{t('Potencia tu producción usando $ARNOLD')}</span></div><button type="button" onClick={() => setBoostOpen(true)}><Zap size={16} /> {t('BOOST')}</button></div>
       <p className="helper">{t(cycle ? (cycleFinished ? 'Tu ciclo terminó. Reclama la recompensa registrada en tu saldo ARNOLD.' : 'Tu ciclo de 24 horas está activo. La cifra minada es una estimación; la recompensa final se confirma al reclamar.') : miningStatus?.verified ? 'Billetera verificada. Puedes iniciar un ciclo de 24 horas.' : 'Conecta y verifica tu billetera con el pago único de 0.10 GRAM para desbloquear la minería.')}</p>
@@ -255,7 +255,7 @@ function TasksPage({ t }: { t: (phrase: string) => string }) {
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const post = async (action: string) => {
-    if (!WebApp.initData) throw new Error(t('Abre ARNOLD desde el bot oficial de Telegram.'))
+    if (!WebApp.initData) throw new Error(t(t('Abre ARNOLD desde el bot oficial de Telegram.')))
     const response = await fetch(endpoint, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,initData:WebApp.initData})})
     const data = await response.json().catch(()=>({}))
     if (!response.ok) throw new Error(data.error === 'CHANNEL_MEMBERSHIP_REQUIRED' ? t('Primero únete al canal de noticias.') : t(data.error || 'No se pudo completar la tarea.'))
@@ -303,7 +303,7 @@ function TasksPage({ t }: { t: (phrase: string) => string }) {
       <a className="task-join-link" href="https://t.me/arnoldschwartzenigganews" target="_blank" rel="noreferrer">{t('IR A LA TAREA')} <span>↗</span></a>
       <div className="task-claim-row">
         <span>{status?.channel_member ? t('Membresía verificada') : t('Únete al canal para desbloquear el reclamo')}</span>
-        <button type="button" disabled={busy!==null || !status?.channel_member || !channelReady} onClick={()=>void act('channel')}>{busy==='channel'?t('VERIFICANDO…'):channelReady?t('RECLAMAR 2 ARNOLD'):t('DISPONIBLE EN')+' '+clock(status?.channel_next_available_at)}</button>
+        <button type="button" disabled={busy!==null || !status?.channel_member || !channelReady} onClick={()=>void act('channel')}>{busy==='channel'?t(t('VERIFICANDO…')):channelReady?t('RECLAMAR 2 ARNOLD'):t('DISPONIBLE EN')+' '+clock(status?.channel_next_available_at)}</button>
       </div>
       {status?.channel_next_available_at && !channelReady && <div className="task-cooldown">{t('Próximo reclamo en')} <strong>{clock(status.channel_next_available_at)}</strong></div>}
     </article>
@@ -351,7 +351,7 @@ function ReferralsPage({ t }: { t: (phrase: string) => string }) {
           })
           if (!syncResponse.ok) {
             const syncData = await syncResponse.json().catch(() => ({}))
-            throw new Error(syncData?.error || 'No se pudo registrar la invitación')
+            throw new Error(syncData?.error || t('No se pudo registrar la invitación'))
           }
         }
         const response = await fetch(endpoint, {
@@ -360,7 +360,7 @@ function ReferralsPage({ t }: { t: (phrase: string) => string }) {
           body: JSON.stringify({ action: 'stats', initData })
         })
         const data = await response.json()
-        if (!response.ok) throw new Error(data?.error || 'No se pudieron cargar los referidos')
+        if (!response.ok) throw new Error(data?.error || t('No se pudieron cargar los referidos'))
         if (!cancelled) setStats({
           total: Number(data.total || 0),
           eligible: Number(data.eligible || 0),
@@ -372,7 +372,7 @@ function ReferralsPage({ t }: { t: (phrase: string) => string }) {
           body: JSON.stringify({ action: 'earnings', initData })
         })
         const earningsData = await earningsResponse.json()
-        if (!earningsResponse.ok) throw new Error(earningsData?.error || 'No se pudieron cargar las ganancias')
+        if (!earningsResponse.ok) throw new Error(earningsData?.error || t('No se pudieron cargar las ganancias'))
         if (!cancelled) setEarnings({
           available: Number(earningsData.available || 0),
           reserved: Number(earningsData.reserved || 0),
@@ -384,7 +384,7 @@ function ReferralsPage({ t }: { t: (phrase: string) => string }) {
         })
 
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : 'No se pudieron cargar los referidos')
+        if (!cancelled) setError(e instanceof Error ? e.message : t('No se pudieron cargar los referidos'))
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -404,8 +404,8 @@ function ReferralsPage({ t }: { t: (phrase: string) => string }) {
         body: JSON.stringify({ action: 'claim', initData: WebApp.initData })
       })
       const data = await response.json().catch(() => ({}))
-      if (!response.ok) throw new Error(data?.error || 'No se pudo acreditar la comisión.')
-      setClaimMessage('Comisión acreditada al tablero interno: ' + Number(data.amount || 0).toLocaleString(undefined, { maximumFractionDigits: 6 }) + ' $ARNOLD. No se realizó ninguna transferencia.')
+      if (!response.ok) throw new Error(data?.error || t('No se pudo acreditar la comisión.'))
+      setClaimMessage(t('Comisión acreditada al tablero interno: ') + Number(data.amount || 0).toLocaleString(undefined, { maximumFractionDigits: 6 }) + ' $ARNOLD. ' + t('No se realizó ninguna transferencia.'))
       const refresh = await fetch('https://vnslzfivilgdqqgdyoxd.supabase.co/functions/v1/referral-service', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'earnings', initData: WebApp.initData })
@@ -417,7 +417,7 @@ function ReferralsPage({ t }: { t: (phrase: string) => string }) {
         mining: Number(updated.mining || 0), tasks: Number(updated.tasks || 0)
       })
     } catch (e) {
-      setClaimError(e instanceof Error ? e.message : 'No se pudo registrar la solicitud.')
+      setClaimError(e instanceof Error ? e.message : t('No se pudo registrar la solicitud.'))
     } finally { setClaiming(false) }
   }
   const copyInvite = async () => {
@@ -442,7 +442,7 @@ function ReferralsPage({ t }: { t: (phrase: string) => string }) {
       window.setTimeout(() => setCopied(false), 2500)
     } catch {
       setCopied(false)
-      setCopyError('No se pudo copiar automáticamente. Mantén pulsado el enlace para copiarlo.')
+      setCopyError(t('No se pudo copiar automáticamente. Mantén pulsado el enlace para copiarlo.'))
     }
   }
   return <section className="inner-page">
@@ -471,7 +471,7 @@ function ReferralsPage({ t }: { t: (phrase: string) => string }) {
         <div><span>{t('POR TAREAS')}</span><b>{earnings.tasks.toLocaleString(undefined, { maximumFractionDigits: 6 })}</b></div>
       </div>
       <button className="primary-btn referral-claim-btn" type="button" disabled={claiming || earnings.available <= 0} onClick={() => { void requestClaim() }}>
-        {claiming ? t('ACREDITANDO…') : 'CLAIM'}
+        {claiming ? t('ACREDITANDO…') : t('CLAIM')}
       </button>
       <div className="referral-claim-status">
         <span>{t('EN PROCESO')}: {earnings.reserved.toLocaleString(undefined, { maximumFractionDigits: 6 })} $ARNOLD</span>
@@ -509,7 +509,7 @@ function WalletPage({ t, walletAddress, walletReady, onConnect, onDisconnect, on
       <div className="profile-row"><span>{t('Verification fee')}</span><b>0.10 GRAM</b></div>
       <p className="helper helper-left">{t('Pay 0.10 GRAM from your connected wallet to complete the verification request.')}</p>
       <button className="primary-btn" type="button" disabled={!walletAddress || paymentState === 'sending' || paymentState === 'verified'} onClick={onVerifyPayment}>
-        <LockKeyhole size={17} /> {paymentState === 'sending' ? t('COMPROBANDO PAGO…') : paymentState === 'sent' ? t('COMPROBAR PAGO ANTERIOR') : paymentState === 'verified' ? '✅ ' + t('VERIFICADO') : t('PAY 0.10 GRAM')}
+        <LockKeyhole size={17} /> {paymentState === 'sending' ? t(t('COMPROBANDO PAGO…')) : paymentState === 'sent' ? t('COMPROBAR PAGO ANTERIOR') : paymentState === 'verified' ? '✅ ' + t('VERIFICADO') : t('PAY 0.10 GRAM')}
       </button>
       {paymentState === 'sent' && <p className="balance-hint">{t('Ya existe un pago enviado. Pulsa “COMPROBAR PAGO ANTERIOR”; no se abrirá otra transacción ni se realizará otro cobro.')}</p>}
       {paymentState === 'verified' && <p className="balance-hint">{t('Billetera verificada en la blockchain. Ya puedes iniciar minería y participar en referidos.')}</p>}
@@ -604,11 +604,11 @@ function MarketPage({ t, walletAddress, onConnect, tonConnect }: { t: (phrase: s
   const startPurchase = async () => {
     if (purchaseBusy) return
     if (!walletAddress) { onConnect(); return }
-    if (!tonConnect) { setPurchaseError('La conexión con TON Connect todavía no está lista.'); return }
-    if (!WebApp.initData) { setPurchaseError('Abre ARNOLD desde el bot oficial de Telegram para validar tu sesión.'); return }
+    if (!tonConnect) { setPurchaseError(t('La conexión con TON Connect todavía no está lista.')); return }
+    if (!WebApp.initData) { setPurchaseError(t('Abre ARNOLD desde el bot oficial de Telegram para validar tu sesión.')); return }
     if (!quote?.purchases_enabled) return
     const gramsValue = Number(grams.trim())
-    if (!/^\d+(\.\d{1,9})?$/.test(grams.trim()) || !Number.isFinite(gramsValue) || gramsValue < 1) { setPurchaseError('El mínimo de compra es 1 GRAM. Puedes introducir cualquier cantidad superior.'); return }
+    if (!/^\d+(\.\d{1,9})?$/.test(grams.trim()) || !Number.isFinite(gramsValue) || gramsValue < 1) { setPurchaseError(t('El mínimo de compra es 1 GRAM. Puedes introducir cualquier cantidad superior.')); return }
     setPurchaseBusy(true)
     setPurchaseError('')
     setPurchaseMessage('')
@@ -619,7 +619,7 @@ function MarketPage({ t, walletAddress, onConnect, tonConnect }: { t: (phrase: s
         setPaymentSubmitted(false)
         setPaymentSubmittedAt(null)
         setRecoveryAvailable(false)
-        throw new Error('La orden anterior venció sin confirmación de pago. Inicia una compra nueva.')
+        throw new Error(t('La orden anterior venció sin confirmación de pago. Inicia una compra nueva.'))
       }
       if (!order) {
         const created = await saleRequest({ action: 'create_order', initData: WebApp.initData, grams: gramsValue.toFixed(9).replace(/\.?0+$/, ''), walletAddress })
@@ -646,11 +646,11 @@ function MarketPage({ t, walletAddress, onConnect, tonConnect }: { t: (phrase: s
       setPayoutStatus('pending')
       setPaymentSubmittedAt(Date.now())
       setRecoveryAvailable(false)
-      setPurchaseMessage('Transferencia enviada. Verificando automáticamente el pago y la entrega de ARNOLD…')
+      setPurchaseMessage(t('Transferencia enviada. Verificando automáticamente el pago y la entrega de ARNOLD…'))
       const result = await saleRequest({ action: 'verify_payment', initData: WebApp.initData, orderId: order.order_id })
       applyOrderVerification(result)
     } catch (error) {
-      setPurchaseError(error instanceof Error ? error.message : 'No se pudo iniciar la compra')
+      setPurchaseError(error instanceof Error ? error.message : t('No se pudo iniciar la compra'))
     } finally {
       setPurchaseBusy(false)
     }
@@ -676,11 +676,11 @@ function MarketPage({ t, walletAddress, onConnect, tonConnect }: { t: (phrase: s
           setPayoutStatus(String(recovered.payout_status ?? 'pending'))
           setPaymentSubmittedAt(Date.now())
           setRecoveryAvailable(false)
-          setPurchaseMessage('Encontramos una compra pagada. Estamos comprobando automáticamente si los tokens ya llegaron.')
+          setPurchaseMessage(t('Encontramos una compra pagada. Estamos comprobando automáticamente si los tokens ya llegaron.'))
         }
       } catch (error) {
         if (error instanceof Error && !error.message.includes('NO_RECOVERABLE_ORDER') && !cancelled) {
-          setPurchaseError('No pudimos recuperar automáticamente tu orden. Inténtalo de nuevo en unos momentos.')
+          setPurchaseError(t('No pudimos recuperar automáticamente tu orden. Inténtalo de nuevo en unos momentos.'))
         }
       } finally {
         if (!cancelled) setRecoveringOrder(false)
@@ -717,7 +717,7 @@ function MarketPage({ t, walletAddress, onConnect, tonConnect }: { t: (phrase: s
           body: JSON.stringify({ action: 'quote' })
         })
         const data = await response.json()
-        if (!response.ok) throw new Error(data?.error || 'No se pudo obtener la cotización')
+        if (!response.ok) throw new Error(data?.error || t('No se pudo obtener la cotización'))
         if (!cancelled) {
           setQuote({
             ton_usd: String(data.ton_usd),
@@ -730,7 +730,7 @@ function MarketPage({ t, walletAddress, onConnect, tonConnect }: { t: (phrase: s
           setQuoteError('')
         }
       } catch {
-        if (!cancelled) setQuoteError('Cotización en vivo no disponible. Inténtalo de nuevo más tarde.')
+        if (!cancelled) setQuoteError(t('Cotización en vivo no disponible. Inténtalo de nuevo más tarde.'))
       } finally {
         if (!cancelled) setQuoteLoading(false)
       }
@@ -776,15 +776,15 @@ function MarketPage({ t, walletAddress, onConnect, tonConnect }: { t: (phrase: s
         <Wallet size={18} /> {walletAddress ? t('BILLETERA CONECTADA') : t('CONECTAR BILLETERA')}
       </button>
       <button className={quote?.purchases_enabled && !(activeOrder && paymentSubmitted) && !purchaseBusy && !recoveringOrder ? 'market-buy-btn market-buy-btn-active' : 'market-buy-btn'} type="button" disabled={purchaseBusy || recoveringOrder || (!!activeOrder && paymentSubmitted) || quoteLoading || !quote?.purchases_enabled} onClick={() => void startPurchase()}>
-        <ShoppingBag size={17} /> {purchaseBusy ? t('PROCESANDO…') : recoveringOrder ? 'COMPROBANDO COMPRA…' : activeOrder && paymentSubmitted ? 'COMPRA EN VERIFICACIÓN…' : activeOrder ? 'CONTINUAR PAGO' : quote?.purchases_enabled ? 'BUY $ARNOLD' : t('COMPRAS TODAVÍA CERRADAS')}
+        <ShoppingBag size={17} /> {purchaseBusy ? t('PROCESANDO…') : recoveringOrder ? t('COMPROBANDO COMPRA…') : activeOrder && paymentSubmitted ? t('COMPRA EN VERIFICACIÓN…') : activeOrder ? 'CONTINUAR PAGO' : quote?.purchases_enabled ? t('BUY $ARNOLD') : t('COMPRAS TODAVÍA CERRADAS')}
       </button>
       <button className="market-recovery-btn" type="button" disabled={!recoveryAvailable || purchaseBusy || !activeOrder} onClick={() => void verifyOrder()}>
-        <ShieldCheck size={16} /> {purchaseBusy ? 'VERIFICANDO…' : 'RECUPERAR / VERIFICAR ENTREGA'}
+        <ShieldCheck size={16} /> {purchaseBusy ? t('VERIFICANDO…') : t(t('RECUPERAR / VERIFICAR ENTREGA'))}
       </button>
       {purchaseMessage && <p className="market-quote-note" role="status">{purchaseMessage}</p>}
       {purchaseError && <p className="market-quote-note" role="alert">{purchaseError}</p>}
       {activeOrder && <p className="market-buy-footnote">Orden {activeOrder.order_id.slice(0, 8)} · {activeOrder.arnold_amount} $ARNOLD · pago: {paymentStatus} · entrega: {payoutStatus}.</p>}
-      <p className="market-buy-footnote">{walletAddress ? 'Billetera conectada. La compra solo solicitará la cantidad exacta que confirmes en tu wallet.' : 'Conecta tu billetera para comprar GRAM desde 1. Puedes introducir cualquier importe o usar los paquetes sugeridos.'}</p>
+      <p className="market-buy-footnote">{walletAddress ? t('Billetera conectada. La compra solo solicitará la cantidad exacta que confirmes en tu wallet.') : t('Conecta tu billetera para comprar GRAM desde 1. Puedes introducir cualquier importe o usar los paquetes sugeridos.')}</p>
     </section>
     <button className="sale-allocation-toggle" type="button" onClick={() => setShowSalePhases(value => !value)} aria-expanded={showSalePhases}>
       <span>{t('ASIGNACIÓN TOTAL DE VENTA')}</span>
@@ -948,7 +948,7 @@ export default function App() {
   const walletVerificationEndpoint = 'https://vnslzfivilgdqqgdyoxd.supabase.co/functions/v1/wallet-verification'
   const miningEndpoint = 'https://vnslzfivilgdqqgdyoxd.supabase.co/functions/v1/arnold-mining'
   const postTelegramAction = async (endpoint: string, body: Record<string, unknown>) => {
-    if (!WebApp.initData) throw new Error('Abre ARNOLD desde el bot oficial de Telegram.')
+    if (!WebApp.initData) throw new Error(t('Abre ARNOLD desde el bot oficial de Telegram.'))
     const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...body, initData: WebApp.initData }) })
     const data = await response.json().catch(() => ({}))
     if (!response.ok && response.status !== 202) throw new Error(data?.message || data?.error || 'No se pudo completar la operación')
