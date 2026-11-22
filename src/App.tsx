@@ -690,14 +690,15 @@ function MarketPage({ t, walletAddress, onConnect, tonConnect }: { t: (phrase: s
       <div className="market-buy-brand"><div className="market-buy-logo"><Flame size={25} fill="currentColor" /></div><div><b>ARNOLD</b><span>{t('OFFICIAL TOKEN SALE')}</span></div></div>
       <div className="market-live-price"><span className={quote ? 'market-live-dot' : 'market-live-dot market-live-dot-off'} />{quote ? '$' + phasePrice.toFixed(quote.active_phase === 1 ? 3 : 4) : '—'}<small>USD / ARNOLD</small></div>
     </div>
-        <section className="market-holdings-reward" aria-label="Beneficio de minería por compras">
-      <div className="market-holdings-reward-icon"><Zap size={20} /></div>
-      <div className="market-holdings-reward-copy">
-        <b>{t('GANA EL 0.10% DE TUS COMPRAS EN MINERÍA DIARIA')}</b>
-        <p>{t('Tus compras confirmadas de $ARNOLD aumentan permanentemente tu producción diaria en un 0.10% de la cantidad comprada.')}</p>
-        <small>{t('Ejemplo: compra 1,000 $ARNOLD y suma +1 $ARNOLD al día. Tus bonificaciones se acumulan.')}</small>
-      </div>
-    </section>
+        <div className="market-feature-art">
+      <img
+        className="market-feature-image"
+        src="https://azure-high-cougar-588.mypinata.cloud/ipfs/bafybeicjfptyteaxsypwtluvhwgfhrugekpqt6jfgtbar43o26474ab57m"
+        alt="ARNOLD Market"
+        loading="lazy"
+        decoding="async"
+      />
+    </div>
 <section className="market-buy-card">
       <div className="market-buy-title"><span>{t('COMPRA $ARNOLD')}</span><small>{quote ? t('FASE') + ' ' + activePhase + ' ' + t('ACTIVA') : t('VENTA EN PREPARACIÓN')}</small></div>
       <label className="market-amount-label" htmlFor="arnold-gram-amount">{t('Cantidad libre en GRAM (mínimo 1)')}</label>
