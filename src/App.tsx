@@ -1058,6 +1058,5 @@ export default function App() {
         <Icon size={18} strokeWidth={tab === id ? 2.4 : 1.8} /><span>{t(label)}</span>
       </button>)}
     </nav>
-    <div className="demo-tag">{t('EARLY BUILD · LIVE FEATURES DISABLED')}</div>
   </main>
 }
