@@ -78,8 +78,18 @@ Deno.serve(async (req: Request) => {
     const yesterday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 1)).toISOString().slice(0, 10);
     const tomorrow = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1)).toISOString();
 
-    const [membership, channelResult, checkinResult] = await Promise.all([
-      isChannelMember(telegramUserId),
+    // Channel membership is only required for the channel task.
+    // A Telegram getChatMember outage must never block the independent daily check-in.
+    let membership = false;
+    if (action !== "claim_checkin") {
+      try {
+        membership = await isChannelMember(telegramUserId);
+      } catch (membershipError) {
+        if (action === "claim_channel") throw membershipError;
+        membership = false; // status remains available; user can still use daily check-in
+      }
+    }
+    const [channelResult, checkinResult] = await Promise.all([
       db.from("task_reward_claims").select("claimed_at").eq("telegram_user_id", telegramUserId)
         .eq("task_key", "channel_join").order("claimed_at", { ascending: false }).limit(1).maybeSingle(),
       db.from("task_checkin_state").select("current_streak,last_claim_date")
