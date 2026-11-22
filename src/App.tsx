@@ -136,7 +136,7 @@ function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMin
   const elapsed = cycle ? Math.min(duration, Math.max(0, now - startedAt)) : 0
   const cycleFinished = !!cycle && remaining <= 0
   const totalReward = cycle ? Math.max(0, Number(cycle.total_reward) || 5) : 5
-  const purchaseBonusDaily = cycle ? Number(cycle.purchase_bonus ?? 0) : Number(miningStatus?.purchase_bonus?.purchase_bonus_daily ?? 0)
+  const purchaseBonusDaily = Number(miningStatus?.purchase_bonus?.purchase_bonus_daily ?? cycle?.purchase_bonus ?? 0)
   const nextDailyReward = Number(miningStatus?.purchase_bonus?.daily_reward ?? (Number(miningStatus?.purchase_bonus?.base_reward ?? 5) + Number(miningStatus?.purchase_bonus?.purchase_bonus_daily ?? 0)))
   const hourlyReward = cycle ? totalReward / 24 : 0
   const estimatedMined = cycle ? totalReward * (elapsed / duration) : 0
