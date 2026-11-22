@@ -136,6 +136,8 @@ function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMin
   const elapsed = cycle ? Math.min(duration, Math.max(0, now - startedAt)) : 0
   const cycleFinished = !!cycle && remaining <= 0
   const totalReward = cycle ? Math.max(0, Number(cycle.total_reward) || 5) : 5
+  const purchaseBonusDaily = cycle ? Number(cycle.purchase_bonus ?? 0) : Number(miningStatus?.purchase_bonus?.purchase_bonus_daily ?? 0)
+  const nextDailyReward = Number(miningStatus?.purchase_bonus?.daily_reward ?? (Number(miningStatus?.purchase_bonus?.base_reward ?? 5) + Number(miningStatus?.purchase_bonus?.purchase_bonus_daily ?? 0)))
   const hourlyReward = cycle ? totalReward / 24 : 0
   const estimatedMined = cycle ? totalReward * (elapsed / duration) : 0
   const formatClock = (milliseconds: number) => {
@@ -191,7 +193,7 @@ function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMin
           </article>
         </div>
       </div>
-      <div className="reward-line"><div className="reward-icon"><Zap size={19} /></div><div className="reward-desc"><b>{t('BASE CYCLE REWARD')}</b><span>{t('Initial reward before holding bonuses')}</span></div><div className="reward-value">+{totalReward}<small>$ARNOLD</small></div></div>
+      <div className="reward-line"><div className="reward-icon"><Zap size={19} /></div><div className="reward-desc"><b>{t('DAILY MINING REWARD')}</b><span>{t('Includes permanent 0.10% purchase bonus')} · +{purchaseBonusDaily.toFixed(6)} $ARNOLD</span></div><div className="reward-value">+{(cycle ? totalReward : nextDailyReward).toFixed(6)}<small>$ARNOLD</small></div></div>
       <div className="mining-action-buttons">
         <button className="primary-btn mining-start-btn" type="button" disabled={miningBusy || !!cycle || !miningStatus?.verified} onClick={miningStatus?.verified ? onStartMining : onOpenWallet}><Pickaxe size={17} /> {miningBusy ? t('PROCESSING…') : cycle ? t('MINING ACTIVE') : miningStatus?.verified ? t('START MINING') : t('MINING')}</button>
         <button className={'claim-btn' + (cycleFinished && !miningBusy ? ' claim-ready' : '')} type="button" disabled={miningBusy || !cycleFinished} aria-live="polite" aria-label={cycleFinished ? t('CLAIM REWARD NOW') : t('CLAIM')} onClick={onClaimMining}><Gift size={17} /> {miningBusy ? t('PROCESSING…') : cycleFinished ? t('CLAIM REWARD NOW') : t('CLAIM')}</button>
@@ -200,7 +202,7 @@ function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMin
       <p className="helper">{t(cycle ? (cycleFinished ? 'Tu ciclo terminó. Reclama la recompensa registrada en tu saldo ARNOLD.' : 'Tu ciclo de 24 horas está activo. La cifra minada es una estimación; la recompensa final se confirma al reclamar.') : miningStatus?.verified ? 'Billetera verificada. Puedes iniciar un ciclo de 24 horas.' : 'Conecta y verifica tu billetera con el pago único de 0.10 GRAM para desbloquear la minería.')}</p>
     </section>
     <section className="stats">
-      <article className="stat-card featured"><div className="stat-label"><Coins size={14} /> {t('BASE REWARD')}</div><div className="stat-number">5 <small>$ARNOLD</small></div><div className="stat-caption">{t('Per completed 24-hour cycle')}</div></article>
+      <article className="stat-card featured"><div className="stat-label"><Coins size={14} /> {t('DAILY REWARD')}</div><div className="stat-number">{nextDailyReward.toFixed(6)} <small>$ARNOLD</small></div><div className="stat-caption">{t('Includes permanent 0.10% purchase bonus')}</div></article>
       <article className="stat-card"><div className="stat-label"><Clock3 size={14} /> {t('CYCLE')}</div><div className="stat-number">24 <small>{t('HOURS')}</small></div><div className="stat-caption">{t('One manual cycle at a time')}</div></article>
     </section>
     <button className="home-referral-cta" type="button" onClick={onOpenReferrals}>
