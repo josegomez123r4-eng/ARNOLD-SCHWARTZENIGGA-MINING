@@ -860,6 +860,17 @@ export default function App() {
   const [balanceRefresh, setBalanceRefresh] = useState(0)
   const tonConnect = useRef<TonConnectInstance | null>(null)
   const t = (phrase: string) => translate(language, phrase)
+  const analyticsOpenSent = useRef(false)
+  useEffect(() => {
+    if (analyticsOpenSent.current || !WebApp.initData) return
+    analyticsOpenSent.current = true
+    void fetch('https://vnslzfivilgdqqgdyoxd.supabase.co/functions/v1/arnold-analytics', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ eventType: 'mini_app_open', initData: WebApp.initData }),
+      keepalive: true
+    }).catch(error => console.warn('ARNOLD analytics event could not be recorded:', error))
+  }, [])
   useEffect(() => {
     let cancelled = false
     let retryTimer: number | undefined
