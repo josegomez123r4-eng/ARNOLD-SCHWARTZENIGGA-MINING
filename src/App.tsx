@@ -251,18 +251,20 @@ function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMin
 
 function TasksPage({ t }: { t: (phrase: string) => string }) {
   const endpoint = 'https://vnslzfivilgdqqgdyoxd.supabase.co/functions/v1/task-rewards'
-  const [status, setStatus] = useState<{channel_member:boolean;channel_next_available_at:string|null;checkin_streak:number;checkin_claimed_today:boolean;checkin_next_available_at:string} | null>(null)
+  const [status, setStatus] = useState<{channel_member:boolean;channel_next_available_at:string|null;support_channel_member:boolean;support_channel_next_available_at:string|null;checkin_streak:number;checkin_claimed_today:boolean;checkin_next_available_at:string} | null>(null)
   const [now, setNow] = useState(Date.now())
   const [busy, setBusy] = useState<'channel'|'checkin'|null>(null)
   const [channelJoinClicked, setChannelJoinClicked] = useState(false)
   const [channelWaitUntil, setChannelWaitUntil] = useState<number | null>(null)
+  const [supportJoinClicked, setSupportJoinClicked] = useState(false)
+  const [supportWaitUntil, setSupportWaitUntil] = useState<number | null>(null)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const post = async (action: string) => {
     if (!WebApp.initData) throw new Error(t('Abre ARNOLD desde el bot oficial de Telegram.'))
     const response = await fetch(endpoint, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,initData:WebApp.initData})})
     const data = await response.json().catch(()=>({}))
-    if (!response.ok) throw new Error(data.error === 'CHANNEL_MEMBERSHIP_REQUIRED' ? t('Primero únete al canal de noticias.') : t(data.error || 'No se pudo completar la tarea.'))
+    if (!response.ok) throw new Error(data.error === 'CHANNEL_MEMBERSHIP_REQUIRED' ? t('Primero únete al canal de noticias.') : data.error === 'SUPPORT_CHANNEL_MEMBERSHIP_REQUIRED' ? t('Primero únete al canal de soporte.') : t(data.error || 'No se pudo completar la tarea.'))
     return data
   }
   const refresh = async () => {
@@ -278,13 +280,15 @@ function TasksPage({ t }: { t: (phrase: string) => string }) {
   }
   const channelReady = !status?.channel_next_available_at || new Date(status.channel_next_available_at).getTime() <= now
   const channelJoinReady = channelJoinClicked && channelWaitUntil !== null && now >= channelWaitUntil && !!status?.channel_member
+  const supportReady = !status?.support_channel_next_available_at || new Date(status.support_channel_next_available_at).getTime() <= now
+  const supportJoinReady = supportJoinClicked && supportWaitUntil !== null && now >= supportWaitUntil && !!status?.support_channel_member
   const checkinReady = !!status && !status.checkin_claimed_today
   const nextCheckin = status?.checkin_next_available_at
-  const act = async (kind:'channel'|'checkin') => {
+  const act = async (kind:'channel'|'support'|'checkin') => {
     setBusy(kind);setMessage('');setError('')
     try {
-      const data = await post(kind==='channel'?'claim_channel':'claim_checkin')
-      setMessage(kind==='channel' ? (data.claimed ? t('¡Recompensa de 2 ARNOLD acreditada!') : t('La tarea todavía está en enfriamiento.')) : (data.claimed ? t('¡Check-in acreditado: +0.5 ARNOLD!') : t('Ya reclamaste el check-in de hoy.')))
+      const data = await post(kind==='channel'?'claim_channel':kind==='support'?'claim_support':'claim_checkin')
+      setMessage(kind==='checkin' ? (data.claimed ? t('¡Check-in acreditado: +0.5 ARNOLD!') : t('Ya reclamaste el check-in de hoy.')) : (data.claimed ? t('¡Recompensa de 2 ARNOLD acreditada!') : t('La tarea todavía está en enfriamiento.')))
       await refresh()
     } catch(e) { setError(e instanceof Error ? t(e.message) : t('No se pudo reclamar.')) }
     finally { setBusy(null) }
@@ -311,6 +315,19 @@ function TasksPage({ t }: { t: (phrase: string) => string }) {
         <button type="button" className={channelJoinReady && channelReady && busy===null ? 'task-claim-ready' : ''} style={channelJoinReady && channelReady && busy===null ? { background: 'linear-gradient(135deg, #f7d76b, #c99724)', color: '#17120a', borderColor: '#f7d76b', boxShadow: '0 0 16px rgba(247,215,107,.28)' } : undefined} disabled={busy!==null || !channelJoinReady || !channelReady} onClick={()=>void act('channel')}>{busy==='channel'?t('VERIFICANDO…'):!channelJoinClicked?t('BLOQUEADO'):channelWaitUntil !== null && now < channelWaitUntil?t('ESPERA 5 SEGUNDOS'):!status?.channel_member?t('ÚNETE AL CANAL'):channelReady?t('RECLAMAR 2 ARNOLD'):t('DISPONIBLE EN')+' '+clock(status?.channel_next_available_at)}</button>
       </div>
       {status?.channel_next_available_at && !channelReady && <div className="task-cooldown">{t('Próximo reclamo en')} <strong>{clock(status.channel_next_available_at)}</strong></div>}
+    </article>
+    <article className="task-reward-card">
+      <div className="task-card-top"><span className="task-card-icon"><Gift size={20}/></span><span className="task-reward-amount">+2 ARNOLD</span></div>
+      <h2>{t('Join our support channel')}</h2>
+      <p>{t('Join the ARNOLD support community and get help with your questions.')}</p>
+      <a className="task-join-link" href="https://t.me/arnoldchatsupport" target="_blank" rel="noreferrer" onClick={() => { setSupportJoinClicked(true); setSupportWaitUntil(Date.now() + 5000); window.setTimeout(() => { void refresh() }, 5000) }}>{t('JOIN CHANNEL')} <span>↗</span></a>
+      <div className="task-claim-row">
+        <span>{!supportJoinClicked ? t('Join the support channel to unlock the reward') : supportWaitUntil !== null && now < supportWaitUntil ? t('Checking in 5 seconds…') : status?.support_channel_member ? t('Membership verified') : t('You are not yet a member of the support channel')}</span>
+        <button type="button" className={supportJoinReady && supportReady && busy===null ? 'task-claim-ready' : ''} style={supportJoinReady && supportReady && busy===null ? { background: 'linear-gradient(135deg, #f7d76b, #c99724)', color: '#17120a', borderColor: '#f7d76b', boxShadow: '0 0 16px rgba(247,215,107,.28)' } : undefined} disabled={busy!==null || !supportJoinReady || !supportReady} onClick={()=>void act('support')}>
+          {busy==='support'?t('VERIFYING…'):!supportJoinClicked?t('LOCKED'):supportWaitUntil !== null && now < supportWaitUntil?t('WAIT 5 SECONDS'):!status?.support_channel_member?t('JOIN THE CHANNEL'):supportReady?t('CLAIM 2 ARNOLD'):t('AVAILABLE IN')+' '+clock(status?.support_channel_next_available_at)}
+        </button>
+      </div>
+      {status?.support_channel_next_available_at && !supportReady && <div className="task-cooldown">{t('Next claim in')} <strong>{clock(status.support_channel_next_available_at)}</strong></div>}
     </article>
 
     {message && <p className="task-feedback success" role="status">{message}</p>}
