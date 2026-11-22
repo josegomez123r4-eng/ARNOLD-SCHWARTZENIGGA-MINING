@@ -248,10 +248,67 @@ function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMin
 }
 
 function TasksPage({ t }: { t: (phrase: string) => string }) {
-  return <section className="inner-page">
+  const endpoint = 'https://vnslzfivilgdqqgdyoxd.supabase.co/functions/v1/task-rewards'
+  const [status, setStatus] = useState<{channel_member:boolean;channel_next_available_at:string|null;checkin_streak:number;checkin_claimed_today:boolean;checkin_next_available_at:string} | null>(null)
+  const [now, setNow] = useState(Date.now())
+  const [busy, setBusy] = useState<'channel'|'checkin'|null>(null)
+  const [message, setMessage] = useState('')
+  const [error, setError] = useState('')
+  const post = async (action: string) => {
+    if (!WebApp.initData) throw new Error('Abre ARNOLD desde el bot oficial de Telegram.')
+    const response = await fetch(endpoint, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,initData:WebApp.initData})})
+    const data = await response.json().catch(()=>({}))
+    if (!response.ok) throw new Error(data.error === 'CHANNEL_MEMBERSHIP_REQUIRED' ? 'Primero únete al canal de noticias.' : data.error || 'No se pudo completar la tarea.')
+    return data
+  }
+  const refresh = async () => {
+    try { const data = await post('status'); setStatus(data); setError('') }
+    catch (e) { setError(e instanceof Error ? e.message : 'No se pudieron cargar las tareas.') }
+  }
+  useEffect(() => { void refresh() }, [])
+  useEffect(() => { const timer = window.setInterval(()=>setNow(Date.now()),1000); return ()=>window.clearInterval(timer) }, [])
+  const clock = (until: string|null|undefined) => {
+    if (!until) return '00:00:00'
+    const seconds = Math.max(0,Math.floor((new Date(until).getTime()-now)/1000))
+    return [Math.floor(seconds/3600),Math.floor(seconds%3600/60),seconds%60].map(v=>String(v).padStart(2,'0')).join(':')
+  }
+  const channelReady = !status?.channel_next_available_at || new Date(status.channel_next_available_at).getTime() <= now
+  const checkinReady = !!status && !status.checkin_claimed_today
+  const nextCheckin = status?.checkin_next_available_at
+  const act = async (kind:'channel'|'checkin') => {
+    setBusy(kind);setMessage('');setError('')
+    try {
+      const data = await post(kind==='channel'?'claim_channel':'claim_checkin')
+      setMessage(kind==='channel' ? (data.claimed ? '¡Recompensa de 2 ARNOLD acreditada!' : 'La tarea todavía está en enfriamiento.') : (data.claimed ? '¡Check-in acreditado: +0.5 ARNOLD!' : 'Ya reclamaste el check-in de hoy.'))
+      await refresh()
+    } catch(e) { setError(e instanceof Error ? e.message : 'No se pudo reclamar.') }
+    finally { setBusy(null) }
+  }
+  const days = Array.from({length:7},(_,i)=>i+1)
+  return <section className="inner-page tasks-page">
     <div className="kicker">{t('EARN MORE $ARNOLD')}</div><h1>{t('DAILY')}<br /><span>{t('TASKS.')}</span></h1>
-    <div className="feature-panel"><div className="feature-icon"><ListChecks size={22} /></div><div><b>{t('REWARD TASKS')}</b><span>{t('Complete activities to earn additional rewards.')}</span></div></div>
-    <div className="empty-state"><CircleHelp size={34} /><b>{t('TASKS COMING SOON')}</b><span>{t('Available tasks and their rewards will be published here.')}</span></div>
+    <div className="feature-panel"><div className="feature-icon"><ListChecks size={22} /></div><div><b>{t('REWARD TASKS')}</b><span>Completa tareas y gana recompensas ARNOLD.</span></div></div>
+    <article className="task-reward-card">
+      <div className="task-card-top"><span className="task-card-icon"><Gift size={20}/></span><span className="task-reward-amount">+2 ARNOLD</span></div>
+      <h2>Únete a nuestro canal de noticias</h2>
+      <p>Forma parte de la comunidad y mantente al día con las novedades de ARNOLD.</p>
+      <a className="task-join-link" href="https://t.me/arnoldschwartzenigganews" target="_blank" rel="noreferrer">IR A LA TAREA <span>↗</span></a>
+      <div className="task-claim-row">
+        <span>{status?.channel_member ? 'Membresía verificada' : 'Únete al canal para desbloquear el reclamo'}</span>
+        <button type="button" disabled={busy!==null || !status?.channel_member || !channelReady} onClick={()=>void act('channel')}>{busy==='channel'?'VERIFICANDO…':channelReady?'RECLAMAR 2 ARNOLD':'DISPONIBLE EN '+clock(status?.channel_next_available_at)}</button>
+      </div>
+      {status?.channel_next_available_at && !channelReady && <div className="task-cooldown">Próximo reclamo en <strong>{clock(status.channel_next_available_at)}</strong></div>}
+    </article>
+    <article className="checkin-card">
+      <div className="checkin-heading"><div><div className="kicker">RECOMPENSA DIARIA</div><h2>CHECK-IN DE 7 DÍAS</h2></div><strong>+0.5 <small>ARNOLD / DÍA</small></strong></div>
+      <p>Haz check-in cada día para mantener tu racha. Si pierdes un día, vuelves al día 1.</p>
+      <div className="checkin-days">{days.map(day=><div className={'checkin-day'+(day<=(status?.checkin_streak??0)?' completed':'')+(day===(status?.checkin_streak??0)+1 && !status?.checkin_claimed_today?' current':'')} key={day}><span>{day<=(status?.checkin_streak??0)?'✓':day}</span><small>DÍA</small><b>0.5</b></div>)}</div>
+      <div className="checkin-total"><span>PROGRESO SEMANAL</span><strong>{status?.checkin_streak??0}/7 · {((status?.checkin_streak??0)*0.5).toFixed(1)} / 3.5 ARNOLD</strong></div>
+      <button className="checkin-claim-btn" type="button" disabled={busy!==null || !checkinReady} onClick={()=>void act('checkin')}>{busy==='checkin'?'GUARDANDO…':checkinReady?'HACER CHECK-IN · +0.5 ARNOLD':'CHECK-IN COMPLETADO HOY'}</button>
+      <div className="checkin-countdown">Siguiente check-in en <strong>{clock(nextCheckin)}</strong> · Reinicio diario UTC</div>
+    </article>
+    {message && <p className="task-feedback success" role="status">{message}</p>}
+    {error && <p className="task-feedback error" role="alert">{error}</p>}
   </section>
 }
 
