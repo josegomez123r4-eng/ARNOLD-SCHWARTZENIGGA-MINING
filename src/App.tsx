@@ -56,7 +56,7 @@ const tabs = [
 
 function Header({ language, onLanguageChange }: { language: LanguageCode; onLanguageChange: (language: LanguageCode) => void }) {
   return <header className="topbar">
-    <div className="brand"><img className="brand-logo" src="https://azure-high-cougar-588.mypinata.cloud/ipfs/bafybeid7ztv2vpc77hkdcuvsh7y3dbg54tqair2qvebpcxhgvqg7owhdl4" alt={t("Arnold Schwartzenigga Mining")} />
+    <div className="brand"><img className="brand-logo" src="https://azure-high-cougar-588.mypinata.cloud/ipfs/bafybeid7ztv2vpc77hkdcuvsh7y3dbg54tqair2qvebpcxhgvqg7owhdl4" alt={translate(language, "Arnold Schwartzenigga Mining")} />
       <div><div className="brand-name">ARNOLD</div><div className="brand-sub">SCHWARTZENIGGA MINING</div></div>
     </div>
     <div className="header-actions"><label className="language-picker" aria-label={translate(language, 'Select language')}><select value={language} onChange={(event) => { onLanguageChange(event.target.value as LanguageCode) }}>{languages.map((item) => <option key={item.code} value={item.code}>{item.flag} {item.name}</option>)}</select></label></div>
