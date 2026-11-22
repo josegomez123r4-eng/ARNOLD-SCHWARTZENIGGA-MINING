@@ -286,7 +286,15 @@ function TasksPage({ t }: { t: (phrase: string) => string }) {
   }
   const days = Array.from({length:7},(_,i)=>i+1)
   return <section className="inner-page tasks-page">
-    <div className="kicker">{t('EARN MORE $ARNOLD')}</div><h1>{t('DAILY')}<br /><span>{t('TASKS.')}</span></h1>
+    <div className="tasks-banner-wrap"><img className="tasks-banner-image" src="https://azure-high-cougar-588.mypinata.cloud/ipfs/bafybeih5epoypzce6oidj3w5ucf55b6b2otort2qaglzybs5f4kicpfpg4" alt="ARNOLD Daily Tasks" /></div>
+    <article className="checkin-card">
+      <div className="checkin-heading"><div><div className="kicker">RECOMPENSA DIARIA</div><h2>CHECK-IN DE 7 DÍAS</h2></div><strong>+0.5 <small>ARNOLD / DÍA</small></strong></div>
+      <p>Haz check-in cada día para mantener tu racha. Si pierdes un día, vuelves al día 1.</p>
+      <div className="checkin-days">{days.map(day=><div className={'checkin-day'+(day<=(status?.checkin_streak??0)?' completed':'')+(day===(status?.checkin_streak??0)+1 && !status?.checkin_claimed_today?' current':'')} key={day}><span>{day<=(status?.checkin_streak??0)?'✓':day}</span><small>DÍA</small><b>0.5</b></div>)}</div>
+      <div className="checkin-total"><span>PROGRESO SEMANAL</span><strong>{status?.checkin_streak??0}/7 · {((status?.checkin_streak??0)*0.5).toFixed(1)} / 3.5 ARNOLD</strong></div>
+      <button className="checkin-claim-btn" type="button" disabled={busy!==null || !checkinReady} onClick={()=>void act('checkin')}>{busy==='checkin'?'GUARDANDO…':checkinReady?'HACER CHECK-IN · +0.5 ARNOLD':'CHECK-IN COMPLETADO HOY'}</button>
+      <div className="checkin-countdown">Siguiente check-in en <strong>{clock(nextCheckin)}</strong> · Reinicio diario UTC</div>
+    </article>
     <div className="feature-panel"><div className="feature-icon"><ListChecks size={22} /></div><div><b>{t('REWARD TASKS')}</b><span>Completa tareas y gana recompensas ARNOLD.</span></div></div>
     <article className="task-reward-card">
       <div className="task-card-top"><span className="task-card-icon"><Gift size={20}/></span><span className="task-reward-amount">+2 ARNOLD</span></div>
@@ -299,14 +307,7 @@ function TasksPage({ t }: { t: (phrase: string) => string }) {
       </div>
       {status?.channel_next_available_at && !channelReady && <div className="task-cooldown">Próximo reclamo en <strong>{clock(status.channel_next_available_at)}</strong></div>}
     </article>
-    <article className="checkin-card">
-      <div className="checkin-heading"><div><div className="kicker">RECOMPENSA DIARIA</div><h2>CHECK-IN DE 7 DÍAS</h2></div><strong>+0.5 <small>ARNOLD / DÍA</small></strong></div>
-      <p>Haz check-in cada día para mantener tu racha. Si pierdes un día, vuelves al día 1.</p>
-      <div className="checkin-days">{days.map(day=><div className={'checkin-day'+(day<=(status?.checkin_streak??0)?' completed':'')+(day===(status?.checkin_streak??0)+1 && !status?.checkin_claimed_today?' current':'')} key={day}><span>{day<=(status?.checkin_streak??0)?'✓':day}</span><small>DÍA</small><b>0.5</b></div>)}</div>
-      <div className="checkin-total"><span>PROGRESO SEMANAL</span><strong>{status?.checkin_streak??0}/7 · {((status?.checkin_streak??0)*0.5).toFixed(1)} / 3.5 ARNOLD</strong></div>
-      <button className="checkin-claim-btn" type="button" disabled={busy!==null || !checkinReady} onClick={()=>void act('checkin')}>{busy==='checkin'?'GUARDANDO…':checkinReady?'HACER CHECK-IN · +0.5 ARNOLD':'CHECK-IN COMPLETADO HOY'}</button>
-      <div className="checkin-countdown">Siguiente check-in en <strong>{clock(nextCheckin)}</strong> · Reinicio diario UTC</div>
-    </article>
+
     {message && <p className="task-feedback success" role="status">{message}</p>}
     {error && <p className="task-feedback error" role="alert">{error}</p>}
   </section>
