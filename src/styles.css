@@ -569,3 +569,8 @@ body{background:#050505}
 .task-feedback{padding:12px;border-radius:10px;font-size:12px}
 .task-feedback.success{background:rgba(46,160,90,.12);color:#77d99b}
 .task-feedback.error{background:rgba(220,70,70,.12);color:#ff9292}
+
+/* Tasks header banner supplied by the project owner */
+.tasks-banner-wrap{width:100%;margin:0 auto 16px;overflow:hidden;border:1px solid #ffad3952;border-radius:16px;background:radial-gradient(ellipse at 50% 0%,#58300f55,transparent 72%),#090806;box-shadow:0 12px 30px #0008;line-height:0}
+.tasks-banner-image{display:block;width:100%;height:auto;max-width:100%;object-fit:contain;object-position:center}
+.checkin-card{margin:0 0 16px}
