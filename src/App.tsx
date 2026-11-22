@@ -1063,9 +1063,22 @@ export default function App() {
           setVerificationSent(false)
           await loadMiningStatus()
         } else if (result.data.pending_intent && normalizeTonAddress(String(result.data.pending_intent.wallet_address)) === normalizeTonAddress(walletAddress ?? '')) {
-          setVerificationIntent(result.data.pending_intent)
-          setVerificationSent(true)
-          setPaymentState('sent')
+          const pendingIntent = result.data.pending_intent
+          setVerificationIntent(pendingIntent)
+          // A pending intent is only an invoice, not proof that the wallet sent funds.
+          // Check the chain by memo before deciding whether to show "check payment"
+          // or let the user initiate the payment again.
+          const paymentCheck = await postTelegramAction(walletVerificationEndpoint, { action: 'verify_payment', intentId: pendingIntent.intent_id })
+          if (cancelled) return
+          if (paymentCheck.data?.verified === true) {
+            setPaymentState('verified')
+            setVerificationIntent(null)
+            setVerificationSent(false)
+            await loadMiningStatus()
+          } else {
+            setVerificationSent(false)
+            setPaymentState('idle')
+          }
         }
       } catch { /* Telegram session or network may not be ready yet */ }
     }
