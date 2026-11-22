@@ -6,6 +6,7 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SECRET_KEYS = JSON.parse(Deno.env.get("SUPABASE_SECRET_KEYS") ?? "{}");
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? SECRET_KEYS.default ?? "";
 const CHANNEL = "@arnoldschwartzenigganews";
+const SUPPORT_CHANNEL = "@arnoldchatsupport";
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -47,11 +48,11 @@ async function verifyInitData(initData: string): Promise<string> {
   if (!user?.id || !/^\d{1,20}$/.test(String(user.id))) throw new Error("TELEGRAM_USER_MISSING");
   return String(user.id);
 }
-async function isChannelMember(telegramUserId: string): Promise<boolean> {
+async function isChannelMember(telegramUserId: string, chatId: string): Promise<boolean> {
   const response = await fetch("https://api.telegram.org/bot" + BOT_TOKEN + "/getChatMember", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chat_id: CHANNEL, user_id: Number(telegramUserId) }),
+    body: JSON.stringify({ chat_id: chatId, user_id: Number(telegramUserId) }),
     signal: AbortSignal.timeout(8000),
   });
   const result = await response.json().catch(() => ({}));
@@ -71,7 +72,7 @@ Deno.serve(async (req: Request) => {
     const body = await req.json();
     const telegramUserId = await verifyInitData(String(body.initData ?? ""));
     const action = String(body.action ?? "");
-    if (!["status", "claim_channel", "claim_checkin"].includes(action)) return json(400, { error: "UNKNOWN_ACTION" });
+    if (!["status", "claim_channel", "claim_support", "claim_checkin"].includes(action)) return json(400, { error: "UNKNOWN_ACTION" });
 
     const now = new Date();
     const today = now.toISOString().slice(0, 10);
@@ -81,26 +82,39 @@ Deno.serve(async (req: Request) => {
     // Channel membership is only required for the channel task.
     // A Telegram getChatMember outage must never block the independent daily check-in.
     let membership = false;
+    let supportMembership = false;
     if (action !== "claim_checkin") {
       try {
-        membership = await isChannelMember(telegramUserId);
+        membership = await isChannelMember(telegramUserId, CHANNEL);
       } catch (membershipError) {
         if (action === "claim_channel") throw membershipError;
-        membership = false; // status remains available; user can still use daily check-in
+        membership = false;
+      }
+      try {
+        supportMembership = await isChannelMember(telegramUserId, SUPPORT_CHANNEL);
+      } catch (membershipError) {
+        if (action === "claim_support") throw membershipError;
+        supportMembership = false;
       }
     }
-    const [channelResult, checkinResult] = await Promise.all([
+    const [channelResult, supportResult, checkinResult] = await Promise.all([
       db.from("task_reward_claims").select("claimed_at").eq("telegram_user_id", telegramUserId)
         .eq("task_key", "channel_join").order("claimed_at", { ascending: false }).limit(1).maybeSingle(),
+      db.from("task_reward_claims").select("claimed_at").eq("telegram_user_id", telegramUserId)
+        .eq("task_key", "support_channel_join").order("claimed_at", { ascending: false }).limit(1).maybeSingle(),
       db.from("task_checkin_state").select("current_streak,last_claim_date")
         .eq("telegram_user_id", telegramUserId).maybeSingle(),
     ]);
     if (channelResult.error) throw channelResult.error;
+    if (supportResult.error) throw supportResult.error;
     if (checkinResult.error) throw checkinResult.error;
 
     const lastChannelClaim = channelResult.data?.claimed_at ? new Date(channelResult.data.claimed_at) : null;
     const nextChannel = lastChannelClaim ? new Date(lastChannelClaim.getTime() + 48 * 60 * 60 * 1000) : null;
     const channelAvailableAt = nextChannel && nextChannel.getTime() > now.getTime() ? nextChannel.toISOString() : null;
+    const lastSupportClaim = supportResult.data?.claimed_at ? new Date(supportResult.data.claimed_at) : null;
+    const nextSupport = lastSupportClaim ? new Date(lastSupportClaim.getTime() + 48 * 60 * 60 * 1000) : null;
+    const supportAvailableAt = nextSupport && nextSupport.getTime() > now.getTime() ? nextSupport.toISOString() : null;
     const lastCheckinDate = checkinResult.data?.last_claim_date ?? null;
     const currentStreak = lastCheckinDate === today || lastCheckinDate === yesterday
       ? Number(checkinResult.data?.current_streak ?? 0) : 0;
@@ -109,25 +123,29 @@ Deno.serve(async (req: Request) => {
       return json(200, {
         channel_member: membership,
         channel_next_available_at: channelAvailableAt,
+        support_channel_member: supportMembership,
+        support_channel_next_available_at: supportAvailableAt,
         checkin_streak: currentStreak,
         checkin_claimed_today: lastCheckinDate === today,
         checkin_next_available_at: tomorrow,
         channel_url: "https://t.me/arnoldschwartzenigganews",
+        support_channel_url: "https://t.me/arnoldchatsupport",
       });
     }
 
-    const taskKey = action === "claim_channel" ? "channel_join" : "daily_checkin";
+    const taskKey = action === "claim_channel" ? "channel_join" : action === "claim_support" ? "support_channel_join" : "daily_checkin";
     if (taskKey === "channel_join" && !membership) return json(403, { error: "CHANNEL_MEMBERSHIP_REQUIRED" });
+    if (taskKey === "support_channel_join" && !supportMembership) return json(403, { error: "SUPPORT_CHANNEL_MEMBERSHIP_REQUIRED" });
 
     const { data, error } = await db.rpc("claim_arnold_task_reward", {
       p_telegram_user_id: telegramUserId,
       p_task_key: taskKey,
-      p_channel_verified: membership,
+      p_channel_verified: taskKey === "support_channel_join" ? supportMembership : membership,
     });
     if (error) throw error;
     if (!data?.claimed) {
       const status = data?.error === "CHANNEL_MEMBERSHIP_REQUIRED" ? 403
-        : ["CHANNEL_COOLDOWN", "CHECKIN_ALREADY_CLAIMED"].includes(data?.error) ? 409 : 400;
+        : ["CHANNEL_COOLDOWN", "SUPPORT_CHANNEL_COOLDOWN", "CHECKIN_ALREADY_CLAIMED"].includes(data?.error) ? 409 : 400;
       return json(status, data);
     }
     return json(200, data);
