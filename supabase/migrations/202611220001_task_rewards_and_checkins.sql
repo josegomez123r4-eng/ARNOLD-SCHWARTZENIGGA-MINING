@@ -139,7 +139,7 @@ begin
   return jsonb_build_object(
     'channel_last_claimed_at', v_last,
     'channel_next_available_at', case when v_last is null then null else v_last + interval '48 hours' end,
-    'checkin_streak', coalesce(v_streak, 0),
+    'checkin_streak', case when v_last_date is null or v_last_date < v_today - 1 then 0 else coalesce(v_streak, 0) end,
     'checkin_claimed_today', v_last_date = v_today,
     'checkin_last_claim_date', v_last_date,
     'checkin_next_available_at', ((v_today + 1)::timestamp at time zone 'UTC')
