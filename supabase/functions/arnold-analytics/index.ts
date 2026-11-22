@@ -44,6 +44,54 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return Response.json({ error: "Method not allowed" }, { status: 405, headers: cors });
   try {
     const body = await req.json();
+    const adminSecret = Deno.env.get("ARNOLD_ANALYTICS_ADMIN_SECRET");
+    if (body?.action === "stats") {
+      if (!adminSecret || req.headers.get("x-arnold-analytics-admin") !== adminSecret) {
+        return Response.json({ error: "Unauthorized" }, { status: 401, headers: cors });
+      }
+      const url = Deno.env.get("SUPABASE_URL");
+      const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+      if (!url || !key) throw new Error("Analytics service is not configured");
+      const db = createClient(url, key, { auth: { persistSession: false } });
+      const since = new Date(Date.now() - 30 * 86400000).toISOString();
+      const [eventsResult, profilesResult, walletsResult] = await Promise.all([
+        db.from("arnold_analytics_events").select("telegram_user_id,event_type,event_day,event_count").gte("event_day", since.slice(0, 10)).limit(10000),
+        db.schema("arnold").from("user_profiles").select("telegram_user_id", { count: "exact", head: true }),
+        db.from("telegram_wallet_links").select("telegram_user_id", { count: "exact", head: true }).not("verified_at", "is", null),
+      ]);
+      if (eventsResult.error) throw eventsResult.error;
+      if (profilesResult.error) throw profilesResult.error;
+      if (walletsResult.error) throw walletsResult.error;
+      const events = eventsResult.data || [];
+      const unique = (type: string) => new Set(events.filter((e: any) => e.event_type === type).map((e: any) => String(e.telegram_user_id))).size;
+      const dayMap = new Map<string, { bot_starts: number; mini_app_opens: number; unique_users: Set<string> }>();
+      for (const event of events as any[]) {
+        const day = String(event.event_day);
+        if (!dayMap.has(day)) dayMap.set(day, { bot_starts: 0, mini_app_opens: 0, unique_users: new Set() });
+        const bucket = dayMap.get(day)!;
+        if (event.event_type === "bot_start") bucket.bot_starts += Number(event.event_count || 1);
+        if (event.event_type === "mini_app_open") bucket.mini_app_opens += Number(event.event_count || 1);
+        bucket.unique_users.add(String(event.telegram_user_id));
+      }
+      const userDays = new Map<string, Set<string>>();
+      for (const event of events as any[]) {
+        const id = String(event.telegram_user_id);
+        if (!userDays.has(id)) userDays.set(id, new Set());
+        userDays.get(id)!.add(String(event.event_day));
+      }
+      return Response.json({
+        period_days: 30,
+        bot_start_users: unique("bot_start"),
+        mini_app_users: unique("mini_app_open"),
+        unique_users_seen: new Set(events.map((e: any) => String(e.telegram_user_id))).size,
+        returning_users: [...userDays.values()].filter(days => days.size > 1).length,
+        registrations_total: profilesResult.count ?? 0,
+        verified_wallets_total: walletsResult.count ?? 0,
+        daily: [...dayMap.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([date, value]) => ({
+          date, bot_starts: value.bot_starts, mini_app_opens: value.mini_app_opens, unique_users: value.unique_users.size
+        }))
+      }, { headers: cors });
+    }
     const eventType = body?.eventType;
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
