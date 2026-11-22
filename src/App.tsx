@@ -802,9 +802,9 @@ function MarketPage({ t, walletAddress, onConnect, tonConnect }: { t: (phrase: s
       </div>
       <div className="listing-estimate">
         <div className="listing-estimate-label">{t('PRECIO ESTIMADO DE LISTADO')}</div>
-        <strong>$0.01 <small>USD</small></strong>
+        <strong>$0.03 <small>USD</small></strong>
         <b>STON.fi</b>
-        <p>{t('Referencia estimada, no representa un precio garantizado ni una promesa de listado.')}</p>
+        <p>Listed on December 22nd on stonfi</p>
       </div>
       <div className="sale-automation-note"><ShieldCheck size={17} /><p>{t('La siguiente fase se activará automáticamente cuando se vendan y confirmen los 50,000 tokens de la fase actual.')}</p></div>
     </>}
