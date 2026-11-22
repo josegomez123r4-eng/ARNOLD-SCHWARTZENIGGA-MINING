@@ -62,7 +62,7 @@ const translations: Record<string, Record<string, string>> = {
     'Precio actual de GRAM':'Current GRAM price',
     'Se actualiza automáticamente cada 30 segundos. El cálculo definitivo se fija al crear la orden.':'Updates automatically every 30 seconds. The final conversion rate is locked when the order is created.',
 
-    'ARNOLD LEADERBOARD':'ARNOLD LEADERBOARD','See top earners from mining, tasks and referrals':'See top earners from mining, tasks and referrals','VIEW':'VIEW','ARNOLD COMMUNITY':'ARNOLD COMMUNITY','GLOBAL RANKING':'GLOBAL RANKING','Ranked by confirmed ARNOLD rewards earned from mining, tasks and referrals.':'Ranked by confirmed ARNOLD rewards earned from mining, tasks and referrals.','YOUR POSITION':'YOUR POSITION','LOADING RANKING':'LOADING RANKING','TRY AGAIN':'TRY AGAIN','No confirmed rewards yet. Be among the first to earn ARNOLD!':'No confirmed rewards yet. Be among the first to earn ARNOLD!','Only server-recorded rewards are counted. Wallet token balances are not included.':'Only server-recorded rewards are counted. Wallet token balances are not included.','REFRESH RANKING':'REFRESH RANKING','TASKS':'TASKS','MINING':'MINING','REFERRAL REWARDS':'REFERRAL REWARDS',
+    'ARNOLD LEADERBOARD':'ARNOLD LEADERBOARD',
     "INVITE.": "INVITE.",
     "EARN.": "EARN.",
     "COMPRAR $ARNOLD": "COMPRAR $ARNOLD",
