@@ -858,3 +858,62 @@ html,body{background:#090909;color:#f4f0e7}
 .ranking-entry-card b,.ranking-entry-action{color:#e9bb62}
 @keyframes arnoldPulse{0%,100%{box-shadow:0 0 20px #d49c3a20,inset 0 1px #fff2}50%{box-shadow:0 0 38px #d49c3a55,inset 0 1px #fff3}}
 @media(prefers-reduced-motion:reduce){.mining-card{animation:none}}
+
+
+/* ARNOLD ELITE — structural redesign, not a color-only skin */
+.app-shell{max-width:620px;padding-left:clamp(13px,3.6vw,22px);padding-right:clamp(13px,3.6vw,22px);padding-bottom:112px}
+.topbar{height:72px;gap:10px}
+.brand-logo{width:42px;height:42px;object-fit:cover;border-radius:13px}
+.live-pill{display:inline-flex;align-items:center;gap:5px;padding:6px 8px;border:1px solid #c9943755;border-radius:30px;background:#1a150d;color:#e9bb62;font-size:8px;font-weight:900;letter-spacing:1px}
+.live-pill span{width:6px;height:6px;margin:0;background:#7ed18f;box-shadow:0 0 9px #7ed18f}
+.mining-page-redesign{display:flex;flex-direction:column;gap:13px;padding-top:12px}
+.mining-brand-hero{
+  position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px;
+  min-height:146px;margin:0;padding:19px 18px;overflow:hidden;
+  border:1px solid #c9943777;border-radius:20px;
+  background:radial-gradient(ellipse at 80% 40%,#a54e1e44,transparent 48%),linear-gradient(120deg,#2b1d0d 0%,#15100b 55%,#090807 100%);
+  box-shadow:0 14px 38px #0009,inset 0 1px #fff2;
+}
+.mining-brand-hero:before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.24;background:repeating-linear-gradient(135deg,transparent 0 17px,#d49c3a18 18px,#d49c3a18 19px,transparent 20px 37px);mask-image:linear-gradient(90deg,#000,transparent 85%)}
+.mining-hero-copy{position:relative;z-index:1;max-width:78%}
+.hero-energy-tag{display:inline-flex;align-items:center;gap:6px;padding:5px 8px;border:1px solid #d49c3a66;border-radius:20px;background:#09080788;color:#f0c263;font-size:7px;font-weight:900;letter-spacing:1.1px}
+.hero-energy-tag i{width:5px;height:5px;border-radius:50%;background:#79d18d;box-shadow:0 0 8px #79d18d}
+.mining-hero-eyebrow{margin-top:13px;color:#bba47d;font-size:8px;font-weight:900;letter-spacing:2px}
+.mining-brand-hero h1{margin:4px 0 3px;font:900 clamp(34px,9vw,48px)/.95 'Barlow Condensed',sans-serif;letter-spacing:1px;color:#fff0dc}
+.mining-brand-hero h1 em{font-style:normal;color:#e9b64f;text-shadow:0 0 20px #d49c3a55}
+.mining-brand-hero p{margin:7px 0 0;color:#b6aa91;font-size:10px;line-height:1.45}
+.mining-hero-orbit{position:relative;z-index:1;flex:none;width:82px;height:82px;display:grid;place-items:center;border:1px solid #d49c3a88;border-radius:50%;background:radial-gradient(circle,#493719 0%,#21170d 56%,#100d09 72%);box-shadow:0 0 0 8px #d49c3a0b,0 0 0 17px #d49c3a08,0 0 30px #d49c3a30}
+.mining-hero-orbit span{font:900 42px 'Barlow Condensed',sans-serif;color:#f0c263;text-shadow:0 0 18px #d49c3a99}
+.mining-hero-orbit i,.mining-hero-orbit b{position:absolute;display:block;border:1px solid #e7a72c66;border-radius:50%;transform:rotate(-35deg)}
+.mining-hero-orbit i{inset:-7px 12px}.mining-hero-orbit b{inset:12px -7px}
+.mining-card{margin:0;padding:16px 14px 14px;border-radius:20px}
+.mining-showcase{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);align-items:stretch;gap:10px;margin-top:13px}
+.arnold-mascot{min-height:218px;height:100%;border-radius:15px;overflow:hidden}
+.mascot-art-window{height:100%;min-height:175px}
+.mascot-art{max-height:210px;object-fit:contain}
+.mining-meters{display:grid;grid-template-columns:1fr;gap:8px}
+.mining-meter{min-width:0;padding:11px 10px;border-radius:13px}
+.mining-meter>strong{font-size:clamp(19px,5vw,25px);font-variant-numeric:tabular-nums}
+.mining-meter>span{font-size:8px;letter-spacing:.9px}
+.mining-meter>small{font-size:7px}
+.mining-card .reward-line{margin-top:4px;padding:12px 1px}
+.mining-action-buttons{margin-top:8px}
+.earnings-summary{margin:0;padding:15px 13px}
+.stats{margin:0;gap:9px}
+.stat-card{min-height:96px;padding:13px 11px}
+.stat-number{font-size:clamp(23px,6vw,30px)}
+.ranking-entry-card{order:0;margin:0}
+.home-referral-cta{margin:0}
+.mining-page-redesign>.notice-large{margin:0}
+.mining-page-redesign>.section-footnote{margin:0 3px 3px}
+@media(max-width:390px){
+ .mining-brand-hero{min-height:132px;padding:15px 13px}
+ .mining-hero-orbit{width:66px;height:66px}
+ .mining-hero-orbit span{font-size:34px}
+ .mining-showcase{grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr);gap:7px}
+ .arnold-mascot{min-height:190px}
+ .mining-meter{padding:9px 8px}
+ .mining-meter>strong{font-size:19px}
+ .live-pill{font-size:7px;padding:6px}
+}
+@media(max-width:340px){.mining-showcase{grid-template-columns:1fr}.arnold-mascot{min-height:150px}.mascot-art-window{min-height:130px}}
