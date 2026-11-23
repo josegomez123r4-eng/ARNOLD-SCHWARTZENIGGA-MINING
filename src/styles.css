@@ -574,3 +574,149 @@ body{background:#050505}
 .tasks-banner-wrap{width:100%;margin:0 auto 16px;overflow:hidden;border:1px solid #ffad3952;border-radius:16px;background:radial-gradient(ellipse at 50% 0%,#58300f55,transparent 72%),#090806;box-shadow:0 12px 30px #0008;line-height:0}
 .tasks-banner-image{display:block;width:100%;height:auto;max-width:100%;object-fit:contain;object-position:center}
 .checkin-card{margin:0 0 16px}
+
+
+/* ARNOLD ELITE UI — visual-only refinement layer (no business logic changes) */
+:root{
+  --arnold-bg:#070707;
+  --arnold-panel:#11100e;
+  --arnold-panel-raised:#19140e;
+  --arnold-gold:#f4c56b;
+  --arnold-gold-bright:#ffe3a0;
+  --arnold-orange:#f07822;
+  --arnold-muted:#b7a58a;
+  --arnold-line:rgba(244,197,107,.22);
+}
+html{background:var(--arnold-bg);scrollbar-color:#78501f #090807}
+body{background:var(--arnold-bg);color:#f8f1e5}
+button,a,select{-webkit-tap-highlight-color:transparent}
+.app-shell{
+  max-width:600px;
+  padding-left:clamp(14px,4vw,22px);
+  padding-right:clamp(14px,4vw,22px);
+  background:
+    radial-gradient(ellipse at 50% -8%,rgba(191,101,24,.25),transparent 38%),
+    radial-gradient(ellipse at 100% 40%,rgba(111,57,13,.10),transparent 38%),
+    linear-gradient(180deg,#100d09 0%,#080807 34%,#060606 100%);
+}
+.app-shell:before{opacity:.10;background-size:210px 230px,270px 290px}
+.topbar{
+  position:sticky;top:0;z-index:8;height:76px;
+  margin:0 -2px;padding:0 2px;
+  background:linear-gradient(180deg,rgba(10,9,8,.96),rgba(10,9,8,.78));
+  backdrop-filter:blur(18px);
+  border-bottom:1px solid rgba(255,190,80,.18);
+}
+.brand{gap:11px;min-width:0}
+.brand-logo{width:43px;height:43px;border-radius:14px;border-color:#e8b95f99;box-shadow:0 0 0 3px #f3b64b0c,0 0 26px #f28a2630}
+.brand-name{font-size:24px;line-height:.95;letter-spacing:2.4px}
+.brand-sub{font-size:7px;letter-spacing:1.35px;color:#c9a96f}
+.header-actions{gap:7px}
+.language-picker,.music-toggle{height:34px;border-color:#dca64c50;background:linear-gradient(145deg,#21170d,#100d09);box-shadow:inset 0 1px #ffffff0b}
+.content{padding-top:3px}
+.page-section,.inner-page{padding-bottom:22px}
+.mining-brand-hero{
+  margin-top:12px;margin-bottom:17px;
+  border-color:#e6ad4e77;
+  background:
+    radial-gradient(ellipse at 50% 0%,rgba(236,131,34,.28),transparent 60%),
+    linear-gradient(145deg,#241608 0%,#100c08 58%,#090807 100%);
+  box-shadow:0 18px 48px #000b,0 0 34px #e9842512,inset 0 1px #fff2;
+}
+.mining-brand-hero:after{border-color:#ffd17b24;box-shadow:0 0 0 17px #ffb13a0c,0 0 0 36px #ffb13a08,0 0 0 58px #ffb13a05}
+.hero-energy-tag{border-color:#f4bc5b77;background:linear-gradient(90deg,#f18a211b,#f8c65a18);box-shadow:0 0 18px #e88b281c}
+.earnings-summary,.mining-card,.stat-card,.feature-panel,.wallet-connect-card,
+.referral-earnings-card,.referral-invite-card,.market-buy-card,.eligibility-panel,
+.verification-payment-card,.staking-coming-card,.checkin-card,.task-reward-card,
+.positions-panel,.wallet-withdraw-section,.market-preview,.home-referral-cta{
+  border-radius:17px;
+  box-shadow:0 12px 32px rgba(0,0,0,.30),inset 0 1px rgba(255,255,255,.035);
+}
+.earnings-summary{
+  position:relative;overflow:hidden;
+  border:1px solid rgba(255,194,91,.48);
+  background:radial-gradient(ellipse at 100% 0%,rgba(226,131,34,.16),transparent 48%),linear-gradient(145deg,#21170d,#100e0b 72%);
+}
+.earnings-summary:before,.market-buy-card:before,.referral-earnings-card:before{
+  content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;
+  background:linear-gradient(125deg,rgba(255,225,160,.09),transparent 24%,transparent 75%,rgba(244,155,48,.06));
+}
+.earnings-summary-head h2{color:#fff0d1;letter-spacing:.6px}
+.earnings-total strong{color:#ffe3a0;text-shadow:0 0 22px #f6a63c22}
+.earnings-live-label{border:1px solid #78c98e55;border-radius:30px;padding:5px 8px;background:#16301c55}
+.earnings-source{border-top-color:#ffffff17}
+.earnings-note{color:#a9987d}
+.mining-card{border-color:#e8b45288}
+.mining-showcase{gap:11px;margin-top:16px}
+.arnold-mascot{border-color:#eab45688;background:radial-gradient(ellipse at 50% 45%,#a54e1470,transparent 67%),linear-gradient(145deg,#281708,#0d0b08);box-shadow:inset 0 0 32px #f28a2412,0 10px 26px #0008}
+.mining-meter{border-color:#d99e484a;background:linear-gradient(145deg,#25190d,#100d09);box-shadow:inset 0 1px #ffffff0b}
+.mining-meter>span{color:#d9bd8c}
+.mining-meter>strong{color:#ffe5ae;text-shadow:0 0 16px #f2a93b20}
+.timer-panel{border-radius:15px}
+.mining-action-buttons{gap:9px}
+.mining-action-buttons .primary-btn,.mining-action-buttons .claim-btn{min-height:50px;border-radius:12px}
+.claim-btn{background:linear-gradient(145deg,#24180d,#15100a);border-color:#d69d46;color:#f7ce7d}
+.stats{gap:10px}
+.stat-card{min-height:112px}
+.stat-card.featured{border-color:#f2bd6388}
+.stat-number{font-variant-numeric:tabular-nums}
+.home-referral-cta{
+  border-color:#e4ad5266;
+  background:linear-gradient(105deg,#2c1b0d,#17100a 72%);
+  box-shadow:0 10px 26px #0007,inset 0 1px #ffffff0a;
+}
+.home-referral-icon{box-shadow:0 0 18px #ff9d2b20}
+.inner-page{padding-top:30px}
+.inner-page h1{line-height:.9}
+.feature-panel{border-color:#dba34c66}
+.empty-state{border-radius:18px;min-height:190px;background:radial-gradient(ellipse at 50% 0%,#9a4b162b,transparent 75%),linear-gradient(145deg,#17110b,#0b0a08)}
+.referral-banner,.wallet-banner,.tasks-banner-image{border-radius:14px}
+.referral-invite-card,.referral-earnings-card{position:relative;overflow:hidden;border-color:#dba64f77;background:radial-gradient(ellipse at 0 0,#70400d66,transparent 62%),linear-gradient(145deg,#21170d,#0e0c09)}
+.referral-link-input{border-color:#d8a44e66;background:#090807;color:#ffe4ad}
+.referral-share-btn,.task-join-link,.checkin-claim-btn{border-radius:12px;box-shadow:0 8px 22px #e88a241c}
+.referral-stats{gap:9px}
+.wallet-connect-card{border-color:#dba34c77}
+.wallet-connect-card .wallet-icon{box-shadow:0 0 24px #f29b3020}
+.arnold-balance-card{border-color:#e7b45b88;background:radial-gradient(ellipse at 100% 0%,#8b4b1644,transparent 55%),linear-gradient(145deg,#26190d,#0e0c09);box-shadow:0 14px 36px #0009,inset 0 1px #fff2}
+.balance-amount{color:#ffe2a0;text-shadow:0 0 24px #f2a93b2a}
+.market-buy-card{position:relative;overflow:hidden;border-color:#e3ad5680;background:radial-gradient(ellipse at 100% 0%,#85441155,transparent 52%),linear-gradient(145deg,#21160c,#0e0c09)}
+.market-buy-header{border-bottom-color:#ffffff1b}
+.market-buy-title,.market-phases-heading{color:#ffe4b0}
+.market-quick-amounts button{border-radius:9px;border-color:#dca34d66;background:#1c140b;color:#f7d28c}
+.market-quick-amounts button:focus-visible,.bottom-nav button:focus-visible,.primary-btn:focus-visible,.claim-btn:focus-visible{outline:2px solid #ffe0a0;outline-offset:3px}
+.sale-allocation-toggle{border-color:#dba34c66;background:linear-gradient(145deg,#24180d,#100d09)}
+.sale-phase-allocation{border-color:#ffffff19;background:#17110b}
+.sale-phase-price{color:#ffe0a0}
+.task-reward-card,.checkin-card{border-color:#d9a44f55;background:radial-gradient(ellipse at 100% 0%,#743c112c,transparent 55%),linear-gradient(145deg,#1b150e,#0e0d0b)}
+.checkin-day{border-radius:11px}
+.p2p-emblem{width:82px;height:82px;border-radius:25px}
+.bottom-nav{
+  width:min(100%,600px);height:76px;
+  padding:8px 10px calc(8px + env(safe-area-inset-bottom));
+  background:rgba(9,8,7,.94);
+  border-top:1px solid rgba(238,179,83,.28);
+  box-shadow:0 -12px 34px rgba(0,0,0,.48);
+  backdrop-filter:blur(22px);
+}
+.bottom-nav button{font-size:7.5px;letter-spacing:.45px;color:#96866d}
+.bottom-nav button.selected{color:#ffe0a0}
+.bottom-nav button.selected svg{filter:drop-shadow(0 0 9px #f3a83c88)}
+.notice-large{border-radius:13px;box-shadow:inset 0 1px #ffffff0a}
+.section-footnote{color:#9c896b}
+button{transition:filter .16s ease,transform .16s ease,box-shadow .16s ease}
+button:active{filter:brightness(1.08)}
+@media(min-width:560px){
+  .app-shell{border-left:1px solid rgba(240,185,91,.09);border-right:1px solid rgba(240,185,91,.09)}
+}
+@media(max-width:380px){
+  .brand-name{font-size:21px}
+  .brand-sub{font-size:6.5px;letter-spacing:1px}
+  .brand-logo{width:39px;height:39px}
+  .topbar{height:70px}
+  .bottom-nav{height:72px;padding-left:5px;padding-right:5px}
+  .bottom-nav button{font-size:6.5px}
+  .earnings-summary{padding:14px}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{scroll-behavior:auto!important;transition:none!important}
+}
