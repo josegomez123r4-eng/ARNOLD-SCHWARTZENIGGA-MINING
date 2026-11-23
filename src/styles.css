@@ -978,3 +978,10 @@ html,body{background:#090909;color:#f4f0e7}
  .mining-footer-metric>b{font-size:12px}
  .mining-footer-claim{min-width:58px;padding:0 7px}
 }
+
+/* Only Arnold's workout figure should be visible inside the mining orbit */
+.mining-avatar-orbit .arnold-mascot{overflow:hidden!important;border:0!important;background:transparent!important;box-shadow:none!important}
+.mining-avatar-orbit .arnold-mascot:after{display:none}
+.mining-avatar-orbit .mascot-art-window{position:absolute;inset:0!important;height:100%!important;min-height:0!important;overflow:hidden;display:block}
+.mining-avatar-orbit .mascot-art{position:absolute;left:0;top:0;width:220%!important;max-width:none!important;height:100%!important;max-height:none!important;margin:0!important;object-fit:cover!important;object-position:58% center!important}
+.mining-avatar-orbit .mascot-status{display:none!important}

@@ -71,7 +71,6 @@ function ArnoldWorkoutMascot({ active, t }: { active: boolean; t: (phrase: strin
     <div className="mascot-art-window">
       <img className="mascot-art mascot-animation" src={animationUrl} alt={t("Arnold haciendo curls con dos mancuernas")} />
     </div>
-    <span className="mascot-status"><i /> {active ? t('MINING ACTIVE') : t('MINING STANDBY')}</span>
   </div>
 }
 function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMining, onClaimMining, miningBusy }: { t: (phrase: string) => string; onOpenReferrals: () => void; onOpenWallet: () => void; miningStatus: MiningStatus | null; onStartMining: () => void; onClaimMining: () => void; miningBusy: boolean }) {
