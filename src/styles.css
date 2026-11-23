@@ -995,3 +995,22 @@ html,body{background:#090909;color:#f4f0e7}
  object-fit:cover!important;object-position:62% 38%!important
 }
 .mining-avatar-orbit .mascot-status{display:none!important}
+
+
+/* Fit the approved Pinata workout GIF cleanly inside the existing mining orbit */
+.mining-avatar-orbit .arnold-mascot{
+  width:92%!important;height:92%!important;aspect-ratio:1/1;min-height:0!important;
+  border:0!important;border-radius:50%!important;overflow:hidden!important;
+  clip-path:circle(50% at 50% 50%);background:transparent!important;
+  box-shadow:none!important;
+}
+.mining-avatar-orbit .mascot-art-window{
+  position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+  min-height:0!important;overflow:hidden!important;border-radius:50%!important;
+  clip-path:circle(50% at 50% 50%);
+}
+.mining-avatar-orbit .mascot-art{
+  position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+  max-width:none!important;max-height:none!important;margin:0!important;
+  object-fit:contain!important;object-position:center center!important;
+}
