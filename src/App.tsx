@@ -66,7 +66,7 @@ function Header({ language, onLanguageChange }: { language: LanguageCode; onLang
 type MiningStatus = { verified: boolean; wallet_address?: string | null; cycle: { id: string; status: string; started_at: string; ends_at: string; total_reward: string; base_reward?: string; holding_bonus?: string; purchase_bonus?: string } | null; earned: string; task_earned?: string; pending: string; purchase_bonus?: { purchased_total: string; purchase_bonus_daily: string; base_reward: string; daily_reward: string; bonus_rate: number } }
 type LeaderboardEntry = { rank: number; name: string; total: number; mining: number; tasks: number; referrals: number }
 function ArnoldWorkoutMascot({ active, t }: { active: boolean; t: (phrase: string) => string }) {
-  const animationUrl = 'https://gateway.pinata.cloud/ipfs/bafybeif3wxsbkq75ukpdk2xzomrgp4ph6i2sz3bggsmsyjjrov5y6sqsue'
+  const animationUrl = 'https://azure-high-cougar-588.mypinata.cloud/ipfs/bafybeia66v3dnwe5fg7l4v6zapn6r6d3tlfkk6ybf67emqvhtmdpvlx4ym'
   return <div className={active ? 'arnold-mascot is-training' : 'arnold-mascot is-resting'} aria-label={t(active ? 'Arnold entrenando mientras mina' : 'Arnold listo para minar')}>
     <div className="mascot-art-window">
       <img className="mascot-art mascot-animation" src={animationUrl} alt={t("Arnold haciendo curls con dos mancuernas")} />
