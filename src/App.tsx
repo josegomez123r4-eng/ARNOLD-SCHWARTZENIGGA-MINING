@@ -59,7 +59,7 @@ function Header({ language, onLanguageChange }: { language: LanguageCode; onLang
     <div className="brand"><img className="brand-logo" src="https://azure-high-cougar-588.mypinata.cloud/ipfs/bafybeid7ztv2vpc77hkdcuvsh7y3dbg54tqair2qvebpcxhgvqg7owhdl4" alt={translate(language, "Arnold Schwartzenigga Mining")} />
       <div><div className="brand-name">ARNOLD</div><div className="brand-sub">SCHWARTZENIGGA MINING</div></div>
     </div>
-    <div className="header-actions"><label className="language-picker" aria-label={translate(language, 'Select language')}><select value={language} onChange={(event) => { onLanguageChange(event.target.value as LanguageCode) }}>{languages.map((item) => <option key={item.code} value={item.code}>{item.flag} {item.name}</option>)}</select></label></div>
+    <div className="header-actions"><span className="live-pill"><span /> LIVE</span><label className="language-picker" aria-label={translate(language, 'Select language')}><select value={language} onChange={(event) => { onLanguageChange(event.target.value as LanguageCode) }}>{languages.map((item) => <option key={item.code} value={item.code}>{item.flag} {item.name}</option>)}</select></label></div>
   </header>
 }
 
@@ -151,27 +151,15 @@ function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMin
     return [hours, minutes, secs].map(value => String(value).padStart(2, '0')).join(':')
   }
   const progressPercent = cycle ? Math.min(100, Math.max(0, elapsed / duration * 100)) : 0
-  return <section className="page-section">
-    <div className="mining-banner-wrap">
-      <img className="mining-banner-image" src="https://azure-high-cougar-588.mypinata.cloud/ipfs/bafybeibcbq7akhhr7nvlceupzbp7fdv6g4tt7fqliux6437242pkblpjva" alt="ARNOLD mining banner" fetchPriority="high" />
-    </div>
-    <button className="ranking-entry-card" type="button" onClick={() => { setRankingOpen(true); void loadLeaderboard() }} aria-haspopup="dialog">
-      <span className="ranking-entry-trophy" aria-hidden="true">🏆</span>
-      <span className="ranking-entry-copy"><b>{t('ARNOLD LEADERBOARD')}</b><small>{t('See top earners from mining, tasks and referrals')}</small></span>
-      <span className="ranking-entry-action">{t('VIEW')} <span>›</span></span>
-    </button>
-    <section className="earnings-summary" aria-label={t("EARNINGS SUMMARY")}>
-      <div className="earnings-summary-head">
-        <div><div className="kicker">{t('YOUR REWARDS')}</div><h2><Coins size={19} /> {t('EARNINGS SUMMARY')}</h2></div>
-        <span className="earnings-live-label">{t('CONFIRMED')}</span>
+  return <section className="page-section mining-page-redesign">
+    <section className="mining-brand-hero">
+      <div className="mining-hero-copy">
+        <span className="hero-energy-tag"><i /> ARNOLD NETWORK · LIVE</span>
+        <div className="mining-hero-eyebrow">{t('THE POWER TO EARN')}</div>
+        <h1>ARNOLD <em>MINING</em></h1>
+        <p>{t('Train. Mine. Earn. Your 24-hour cycle starts here.')}</p>
       </div>
-      <div className="earnings-total"><span>{t('TOTAL EARNED')}</span><strong>{miningStatus ? totalConfirmedEarnings.toFixed(6) : '—'} <small>$ARNOLD</small></strong></div>
-      <div className="earnings-sources">
-        <div className="earnings-source"><span><ListChecks size={15} /> {t('TASK REWARDS')}</span><b>{miningStatus ? taskEarnings.toFixed(6) : '—'} <small>$ARNOLD</small></b></div>
-        <div className="earnings-source"><span><Pickaxe size={15} /> {t('MINING REWARDS')}</span><b>{miningStatus ? miningEarnings.toFixed(6) : '—'} <small>$ARNOLD</small></b></div>
-        <div className="earnings-source"><span><Gift size={15} /> {t('REFERRAL REWARDS')}</span><b>{referralEarnings === null ? '—' : referralEarnings.toFixed(6)} <small>$ARNOLD</small></b></div>
-      </div>
-      <p className="earnings-note">{t(miningStatus ? 'Recompensas confirmadas en el registro interno de ARNOLD.' : 'Only confirmed rewards will appear here.')}</p>
+      <div className="mining-hero-orbit" aria-hidden="true"><span>Ａ</span><i /><b /></div>
     </section>
     <section className="mining-card">
       <div className="card-head"><div><div className="kicker">{t('MINING STATION')}</div><h2><Pickaxe size={20} /> {t('MINING SESSION')}</h2></div><div className={cycle ? (cycleFinished ? 'status ready' : 'status active') : 'status'}><span /> {cycle ? (cycleFinished ? t('READY TO CLAIM') : t('ACTIVE')) : t('NOT ACTIVE')}</div></div>
@@ -206,17 +194,34 @@ function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMin
       <div className="mining-boost-row"><div><b>{t('BOOST YOUR MINING')}</b><span>{t('Potencia tu producción usando $ARNOLD')}</span></div><button type="button" onClick={() => setBoostOpen(true)}><Zap size={16} /> {t('BOOST')}</button></div>
       <p className="helper">{t(cycle ? (cycleFinished ? 'Tu ciclo terminó. Reclama la recompensa registrada en tu saldo ARNOLD.' : 'Tu ciclo de 24 horas está activo. La cifra minada es una estimación; la recompensa final se confirma al reclamar.') : miningStatus?.verified ? 'Billetera verificada. Puedes iniciar un ciclo de 24 horas.' : 'Conecta y verifica tu billetera con el pago único de 0.10 GRAM para desbloquear la minería.')}</p>
     </section>
+    <section className="earnings-summary" aria-label={t("EARNINGS SUMMARY")}>
+      <div className="earnings-summary-head">
+        <div><div className="kicker">{t('YOUR REWARDS')}</div><h2><Coins size={19} /> {t('EARNINGS SUMMARY')}</h2></div>
+        <span className="earnings-live-label">{t('CONFIRMED')}</span>
+      </div>
+      <div className="earnings-total"><span>{t('TOTAL EARNED')}</span><strong>{miningStatus ? totalConfirmedEarnings.toFixed(6) : '—'} <small>$ARNOLD</small></strong></div>
+      <div className="earnings-sources">
+        <div className="earnings-source"><span><ListChecks size={15} /> {t('TASK REWARDS')}</span><b>{miningStatus ? taskEarnings.toFixed(6) : '—'} <small>$ARNOLD</small></b></div>
+        <div className="earnings-source"><span><Pickaxe size={15} /> {t('MINING REWARDS')}</span><b>{miningStatus ? miningEarnings.toFixed(6) : '—'} <small>$ARNOLD</small></b></div>
+        <div className="earnings-source"><span><Gift size={15} /> {t('REFERRAL REWARDS')}</span><b>{referralEarnings === null ? '—' : referralEarnings.toFixed(6)} <small>$ARNOLD</small></b></div>
+      </div>
+      <p className="earnings-note">{t(miningStatus ? 'Recompensas confirmadas en el registro interno de ARNOLD.' : 'Only confirmed rewards will appear here.')}</p>
+    </section>
     <section className="stats">
       <article className="stat-card featured"><div className="stat-label"><Coins size={14} /> {t('DAILY REWARD')}</div><div className="stat-number">{nextDailyReward.toFixed(6)} <small>$ARNOLD</small></div><div className="stat-caption">{t('Includes permanent 0.10% purchase bonus')}</div></article>
       <article className="stat-card"><div className="stat-label"><Clock3 size={14} /> {t('CYCLE')}</div><div className="stat-number">24 <small>{t('HOURS')}</small></div><div className="stat-caption">{t('One manual cycle at a time')}</div></article>
     </section>
+    <button className="ranking-entry-card" type="button" onClick={() => { setRankingOpen(true); void loadLeaderboard() }} aria-haspopup="dialog">
+      <span className="ranking-entry-trophy" aria-hidden="true">🏆</span>
+      <span className="ranking-entry-copy"><b>{t('ARNOLD LEADERBOARD')}</b><small>{t('See top earners from mining, tasks and referrals')}</small></span>
+      <span className="ranking-entry-action">{t('VIEW')} <span>›</span></span>
+    </button>
     <button className="home-referral-cta" type="button" onClick={onOpenReferrals}>
       <span className="home-referral-icon"><Gift size={19} /></span>
       <span className="home-referral-copy"><b>{t('PROGRAMA DE REFERIDOS')}</b><small>{t('Invita amigos · Consulta elegibles y pendientes')}</small></span>
       <span className="home-referral-arrow">{t('VER')} <span>›</span></span>
     </button>
     <div className="notice notice-large"><ShieldCheck size={17} /><span>{t('La recompensa se confirma en el servidor al completar el ciclo. El contador es solo una estimación visual.')}</span></div>
-    <div className="section-footnote">{t('Total supply: 1,000,000 $ARNOLD · Mining allocation: 500,000 $ARNOLD')}</div>
     {boostOpen && <div className="boost-modal-backdrop" role="presentation" onClick={() => setBoostOpen(false)}>
       <section className="boost-modal" role="dialog" aria-modal="true" aria-labelledby="boost-modal-title" onClick={event => event.stopPropagation()}>
         <button className="boost-modal-close" type="button" onClick={() => setBoostOpen(false)} aria-label={t('Cerrar')}>×</button>
