@@ -779,7 +779,7 @@ html,body{background:#090909;color:#f4f0e7}
 .stat-number{color:#fff0dc;text-shadow:0 0 18px #d49c3a44}
 .mining-card{
   border:1px solid #c99437b5;border-radius:20px;
-  background:radial-gradient(ellipse at 50% 0%,#302513bb,transparent 53%),linear-gradient(155deg,#321047,#11100d 68%);
+  background:radial-gradient(ellipse at 50% 0%,#302513bb,transparent 53%),linear-gradient(155deg,#302513,#11100d 68%);
   box-shadow:0 18px 60px #000c,0 0 36px #d49c3a2c,inset 0 1px #fff3;
 }
 .mining-card:before{
@@ -840,7 +840,7 @@ html,body{background:#090909;color:#f4f0e7}
 .empty-state b{color:#fff0dc}.empty-state span{color:#928b7d}
 .market-state,.coming-soon{border-color:#c99437;background:linear-gradient(100deg,#493719,#211b12);color:#e9bb62}
 .p2p-emblem{border-color:#c99437;background:linear-gradient(145deg,#493719,#211b12);color:#e9bb62;box-shadow:0 0 35px #d49c3a55}
-.profile-card{border-color:#b58a3c55;background:linear-gradient(145deg,#321047,#17140f)}
+.profile-card{border-color:#b58a3c55;background:linear-gradient(145deg,#302513,#17140f)}
 .profile-avatar{background:#e7a72c33;color:#e6ad45}
 .profile-row{border-bottom-color:#b58a3c3f}.profile-row b{color:#e9bb62}
 .language-picker{border-color:#c9943788;background:#211b12;color:#e9bb62}
@@ -848,7 +848,7 @@ html,body{background:#090909;color:#f4f0e7}
 .music-toggle{border-color:#c9943788;background:linear-gradient(135deg,#302513,#17140f);color:#e9bb62}
 .music-toggle svg{color:#dfad4d}
 .mining-banner-wrap{border:1px solid #c9943799;border-radius:18px;overflow:hidden;box-shadow:0 0 30px #d49c3a33}
-.earnings-summary{border-color:#b58a3c77;background:linear-gradient(145deg,#321047,#17140f);box-shadow:0 12px 35px #0008}
+.earnings-summary{border-color:#b58a3c77;background:linear-gradient(145deg,#302513,#17140f);box-shadow:0 12px 35px #0008}
 .earnings-summary-head h2,.earnings-total strong,.earnings-source b{color:#fff0dc}
 .earnings-live-label{color:#e9bb62;border-color:#c28b2f;background:#302513}
 .earnings-source{border-color:#c9943744}
