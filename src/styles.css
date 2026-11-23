@@ -917,3 +917,64 @@ html,body{background:#090909;color:#f4f0e7}
  .live-pill{font-size:7px;padding:6px}
 }
 @media(max-width:340px){.mining-showcase{grid-template-columns:1fr}.arnold-mascot{min-height:150px}.mascot-art-window{min-height:130px}}
+
+/* Phone Miner-inspired dashboard composition, retaining ARNOLD black/gold identity */
+.mining-page-redesign{gap:12px;padding-top:8px}
+.mining-top-strip{display:grid;grid-template-columns:1fr 1.35fr .8fr;gap:6px;align-items:stretch}
+.mining-top-stat,.mining-top-profile,.mining-top-options{min-width:0;min-height:48px;border:1px solid #c9943766;border-radius:13px;background:linear-gradient(145deg,#302513,#15110b);display:flex;align-items:center;justify-content:center;gap:6px;padding:7px 8px;color:#f5d48c}
+.mining-top-stat{flex-direction:column;gap:1px}
+.mining-top-stat span{font-size:12px;font-weight:900;white-space:nowrap}
+.mining-top-stat small,.mining-top-profile small{font-size:7px;letter-spacing:.7px;color:#a99a7c}
+.mining-top-profile{justify-content:flex-start}
+.mining-profile-mark{width:27px;height:27px;flex:none;display:grid;place-items:center;border-radius:50%;border:1px solid #e9bb62;background:radial-gradient(circle,#6a4b1b,#21170d);font-weight:1000;color:#ffe0a0}
+.mining-top-profile span:last-child{display:flex;flex-direction:column;min-width:0}
+.mining-top-profile b{font-size:9px;letter-spacing:1px}
+.mining-top-options{font-size:9px;font-weight:900;letter-spacing:.5px}
+.mining-dashboard-card{padding:13px 12px 12px;overflow:hidden;background:radial-gradient(ellipse at 50% 24%,#59401655,transparent 43%),linear-gradient(180deg,#21190f,#0d0c09 75%)}
+.mining-dashboard-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.mining-dashboard-kicker{font-size:8px;font-weight:900;letter-spacing:1.5px;color:#c8aa70}
+.mining-dashboard-heading .status{font-size:8px;padding:5px 8px}
+.mining-dashboard-balance{display:flex;justify-content:center;align-items:center;gap:8px;margin:14px 0 3px}
+.mining-dashboard-balance .coin-mark{width:25px;height:25px;display:grid;place-items:center;border-radius:50%;background:linear-gradient(145deg,#f6d77b,#a66b18);color:#271a08;font-weight:1000;box-shadow:0 0 18px #d49c3a66}
+.mining-dashboard-balance strong{font-size:clamp(29px,8vw,39px);line-height:1;font-weight:900;letter-spacing:-1.2px;color:#fff2d4;font-variant-numeric:tabular-nums;text-shadow:0 0 22px #d49c3a44}
+.mining-dashboard-balance small{font-size:9px;color:#c6a65f;font-weight:900}
+.mining-center-stage{display:flex;flex-direction:column;align-items:center;padding:8px 0 13px}
+.mining-avatar-orbit{position:relative;width:min(58vw,232px);height:min(58vw,232px);min-width:188px;min-height:188px;display:grid;place-items:center;border-radius:50%;border:2px solid #c99437aa;background:radial-gradient(circle,#63471966 0%,#24190d 57%,#0e0b08 72%);box-shadow:0 0 0 8px #d49c3a10,0 0 0 17px #d49c3a08,0 0 36px #d49c3a44,inset 0 0 30px #d49c3a2a}
+.mining-avatar-orbit:before,.mining-avatar-orbit:after{content:"";position:absolute;border:1px solid #d49c3a55;border-radius:50%;pointer-events:none}
+.mining-avatar-orbit:before{inset:8px}
+.mining-avatar-orbit:after{inset:-9px 19px;transform:rotate(-27deg)}
+.mining-avatar-orbit .arnold-mascot{position:relative;z-index:1;width:86%;height:86%;min-height:0;border:0;background:transparent;box-shadow:none;overflow:visible}
+.mining-avatar-orbit .mascot-art-window{height:100%;min-height:0}
+.mining-avatar-orbit .mascot-art{max-height:100%;width:100%;object-fit:contain}
+.mining-avatar-orbit .mascot-status{position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);white-space:nowrap;padding:5px 9px;border:1px solid #c99437;border-radius:20px;background:#171108;color:#f0c263;font-size:7px;letter-spacing:.8px}
+.mining-avatar-caption{display:flex;flex-direction:column;align-items:center;gap:3px;margin:8px 0 10px}
+.mining-avatar-caption b{font-size:10px;letter-spacing:1.2px;color:#f4d58a}
+.mining-avatar-caption small{font-size:8px;color:#a99a7c}
+.mining-center-action{min-width:168px;min-height:42px;padding:0 19px;border-radius:25px;justify-content:center;font-size:10px;letter-spacing:.5px}
+.mining-dashboard-footer{display:grid;grid-template-columns:minmax(0,1fr) 1px minmax(0,.72fr) auto;align-items:center;gap:9px;padding:10px 9px;border:1px solid #c9943766;border-radius:15px;background:linear-gradient(100deg,#302513,#19130b)}
+.mining-footer-metric{display:flex;flex-direction:column;gap:3px;min-width:0}
+.mining-footer-metric>span{font-size:7px;letter-spacing:.65px;color:#c2ad85}
+.mining-footer-metric>b{font-size:14px;color:#fff0cf;font-variant-numeric:tabular-nums}
+.mining-footer-metric .progress{height:4px;margin-top:3px}
+.mining-footer-rate b{color:#f0c263}
+.mining-footer-rate small{font-size:7px;color:#a99a7c}
+.mining-footer-divider{height:34px;background:#c9943744}
+.mining-footer-claim{min-width:67px;min-height:39px;padding:0 10px;border-radius:10px;display:flex;align-items:center;justify-content:center;gap:4px;font-size:9px}
+.mining-cycle-earned{display:flex;align-items:center;gap:8px;padding:8px 3px 2px}
+.mining-cycle-earned>span:first-child{font-size:7px;letter-spacing:.8px;color:#b8a47f}
+.mining-cycle-earned>b{font-size:10px;color:#f3d38d}
+.mining-cycle-earned small{font-size:7px;color:#bd9a56}
+.cycle-earned-progress{margin-left:auto;padding:3px 7px;border-radius:20px;background:#c9943722;color:#e9bb62;font-size:8px}
+.mining-dashboard-card>.reward-line{margin-top:7px;border-top:1px solid #c9943733}
+.mining-dashboard-card>.mining-boost-row{margin-top:5px}
+.mining-dashboard-card>.helper{margin-bottom:0}
+@media(max-width:370px){
+ .mining-top-strip{grid-template-columns:.95fr 1.2fr .72fr;gap:4px}
+ .mining-top-stat,.mining-top-profile,.mining-top-options{padding:6px 5px}
+ .mining-top-stat span{font-size:10px}
+ .mining-top-profile b{font-size:8px}
+ .mining-avatar-orbit{min-width:170px;min-height:170px}
+ .mining-dashboard-footer{gap:6px;padding:8px 6px}
+ .mining-footer-metric>b{font-size:12px}
+ .mining-footer-claim{min-width:58px;padding:0 7px}
+}

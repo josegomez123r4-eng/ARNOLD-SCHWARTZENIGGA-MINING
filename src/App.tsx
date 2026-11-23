@@ -151,47 +151,35 @@ function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMin
     return [hours, minutes, secs].map(value => String(value).padStart(2, '0')).join(':')
   }
   const progressPercent = cycle ? Math.min(100, Math.max(0, elapsed / duration * 100)) : 0
+  const displayHourlyReward = cycle ? hourlyReward : nextDailyReward / 24
   return <section className="page-section mining-page-redesign">
-    <section className="mining-brand-hero">
-      <div className="mining-hero-copy">
-        <span className="hero-energy-tag"><i /> ARNOLD NETWORK · LIVE</span>
-        <div className="mining-hero-eyebrow">{t('THE POWER TO EARN')}</div>
-        <h1>ARNOLD <em>MINING</em></h1>
-        <p>{t('Train. Mine. Earn. Your 24-hour cycle starts here.')}</p>
+    <div className="mining-top-strip">
+      <div className="mining-top-stat"><span>🪙 +{displayHourlyReward.toFixed(4)}</span><small>{t('PER HOUR')}</small></div>
+      <div className="mining-top-profile"><span className="mining-profile-mark">A</span><span><b>ARNOLD</b><small>{t('MINING NETWORK')}</small></span></div>
+      <button className="mining-top-options" type="button" onClick={() => setBoostOpen(true)}><Zap size={15}/><span>{t('BOOST')}</span></button>
+    </div>
+    <section className="mining-card mining-dashboard-card">
+      <div className="mining-dashboard-heading">
+        <span className="mining-dashboard-kicker">{t('YOUR ARNOLD BALANCE')}</span>
+        <span className={cycle ? (cycleFinished ? 'status ready' : 'status active') : 'status'}><i />{cycle ? (cycleFinished ? t('READY TO CLAIM') : t('ACTIVE')) : t('NOT ACTIVE')}</span>
       </div>
-      <div className="mining-hero-orbit" aria-hidden="true"><span>Ａ</span><i /><b /></div>
-    </section>
-    <section className="mining-card">
-      <div className="card-head"><div><div className="kicker">{t('MINING STATION')}</div><h2><Pickaxe size={20} /> {t('MINING SESSION')}</h2></div><div className={cycle ? (cycleFinished ? 'status ready' : 'status active') : 'status'}><span /> {cycle ? (cycleFinished ? t('READY TO CLAIM') : t('ACTIVE')) : t('NOT ACTIVE')}</div></div>
-      <div className="mining-showcase">
-        <ArnoldWorkoutMascot active={!!cycle && !cycleFinished} t={t} />
-        <div className="mining-meters">
-          <article className="mining-meter mining-meter-time">
-            <span>{cycle ? (cycleFinished ? t('CYCLE COMPLETED') : t('TIME LEFT')) : t('TIME LEFT')}</span>
-            <strong>{formatClock(remaining)}</strong>
-            <div className="progress"><div style={{ width: progressPercent + '%' }} /></div>
-            <small>{cycle ? Math.round(progressPercent) + '% ' + t('COMPLETE') : t('NOT STARTED')}</small>
-          </article>
-          <article className="mining-meter mining-meter-earned">
-            <span>{t('ARNOLD MINED')}</span>
-            <strong>{cycle ? estimatedMined.toFixed(6) : '0.000000'}</strong>
-            <small>{t('ARNOLD · EN ESTE CICLO')}</small>
-          </article>
-          <article className="mining-meter mining-meter-rate">
-            <span>{t('MINING RATE')}</span>
-            <strong>{hourlyReward.toFixed(6)}</strong>
-            <small>{t('ARNOLD / HOUR')}</small>
-          </article>
-        </div>
+      <div className="mining-dashboard-balance"><span className="coin-mark">A</span><strong>{miningStatus ? totalConfirmedEarnings.toFixed(3) : '—'}</strong><small>$ARNOLD</small></div>
+      <div className="mining-center-stage">
+        <div className="mining-avatar-orbit"><span className="orbit-glow" /><ArnoldWorkoutMascot active={!!cycle && !cycleFinished} t={t} /></div>
+        <div className="mining-avatar-caption"><b>{cycle && !cycleFinished ? t('ARNOLD IS MINING') : t('READY TO MINE')}</b><small>{t('Train. Mine. Earn.')}</small></div>
+        {!miningStatus?.verified
+          ? <button className="primary-btn mining-center-action" type="button" disabled={miningBusy} onClick={onOpenWallet}><ShieldCheck size={17}/>{t('VERIFY WALLET')}</button>
+          : <button className="primary-btn mining-center-action" type="button" disabled={miningBusy || !!cycle} onClick={onStartMining}><Pickaxe size={17}/>{miningBusy ? t('PROCESSING…') : cycle ? t('MINING ACTIVE') : t('START MINING')}</button>}
       </div>
-      <div className="reward-line"><div className="reward-icon"><Zap size={19} /></div><div className="reward-desc"><b>{t('DAILY MINING REWARD')}</b><span>{t('Includes permanent 0.10% purchase bonus')} · +{purchaseBonusDaily.toFixed(6)} $ARNOLD</span></div><div className="reward-value">+{(cycle ? totalReward : nextDailyReward).toFixed(6)}<small>$ARNOLD</small></div></div>
-      <div className="mining-action-buttons">
-        {!miningStatus?.verified ? <button className="primary-btn mining-start-btn" type="button" disabled={miningBusy} onClick={onOpenWallet}><ShieldCheck size={17} /> {t('VERIFICAR BILLETERA')}</button> : <>
-          <button className="primary-btn mining-start-btn" type="button" disabled={miningBusy || !!cycle} onClick={onStartMining}><Pickaxe size={17} /> {miningBusy ? t('PROCESSING…') : cycle ? t('MINING ACTIVE') : t('START MINING')}</button>
-          <button className={'claim-btn' + (cycleFinished && !miningBusy ? ' claim-ready' : '')} type="button" disabled={miningBusy || !cycleFinished} aria-live="polite" aria-label={cycleFinished ? t('CLAIM REWARD NOW') : t('CLAIM')} onClick={onClaimMining}><Gift size={17} /> {miningBusy ? t('PROCESSING…') : cycleFinished ? t('CLAIM REWARD NOW') : t('CLAIM')}</button>
-        </>}
+      <div className="mining-dashboard-footer">
+        <div className="mining-footer-metric"><span>{t('REMAINING TIME')}</span><b>{formatClock(remaining)}</b><div className="progress"><div style={{width:progressPercent+'%'}} /></div></div>
+        <div className="mining-footer-divider" />
+        <div className="mining-footer-metric mining-footer-rate"><span>{t('ARNOLD / HR')}</span><b>+{displayHourlyReward.toFixed(4)}</b><small>$ARNOLD</small></div>
+        <button className={'claim-btn mining-footer-claim'+(cycleFinished&&!miningBusy?' claim-ready':'')} type="button" disabled={miningBusy||!cycleFinished} aria-live="polite" onClick={onClaimMining}><Gift size={16}/>{miningBusy?t('PROCESSING…'):t('CLAIM')}</button>
       </div>
-      <div className="mining-boost-row"><div><b>{t('BOOST YOUR MINING')}</b><span>{t('Potencia tu producción usando $ARNOLD')}</span></div><button type="button" onClick={() => setBoostOpen(true)}><Zap size={16} /> {t('BOOST')}</button></div>
+      <div className="mining-cycle-earned"><span>{t('MINED THIS CYCLE')}</span><b>{cycle ? estimatedMined.toFixed(6) : '0.000000'} <small>$ARNOLD</small></b><span className="cycle-earned-progress">{Math.round(progressPercent)}%</span></div>
+      <div className="reward-line"><div className="reward-icon"><Zap size={18}/></div><div className="reward-desc"><b>{t('DAILY MINING REWARD')}</b><span>{t('Includes permanent 0.10% purchase bonus')}</span></div><div className="reward-value">+{(cycle?totalReward:nextDailyReward).toFixed(4)}<small>$ARNOLD</small></div></div>
+      <div className="mining-boost-row"><div><b>{t('BOOST YOUR MINING')}</b><span>{t('Potencia tu producción usando $ARNOLD')}</span></div><button type="button" onClick={() => setBoostOpen(true)}><Zap size={16}/>{t('BOOST')}</button></div>
       <p className="helper">{t(cycle ? (cycleFinished ? 'Tu ciclo terminó. Reclama la recompensa registrada en tu saldo ARNOLD.' : 'Tu ciclo de 24 horas está activo. La cifra minada es una estimación; la recompensa final se confirma al reclamar.') : miningStatus?.verified ? 'Billetera verificada. Puedes iniciar un ciclo de 24 horas.' : 'Conecta y verifica tu billetera con el pago único de 0.10 GRAM para desbloquear la minería.')}</p>
     </section>
     <section className="earnings-summary" aria-label={t("EARNINGS SUMMARY")}>
