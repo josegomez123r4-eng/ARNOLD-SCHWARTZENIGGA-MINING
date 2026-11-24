@@ -1034,3 +1034,16 @@ html,body{background:#090909;color:#f4f0e7}
   margin:0!important;object-fit:cover!important;object-position:center center!important;
   border-radius:50%!important;
 }
+
+
+/* Referral invitee status list */
+.referral-list-panel{margin:16px 0;padding:15px;border:1px solid #c9943744;border-radius:16px;background:linear-gradient(145deg,#21190f,#11100e)}
+.referral-list-panel .eligibility-title{display:flex;align-items:center;gap:8px;color:#f2cf80;font-size:12px;letter-spacing:.45px}
+.referral-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.referral-list-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 10px;border:1px solid #ffffff12;border-radius:11px;background:#ffffff06}
+.referral-list-person{display:flex;flex-direction:column;gap:4px;min-width:0}
+.referral-list-person b{overflow:hidden;color:#f5ead2;font-size:12px;text-overflow:ellipsis;white-space:nowrap}
+.referral-list-person small{color:#a99a7c;font-size:10px}
+.referral-status{flex-shrink:0;padding:5px 8px;border-radius:20px;font-size:9px;font-weight:800;letter-spacing:.45px}
+.referral-status.eligible{border:1px solid #398d5a66;background:#1b5a3433;color:#86e0a4}
+.referral-status.pending{border:1px solid #c9943744;background:#c9943718;color:#e7bd69}
