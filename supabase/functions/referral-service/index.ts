@@ -92,7 +92,10 @@ Deno.serve(async (req: Request) => {
     const action = String(body.action ?? "");
 
     if (action === "sync") {
-      const referrer = String(body.referrerTelegramId ?? "");
+      // Only accept the inviter embedded in Telegram's signed initData.
+      // Never trust a client-supplied referrerTelegramId, which can be forged.
+      const signedStartParam = new URLSearchParams(initData).get("start_param") ?? "";
+      const referrer = signedStartParam.startsWith("ref_") ? signedStartParam.slice(4) : "";
       if (referrer && /^\d{1,20}$/.test(referrer) && referrer !== telegramId) {
         const { error } = await admin.from("referral_attributions").upsert(
           { referred_telegram_id: telegramId, referrer_telegram_id: referrer },
