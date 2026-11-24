@@ -337,6 +337,7 @@ function ReferralsPage({ t }: { t: (phrase: string) => string }) {
   const [copied, setCopied] = useState(false)
   const [copyError, setCopyError] = useState('')
   const [stats, setStats] = useState({ total: 0, eligible: 0, ineligible: 0 })
+  const [referrals, setReferrals] = useState<Array<{ telegram_user_id: string; name: string; eligible: boolean; status: string; verified_at: string | null }>>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [earnings, setEarnings] = useState({ available: 0, reserved: 0, credited: 0, paid: 0, lifetime: 0, mining: 0, tasks: 0 })
@@ -379,11 +380,14 @@ function ReferralsPage({ t }: { t: (phrase: string) => string }) {
         })
         const data = await response.json()
         if (!response.ok) throw new Error(data?.error || t('No se pudieron cargar los referidos'))
-        if (!cancelled) setStats({
-          total: Number(data.total || 0),
-          eligible: Number(data.eligible || 0),
-          ineligible: Number(data.ineligible || 0)
-        })
+        if (!cancelled) {
+          setStats({
+            total: Number(data.total || 0),
+            eligible: Number(data.eligible || 0),
+            ineligible: Number(data.ineligible || 0)
+          })
+          setReferrals(Array.isArray(data.referrals) ? data.referrals : [])
+        }
         const earningsResponse = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -507,6 +511,15 @@ function ReferralsPage({ t }: { t: (phrase: string) => string }) {
       <article className="stat-card"><div className="stat-label">{t('AÚN NO ELEGIBLES')}</div><div className="stat-number">{loading ? '…' : stats.ineligible}</div><div className="stat-caption">{t('Pendientes de completar la verificación')}</div></article>
     </div>
     {error && <p className="balance-error" role="alert">{error}</p>}
+    <section className="referral-list-panel">
+      <div className="eligibility-title"><Gift size={18} /> <b>{t('ESTADO DE TUS INVITADOS')}</b></div>
+      {loading ? <p className="referral-link-help">{t('Cargando invitados…')}</p>
+        : referrals.length === 0 ? <p className="referral-link-help">{t('Aún no hay invitaciones registradas con este enlace.')}</p>
+        : <div className="referral-list">{referrals.map((referral) => <article className="referral-list-row" key={referral.telegram_user_id}>
+            <div className="referral-list-person"><b>{referral.name}</b><small>{referral.verified_at ? new Date(referral.verified_at).toLocaleDateString() : t('Wallet pendiente de verificación')}</small></div>
+            <span className={referral.eligible ? 'referral-status eligible' : 'referral-status pending'}>{referral.eligible ? t('ELEGIBLE') : t('PENDIENTE')}</span>
+          </article>)}</div>}
+    </section>
     <div className="eligibility-panel"><div className="eligibility-title"><ShieldCheck size={18} /> <b>{t('REQUISITOS DE ELEGIBILIDAD')}</b></div><p>{t('Un invitado cuenta como elegible únicamente después de confirmar su billetera y completar el pago único de 0.10 GRAM, verificado de forma segura en la blockchain.')}</p></div>
   </section>
 }
@@ -857,6 +870,18 @@ export default function App() {
   const tonConnect = useRef<TonConnectInstance | null>(null)
   const t = (phrase: string) => translate(language, phrase)
   const analyticsOpenSent = useRef(false)
+  useEffect(() => {
+    const initData = WebApp.initData
+    const startParam = WebApp.initDataUnsafe?.start_param ?? ''
+    const referrer = startParam.startsWith('ref_') ? startParam.slice(4) : ''
+    if (!initData || !/^\\d{1,20}$/.test(referrer) || referrer === String(WebApp.initDataUnsafe?.user?.id ?? '')) return
+    void fetch('https://vnslzfivilgdqqgdyoxd.supabase.co/functions/v1/referral-service', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'sync', initData, referrerTelegramId: referrer }),
+      keepalive: true
+    }).catch(error => console.warn('ARNOLD referral attribution could not be recorded:', error))
+  }, [])
   useEffect(() => {
     if (analyticsOpenSent.current || !WebApp.initData) return
     analyticsOpenSent.current = true
