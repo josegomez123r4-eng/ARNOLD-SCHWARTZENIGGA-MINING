@@ -100,29 +100,28 @@ Deno.serve(async (req: Request) => {
         );
         if (error) throw error;
 
-        // If the invited user had already verified before the referral sync,
-        // activate the reward relationship now; purchases are never involved.
-        const { data: verifiedWallet, error: verifiedWalletError } = await admin.from("telegram_wallet_links")
-          .select("telegram_user_id").eq("telegram_user_id", telegramId).maybeSingle();
-        if (verifiedWalletError) throw verifiedWalletError;
-        if (verifiedWallet) {
-          const { data: referredProfile, error: referredProfileError } = await admin.schema("arnold").from("user_profiles")
-            .select("user_id").eq("telegram_user_id", telegramId).maybeSingle();
-          if (referredProfileError) throw referredProfileError;
-          const { data: referrerProfile, error: referrerProfileError } = await admin.schema("arnold").from("user_profiles")
-            .upsert({ user_id: crypto.randomUUID(), telegram_user_id: referrer, updated_at: new Date().toISOString() },
+        // Create both profiles as soon as the deep link is received. This keeps
+        // pending invitees visible before wallet verification.
+        const ensureProfile = async (id: string) => {
+          const { data, error: upsertError } = await admin.schema("arnold").from("user_profiles")
+            .upsert({ user_id: crypto.randomUUID(), telegram_user_id: id, updated_at: new Date().toISOString() },
               { onConflict: "telegram_user_id", ignoreDuplicates: true }).select("user_id").maybeSingle();
-          if (referrerProfileError) throw referrerProfileError;
-          let referrerUserId = referrerProfile?.user_id;
-          if (!referrerUserId) {
-            const { data: existingReferrer, error: existingReferrerError } = await admin.schema("arnold").from("user_profiles")
-              .select("user_id").eq("telegram_user_id", referrer).single();
-            if (existingReferrerError) throw existingReferrerError;
-            referrerUserId = existingReferrer.user_id;
-          }
-          if (referredProfile?.user_id && referrerUserId && referredProfile.user_id !== referrerUserId) {
+          if (upsertError) throw upsertError;
+          if (data?.user_id) return String(data.user_id);
+          const { data: existing, error: readError } = await admin.schema("arnold").from("user_profiles")
+            .select("user_id").eq("telegram_user_id", id).single();
+          if (readError) throw readError;
+          return String(existing.user_id);
+        };
+        const referredUserId = await ensureProfile(telegramId);
+        const referrerUserId = await ensureProfile(referrer);
+        if (referredUserId !== referrerUserId) {
+          const { data: verifiedWallet, error: verifiedWalletError } = await admin.from("telegram_wallet_links")
+            .select("telegram_user_id").eq("telegram_user_id", telegramId).maybeSingle();
+          if (verifiedWalletError) throw verifiedWalletError;
+          if (verifiedWallet) {
             const { error: linkError } = await admin.schema("arnold").from("referral_links").upsert(
-              { referred_user_id: referredProfile.user_id, referrer_user_id: referrerUserId },
+              { referred_user_id: referredUserId, referrer_user_id: referrerUserId },
               { onConflict: "referred_user_id", ignoreDuplicates: true }
             );
             if (linkError) throw linkError;
@@ -136,13 +135,26 @@ Deno.serve(async (req: Request) => {
       const { data: rows, error } = await admin.from("referral_attributions")
         .select("referred_telegram_id").eq("referrer_telegram_id", telegramId);
       if (error) throw error;
-      const ids = (rows ?? []).map((r: { referred_telegram_id: string }) => r.referred_telegram_id);
-      if (!ids.length) return json(200, { total: 0, eligible: 0, ineligible: 0 });
-      const { data: verified, error: verificationError } = await admin.from("telegram_wallet_links")
-        .select("telegram_user_id").in("telegram_user_id", ids);
-      if (verificationError) throw verificationError;
-      const eligible = new Set((verified ?? []).map((r: { telegram_user_id: string }) => r.telegram_user_id)).size;
-      return json(200, { total: ids.length, eligible, ineligible: ids.length - eligible });
+      const ids = (rows ?? []).map((r: { referred_telegram_id: string }) => String(r.referred_telegram_id));
+      if (!ids.length) return json(200, { total: 0, eligible: 0, ineligible: 0, referrals: [] });
+      const [verifiedResult, profilesResult] = await Promise.all([
+        admin.from("telegram_wallet_links").select("telegram_user_id,verified_at").in("telegram_user_id", ids),
+        admin.schema("arnold").from("user_profiles").select("telegram_user_id,telegram_username,display_name")
+          .in("telegram_user_id", ids.map(Number))
+      ]);
+      if (verifiedResult.error) throw verifiedResult.error;
+      if (profilesResult.error) throw profilesResult.error;
+      const verifiedById = new Map((verifiedResult.data ?? []).map((r: any) => [String(r.telegram_user_id), r]));
+      const profileById = new Map((profilesResult.data ?? []).map((r: any) => [String(r.telegram_user_id), r]));
+      const referrals = ids.map((id: string) => {
+        const profile: any = profileById.get(id);
+        const wallet: any = verifiedById.get(id);
+        const username = String(profile?.telegram_username ?? "").replace(/^@/, "");
+        const name = username ? "@" + username : String(profile?.display_name ?? "").trim() || "Usuario de Telegram";
+        return { telegram_user_id: id, name: name.slice(0, 32), eligible: !!wallet, status: wallet ? "eligible" : "pending", verified_at: wallet?.verified_at ?? null };
+      });
+      const eligible = referrals.filter((r: any) => r.eligible).length;
+      return json(200, { total: ids.length, eligible, ineligible: ids.length - eligible, referrals });
     }
 
 
