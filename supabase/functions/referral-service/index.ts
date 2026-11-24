@@ -92,46 +92,71 @@ Deno.serve(async (req: Request) => {
     const action = String(body.action ?? "");
 
     if (action === "sync") {
-      // Only accept the inviter embedded in Telegram's signed initData.
-      // Never trust a client-supplied referrerTelegramId, which can be forged.
+      // Attribution is accepted ONLY from Telegram's HMAC-verified initData.
+      // clientStartParam is a diagnostic hint; it is never used as the inviter ID.
       const signedStartParam = new URLSearchParams(initData).get("start_param") ?? "";
-      const referrer = signedStartParam.startsWith("ref_") ? signedStartParam.slice(4) : "";
-      if (referrer && /^\d{1,20}$/.test(referrer) && referrer !== telegramId) {
-        const { error } = await admin.from("referral_attributions").upsert(
-          { referred_telegram_id: telegramId, referrer_telegram_id: referrer },
-          { onConflict: "referred_telegram_id", ignoreDuplicates: true }
-        );
-        if (error) throw error;
-
-        // Create both profiles as soon as the deep link is received. This keeps
-        // pending invitees visible before wallet verification.
-        const ensureProfile = async (id: string) => {
-          const { data, error: upsertError } = await admin.schema("arnold").from("user_profiles")
-            .upsert({ user_id: crypto.randomUUID(), telegram_user_id: id, updated_at: new Date().toISOString() },
-              { onConflict: "telegram_user_id", ignoreDuplicates: true }).select("user_id").maybeSingle();
-          if (upsertError) throw upsertError;
-          if (data?.user_id) return String(data.user_id);
-          const { data: existing, error: readError } = await admin.schema("arnold").from("user_profiles")
-            .select("user_id").eq("telegram_user_id", id).single();
-          if (readError) throw readError;
-          return String(existing.user_id);
-        };
-        const referredUserId = await ensureProfile(telegramId);
-        const referrerUserId = await ensureProfile(referrer);
-        if (referredUserId !== referrerUserId) {
-          const { data: verifiedWallet, error: verifiedWalletError } = await admin.from("telegram_wallet_links")
-            .select("telegram_user_id").eq("telegram_user_id", telegramId).maybeSingle();
-          if (verifiedWalletError) throw verifiedWalletError;
-          if (verifiedWallet) {
-            const { error: linkError } = await admin.schema("arnold").from("referral_links").upsert(
-              { referred_user_id: referredUserId, referrer_user_id: referrerUserId },
-              { onConflict: "referred_user_id", ignoreDuplicates: true }
-            );
-            if (linkError) throw linkError;
-          }
+      const clientStartParam = String(body.clientStartParam ?? "");
+      if (!signedStartParam) {
+        if (clientStartParam.startsWith("ref_")) {
+          return json(422, { error: "SIGNED_START_PARAM_MISSING", detail: "Telegram exposed a referral parameter to the client but did not include it in signed initData. No attribution was saved." });
         }
+        return json(200, { ok: true, recorded: false, reason: "NO_REFERRAL_CODE" });
       }
-      return json(200, { ok: true });
+      if (!signedStartParam.startsWith("ref_")) {
+        return json(200, { ok: true, recorded: false, reason: "NO_REFERRAL_CODE" });
+      }
+      const referrer = signedStartParam.slice(4);
+      if (!/^\d{1,20}$/.test(referrer)) return json(422, { error: "INVALID_SIGNED_REFERRAL_CODE" });
+      if (referrer === telegramId) return json(409, { error: "SELF_REFERRAL_NOT_ALLOWED" });
+
+      const ensureProfile = async (id: string, isInvitee = false) => {
+        const profileData: Record<string, unknown> = {
+          user_id: crypto.randomUUID(),
+          telegram_user_id: id,
+          updated_at: new Date().toISOString()
+        };
+        if (isInvitee) Object.assign(profileData, profileUpdate);
+        const { data, error: upsertError } = await admin.schema("arnold").from("user_profiles")
+          .upsert(profileData, { onConflict: "telegram_user_id", ignoreDuplicates: true })
+          .select("user_id").maybeSingle();
+        if (upsertError) throw upsertError;
+        if (data?.user_id) return String(data.user_id);
+        const { data: existing, error: readError } = await admin.schema("arnold").from("user_profiles")
+          .select("user_id").eq("telegram_user_id", id).single();
+        if (readError) throw readError;
+        return String(existing.user_id);
+      };
+
+      const referredUserId = await ensureProfile(telegramId, true);
+      const referrerUserId = await ensureProfile(referrer);
+
+      // Keep the first valid inviter permanently; retries are idempotent.
+      const { error: attributionError } = await admin.from("referral_attributions").upsert(
+        { referred_telegram_id: telegramId, referrer_telegram_id: referrer },
+        { onConflict: "referred_telegram_id", ignoreDuplicates: true }
+      );
+      if (attributionError) throw attributionError;
+
+      const { data: attribution, error: attributionReadError } = await admin.from("referral_attributions")
+        .select("referrer_telegram_id").eq("referred_telegram_id", telegramId).single();
+      if (attributionReadError) throw attributionReadError;
+      if (String(attribution.referrer_telegram_id) !== referrer) {
+        return json(200, { ok: true, recorded: false, alreadyAttributed: true, reason: "FIRST_REFERRER_PRESERVED" });
+      }
+
+      let eligible = false;
+      const { data: verifiedWallet, error: verifiedWalletError } = await admin.from("telegram_wallet_links")
+        .select("telegram_user_id").eq("telegram_user_id", telegramId).maybeSingle();
+      if (verifiedWalletError) throw verifiedWalletError;
+      if (verifiedWallet) {
+        const { error: linkError } = await admin.schema("arnold").from("referral_links").upsert(
+          { referred_user_id: referredUserId, referrer_user_id: referrerUserId },
+          { onConflict: "referred_user_id", ignoreDuplicates: true }
+        );
+        if (linkError) throw linkError;
+        eligible = true;
+      }
+      return json(200, { ok: true, recorded: true, alreadyAttributed: false, eligible });
     }
 
     if (action === "stats") {
