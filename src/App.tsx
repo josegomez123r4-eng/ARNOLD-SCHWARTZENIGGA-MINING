@@ -553,7 +553,7 @@ function WalletPage({ t, walletAddress, walletReady, onConnect, onDisconnect, on
     <div className="wallet-withdraw-section">
       <div className="wallet-withdraw-heading"><ArrowDownToLine size={19} /><div><b>{t('WITHDRAW')}</b><span>{t('Withdrawal requirements')}</span></div></div>
       <div className="profile-row"><span>{t('Minimum balance in connected wallet')}</span><b>1,000 $ARNOLD</b></div>
-      <div className="profile-row"><span>{t('Minimum withdrawal amount')}</span><b>2,500 $ARNOLD</b></div>
+      <div className="profile-row"><span>{t('Minimum withdrawal amount')}</span><b>500 $ARNOLD</b></div>
       <div className="profile-row"><span>{t('Withdrawal fee')}</span><b>5%</b></div>
       <p className="helper helper-left">{t('Keep at least 1,000 $ARNOLD in your connected wallet to qualify. This balance is not deducted from your withdrawal.')}</p>
       <button className="primary-btn withdraw-disabled" type="button" disabled><LockKeyhole size={17} /> {t('WITHDRAWALS COMING SOON')}</button>
