@@ -359,21 +359,13 @@ function ReferralsPage({ t }: { t: (phrase: string) => string }) {
       setError('')
       try {
         const endpoint = 'https://vnslzfivilgdqqgdyoxd.supabase.co/functions/v1/referral-service'
-        const signedStartParam = new URLSearchParams(initData).get('start_param') ?? ''
-        const effectiveStartParam = signedStartParam || startParam || ''
-        const rawReferrer = effectiveStartParam.startsWith('ref_') ? effectiveStartParam.slice(4) : ''
-        const referrer = rawReferrer && /^\d{1,20}$/.test(rawReferrer) ? rawReferrer : null
-        if (referrer && referrer !== String(telegramId)) {
-          const syncResponse = await fetch(endpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'sync', initData, referrerTelegramId: referrer })
-          })
-          if (!syncResponse.ok) {
-            const syncData = await syncResponse.json().catch(() => ({}))
-            throw new Error(syncData?.error || t('No se pudo registrar la invitación'))
-          }
-        }
+        const syncResponse = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'sync', initData, clientStartParam: startParam || '' })
+        })
+        const syncData = await syncResponse.json().catch(() => ({}))
+        if (!syncResponse.ok) throw new Error(syncData?.error || t('No se pudo registrar la invitación'))
         const response = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -873,15 +865,18 @@ export default function App() {
   const analyticsOpenSent = useRef(false)
   useEffect(() => {
     const initData = WebApp.initData
-    const signedStartParam = new URLSearchParams(initData).get('start_param') ?? ''
-    const startParam = signedStartParam || WebApp.initDataUnsafe?.start_param || ''
-    const referrer = startParam.startsWith('ref_') ? startParam.slice(4) : ''
-    if (!initData || !/^\\d{1,20}$/.test(referrer) || referrer === String(WebApp.initDataUnsafe?.user?.id ?? '')) return
+    if (!initData) return
+    const clientStartParam = WebApp.initDataUnsafe?.start_param ?? ''
     void fetch('https://vnslzfivilgdqqgdyoxd.supabase.co/functions/v1/referral-service', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'sync', initData, referrerTelegramId: referrer }),
+      body: JSON.stringify({ action: 'sync', initData, clientStartParam }),
       keepalive: true
+    }).then(async response => {
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(data?.error || 'REFERRAL_SYNC_FAILED')
+      if (data.recorded) console.info('ARNOLD referral attribution recorded.')
+      else if (data.reason === 'SIGNED_START_PARAM_MISSING') console.warn('Telegram referral parameter was not signed.')
     }).catch(error => console.warn('ARNOLD referral attribution could not be recorded:', error))
   }, [])
   useEffect(() => {
