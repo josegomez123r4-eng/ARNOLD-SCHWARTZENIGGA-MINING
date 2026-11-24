@@ -359,8 +359,9 @@ function ReferralsPage({ t }: { t: (phrase: string) => string }) {
       setError('')
       try {
         const endpoint = 'https://vnslzfivilgdqqgdyoxd.supabase.co/functions/v1/referral-service'
-        const queryRef = new URLSearchParams(window.location.search).get('ref')
-        const rawReferrer = startParam?.startsWith('ref_') ? startParam.slice(4) : queryRef
+        const signedStartParam = new URLSearchParams(initData).get('start_param') ?? ''
+        const effectiveStartParam = signedStartParam || startParam || ''
+        const rawReferrer = effectiveStartParam.startsWith('ref_') ? effectiveStartParam.slice(4) : ''
         const referrer = rawReferrer && /^\d{1,20}$/.test(rawReferrer) ? rawReferrer : null
         if (referrer && referrer !== String(telegramId)) {
           const syncResponse = await fetch(endpoint, {
@@ -872,7 +873,8 @@ export default function App() {
   const analyticsOpenSent = useRef(false)
   useEffect(() => {
     const initData = WebApp.initData
-    const startParam = WebApp.initDataUnsafe?.start_param ?? ''
+    const signedStartParam = new URLSearchParams(initData).get('start_param') ?? ''
+    const startParam = signedStartParam || WebApp.initDataUnsafe?.start_param || ''
     const referrer = startParam.startsWith('ref_') ? startParam.slice(4) : ''
     if (!initData || !/^\\d{1,20}$/.test(referrer) || referrer === String(WebApp.initDataUnsafe?.user?.id ?? '')) return
     void fetch('https://vnslzfivilgdqqgdyoxd.supabase.co/functions/v1/referral-service', {
