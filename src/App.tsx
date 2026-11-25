@@ -247,15 +247,13 @@ function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMin
   </section>
 }
 
-function TasksPage({ t }: { t: (phrase: string) => string }) {
+function TasksPage({ t, onRewardsChanged }: { t: (phrase: string) => string; onRewardsChanged: () => Promise<void> }) {
   const endpoint = 'https://vnslzfivilgdqqgdyoxd.supabase.co/functions/v1/task-rewards'
   const [status, setStatus] = useState<{channel_member:boolean;channel_next_available_at:string|null;support_channel_member:boolean;support_channel_next_available_at:string|null;checkin_streak:number;checkin_claimed_today:boolean;checkin_next_available_at:string} | null>(null)
   const [now, setNow] = useState(Date.now())
-  const [busy, setBusy] = useState<'channel'|'support'|'checkin'|null>(null)
+  const [busy, setBusy] = useState<{channel:boolean;support:boolean;checkin:boolean}>({channel:false,support:false,checkin:false})
   const [channelJoinClicked, setChannelJoinClicked] = useState(false)
-  const [channelWaitUntil, setChannelWaitUntil] = useState<number | null>(null)
   const [supportJoinClicked, setSupportJoinClicked] = useState(false)
-  const [supportWaitUntil, setSupportWaitUntil] = useState<number | null>(null)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const post = async (action: string) => {
@@ -277,24 +275,25 @@ function TasksPage({ t }: { t: (phrase: string) => string }) {
     return [Math.floor(seconds/3600),Math.floor(seconds%3600/60),seconds%60].map(v=>String(v).padStart(2,'0')).join(':')
   }
   const channelReady = !status?.channel_next_available_at || new Date(status.channel_next_available_at).getTime() <= now
-  const channelJoinReady = channelJoinClicked && channelWaitUntil !== null && now >= channelWaitUntil && !!status?.channel_member
+  const channelJoinReady = channelJoinClicked && !!status?.channel_member
   const supportReady = !status?.support_channel_next_available_at || new Date(status.support_channel_next_available_at).getTime() <= now
-  const supportJoinReady = supportJoinClicked && supportWaitUntil !== null && now >= supportWaitUntil && !!status?.support_channel_member
+  const supportJoinReady = supportJoinClicked && !!status?.support_channel_member
   const act = async (kind:'channel'|'support') => {
-    setBusy(kind);setMessage('');setError('')
+    setBusy(value=>({...value,[kind]:true}));setMessage('');setError('')
     try {
       const data = await post(kind==='channel'?'claim_channel':'claim_support')
       setMessage(data.claimed ? t('¡Recompensa de 2 ARNOLD acreditada!') : t('La tarea todavía está en enfriamiento.'))
       if (data.claimed) {
-        if (kind === 'channel') { setChannelJoinClicked(false); setChannelWaitUntil(null) }
-        else { setSupportJoinClicked(false); setSupportWaitUntil(null) }
+        if (kind === 'channel') setChannelJoinClicked(false)
+        else setSupportJoinClicked(false)
+        await onRewardsChanged()
       }
       await refresh()
     } catch(e) { setError(e instanceof Error ? t(e.message) : t('No se pudo reclamar.')) }
-    finally { setBusy(null) }
+    finally { setBusy(value=>({...value,[kind]:false})) }
   }
-  const openNews = () => { setChannelJoinClicked(true); setChannelWaitUntil(Date.now()+5000); window.setTimeout(()=>{void refresh()},5000) }
-  const openSupport = () => { setSupportJoinClicked(true); setSupportWaitUntil(Date.now()+5000); window.setTimeout(()=>{void refresh()},5000) }
+  const openNews = () => { setChannelJoinClicked(true); window.setTimeout(()=>{if(document.visibilityState==='visible')void refresh()},300) }
+  const openSupport = () => { setSupportJoinClicked(true); window.setTimeout(()=>{if(document.visibilityState==='visible')void refresh()},300) }
   return <section className="inner-page tasks-page">
     <div className="tasks-banner-wrap"><img className="tasks-banner-image" src="https://azure-high-cougar-588.mypinata.cloud/ipfs/bafybeih5epoypzce6oidj3w5ucf55b6b2otort2qaglzybs5f4kicpfpg4" alt="ARNOLD Daily Tasks" /></div>
     <article className="checkin-card">
@@ -302,7 +301,7 @@ function TasksPage({ t }: { t: (phrase: string) => string }) {
       <p>{t('Haz check-in cada día para mantener tu racha. Si pierdes un día, vuelves al día 1.')}</p>
       <div className="checkin-days">{Array.from({length:7},(_,i)=>i+1).map(day=><div className={'checkin-day'+(day<=(status?.checkin_streak??0)?' completed':'')+(day===(status?.checkin_streak??0)+1 && !status?.checkin_claimed_today?' current':'')} key={day}><span>{day<=(status?.checkin_streak??0)?'✓':day}</span><small>{t('DÍA')}</small><b>0.5</b></div>)}</div>
       <div className="checkin-total"><span>{t('PROGRESO SEMANAL')}</span><strong>{status?.checkin_streak??0}/7 · {((status?.checkin_streak??0)*0.5).toFixed(1)} / 3.5 ARNOLD</strong></div>
-      <button className="checkin-claim-btn" type="button" disabled={busy!==null || !status || status.checkin_claimed_today} onClick={()=>{void (async()=>{setBusy('checkin');try{await post('claim_checkin');await refresh()}catch(e){setError(e instanceof Error?t(e.message):t('No se pudo reclamar.'))}finally{setBusy(null)}})()}}>{busy==='checkin'?t('GUARDANDO…'):status?.checkin_claimed_today?t('CHECK-IN COMPLETADO HOY'):t('HACER CHECK-IN · +0.5 ARNOLD')}</button>
+      <button className="checkin-claim-btn" type="button" disabled={busy.checkin || !status || status.checkin_claimed_today} onClick={()=>{void (async()=>{setBusy(value=>({...value,checkin:true}));try{await post('claim_checkin');await refresh();await onRewardsChanged()}catch(e){setError(e instanceof Error?t(e.message):t('No se pudo reclamar.'))}finally{setBusy(value=>({...value,checkin:false}))}})()}}>{busy.checkin?t('GUARDANDO…'):status?.checkin_claimed_today?t('CHECK-IN COMPLETADO HOY'):t('HACER CHECK-IN · +0.5 ARNOLD')}</button>
       <div className="checkin-countdown">{t('Siguiente check-in en')} <strong>{clock(status?.checkin_next_available_at)}</strong> · {t('Reinicio diario UTC')}</div>
     </article>
     <div className="feature-panel"><div className="feature-icon"><ListChecks size={22} /></div><div><b>{t('REWARD TASKS')}</b><span>{t('Completa tareas y gana recompensas ARNOLD.')}</span></div></div>
@@ -315,7 +314,7 @@ function TasksPage({ t }: { t: (phrase: string) => string }) {
           {!channelReady
             ? <button className="task-join-link task-cooldown-button" type="button" disabled aria-label={t('Disponible en')+' '+clock(status?.channel_next_available_at)}>{clock(status?.channel_next_available_at)}</button>
             : status?.channel_member && channelJoinReady
-              ? <button className="task-join-link" type="button" disabled={busy!==null} onClick={()=>void act('channel')}>{busy==='channel'?t('…'):'CLAIM'}</button>
+              ? <button className="task-join-link" type="button" disabled={busy.channel} onClick={()=>void act('channel')}>{busy.channel?t('…'):'CLAIM'}</button>
               : <a className="task-join-link" href="https://t.me/arnoldschwartzenigganews" target="_blank" rel="noreferrer" onClick={openNews}>GO</a>}
         </div>
       </div>
@@ -329,7 +328,7 @@ function TasksPage({ t }: { t: (phrase: string) => string }) {
           {!supportReady
             ? <button className="task-join-link task-cooldown-button" type="button" disabled aria-label={t('Available in')+' '+clock(status?.support_channel_next_available_at)}>{clock(status?.support_channel_next_available_at)}</button>
             : status?.support_channel_member && supportJoinReady
-              ? <button className="task-join-link" type="button" disabled={busy!==null} onClick={()=>void act('support')}>{busy==='support'?t('…'):'CLAIM'}</button>
+              ? <button className="task-join-link" type="button" disabled={busy.support} onClick={()=>void act('support')}>{busy.support?t('…'):'CLAIM'}</button>
               : <a className="task-join-link" href="https://t.me/arnoldchatsupport" target="_blank" rel="noreferrer" onClick={openSupport}>GO</a>}
         </div>
       </div>
@@ -1309,7 +1308,7 @@ export default function App() {
     <Header language={language} onLanguageChange={changeLanguage} />
     <div className="content">
       {tab === 'mining' && <MiningPage t={t} onOpenReferrals={() => setTab('referrals')} onOpenWallet={() => setTab('wallet')} miningStatus={miningStatus} onStartMining={() => { void runMiningAction('start') }} onClaimMining={() => { void runMiningAction('claim') }} miningBusy={miningBusy} demoBalance={demoArnoldBalance} />}
-      {tab === 'tasks' && <TasksPage t={t} />}
+      {tab === 'tasks' && <TasksPage t={t} onRewardsChanged={loadMiningStatus} />}
       {tab === 'referrals' && <ReferralsPage t={t} />}
       {tab === 'wallet' && <WalletPage t={t} walletAddress={walletAddress} walletReady={walletReady} onConnect={connectWallet} onDisconnect={disconnectWallet} onReconnect={() => { void reconnectWallet() }} onRefreshBalance={refreshBalance} onVerifyPayment={verifyWalletPayment} walletAppName={walletAppName} paymentState={paymentState} arnoldBalance={arnoldBalance} balanceLoading={balanceLoading} balanceError={balanceError} />}
       {tab === 'market' && <MarketPage t={t} walletAddress={walletAddress} onConnect={connectWallet} tonConnect={tonConnect.current} />}
