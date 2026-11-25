@@ -852,7 +852,7 @@ const GYM_RUSH_POOL = GYM_RUSH_SYMBOLS.flatMap(symbol => Array(symbol.weight).fi
 const GYM_RUSH_BET = 100
 const GYM_RUSH_SIZE = 5
 const GYM_RUSH_ROWS = 3
-const GYM_RUSH_MIN_MATCH = 8
+const GYM_RUSH_MIN_MATCH = 7
 const gymRushWait = (ms: number) => new Promise(resolve => window.setTimeout(resolve, ms))
 const randomGymRushSymbol = () => GYM_RUSH_POOL[Math.floor(Math.random() * GYM_RUSH_POOL.length)]
 const makeGymRushBoard = () => Array.from({ length: GYM_RUSH_SIZE * GYM_RUSH_ROWS }, randomGymRushSymbol)
@@ -1016,23 +1016,23 @@ function GymRushPage({ onOpenMarket }: { onOpenMarket: () => void }) {
       <div className="gymrush-accumulator" aria-live="polite">
         <span>{spinning ? 'ACUMULADO EN ESTE GIRO' : 'TOTAL DEL ÚLTIMO GIRO'}</span>
         <strong>+{spinAccumulated.toLocaleString()} <small>PUNTOS DEMO</small></strong>
-        <small>{cascadeNumber > 0 ? 'CADENA DE ' + cascadeNumber + ' CASCADA(S)' : 'SE ELIMINAN GRUPOS DE 6 O MÁS'}</small>
+        <small>{cascadeNumber > 0 ? 'CADENA DE ' + cascadeNumber + ' CASCADA(S)' : 'SE ELIMINAN GRUPOS DE 7 O MÁS'}</small>
       </div>
       {bonusMessage && <div className="gymrush-free-spins-pop" role="status" aria-live="assertive"><span>👑</span><strong>+10 FREE SPINS</strong><small>¡BONUS DESBLOQUEADO!</small></div>}
       {freeSpins > 0 && <div className="gymrush-free-spins-counter" role="status" aria-live="polite"><span>🎰 FREE SPINS</span><strong>{freeSpins}<small> / 10</small></strong><em>{spinning ? "GIRO GRATIS EN CURSO…" : "SIGUIENTE GIRO GRATIS"}</em></div>}
       <div className="gymrush-result" aria-live="polite">{result}</div>
-      <div className="gymrush-controls">
-        <button className={'gymrush-control auto' + (autoSpin ? ' active' : '')} type="button" onClick={() => setAutoSpin(value => !value)} aria-pressed={autoSpin}>{autoSpin ? '⏸ DETENER' : '🔁 AUTO'}</button>
-      </div>
-      <button className="gymrush-spin" type="button" onClick={() => void spin()} disabled={spinning || autoSpin || (freeSpins === 0 && demoBalance < GYM_RUSH_BET)}>
-        <span>⚡</span>{spinning ? 'GIRANDO…' : freeSpins > 0 ? 'USAR GIRO GRATIS' : 'GIRAR · 100 ARNOLD'}<span>⚡</span>
+      <button className="gymrush-spin-button" type="button" onClick={() => void spin()} disabled={spinning || autoSpin || (freeSpins === 0 && demoBalance < GYM_RUSH_BET)}>
+        <span className="gymrush-spin-icon">✦</span><span>{spinning ? 'GIRANDO…' : freeSpins > 0 ? 'GIRO GRATIS' : 'GIRAR'}</span><small>{freeSpins > 0 ? freeSpins + ' GIROS DISPONIBLES' : 'APUESTA DEMO · 100 ARNOLD'}</small><span className="gymrush-spin-icon">✦</span>
       </button>
-      <div className="gymrush-bet-note">{freeSpins > 0 ? 'TIENES ' + freeSpins + ' GIROS GRATIS DISPONIBLES' : '100 ARNOLD DEMO POR GIRO · SIN COBROS REALES'}</div>
-      <button className="gymrush-spin" type="button" onClick={onOpenMarket}>🛒 COMPRAR ARNOLD EN EL MERCADO</button>
+      <div className="gymrush-action-row">
+        <button className={'gymrush-auto-button' + (autoSpin ? ' active' : '')} type="button" onClick={() => setAutoSpin(value => !value)} aria-pressed={autoSpin}>{autoSpin ? 'Ⅱ PAUSAR' : '↻ AUTO'}</button>
+        <button className="gymrush-market-button" type="button" onClick={onOpenMarket}>＋ COMPRAR ARNOLD</button>
+      </div>
+      <div className="gymrush-bet-note">{freeSpins > 0 ? 'LOS GIROS GRATIS SE DESCUENTAN UNO A UNO' : 'MODO DEMOSTRACIÓN · SIN COBROS REALES'}</div>
     </div>
     <div className="gymrush-prizes">
       <div className="gymrush-section-title"><span> REGLAS DE GYM RUSH </span><i /></div>
-      <div className="gymrush-prize-row"><b className="prize-arnold">A</b><span><strong>6 O MÁS FIGURAS IGUALES</strong><small>Desaparecen, caen nuevas fichas y continúan las cascadas</small></span><em>COMBOS</em></div>
+      <div className="gymrush-prize-row"><b className="prize-arnold">A</b><span><strong>7 O MÁS FIGURAS IGUALES</strong><small>Desaparecen, caen nuevas fichas y continúan las cascadas</small></span><em>COMBOS</em></div>
       <div className="gymrush-prize-row"><b>👑</b><span><strong>3 SÍMBOLOS BONUS</strong><small>Activa 10 giros gratis</small></span><em>10 GIROS</em></div>
       <div className="gymrush-prize-row"><b>⚡</b><span><strong>MULTIPLICADORES DE COMBO</strong><small>Escala: x1 · x2 · x3 · x5</small></span><em>HASTA x5</em></div>
     </div>
