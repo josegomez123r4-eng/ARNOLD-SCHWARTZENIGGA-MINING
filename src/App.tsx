@@ -842,11 +842,10 @@ function MarketPage({ t, walletAddress, onConnect, tonConnect }: { t: (phrase: s
 }
 const GYM_RUSH_SYMBOLS = [
   { id: 'arnold', label: 'ARNOLD', icon: 'A', weight: 1 },
-  { id: 'dumbbell', label: 'MANCUERNA', icon: '🏋️', weight: 3 },
-  { id: 'barbell', label: 'BARRA', icon: '💪', weight: 3 },
-  { id: 'trophy', label: 'TROFEO', icon: '🏆', weight: 3 },
-  { id: 'protein', label: 'PROTEÍNA', icon: '🥤', weight: 3 },
-  { id: 'kettlebell', label: 'KETTLEBELL', icon: '🔔', weight: 3 },
+  { id: 'dumbbell', label: 'MANCUERNA', icon: '🏋️', weight: 4 },
+  { id: 'barbell', label: 'BARRA', icon: '💪', weight: 4 },
+  { id: 'trophy', label: 'TROFEO', icon: '🏆', weight: 4 },
+  { id: 'protein', label: 'PROTEÍNA', icon: '🥤', weight: 4 },
   { id: 'bonus', label: 'BONUS', icon: '👑', weight: 1 },
 ]
 const GYM_RUSH_POOL = GYM_RUSH_SYMBOLS.flatMap(symbol => Array(symbol.weight).fill(symbol))
@@ -854,12 +853,14 @@ const GYM_RUSH_BET = 100
 const GYM_RUSH_SIZE = 5
 const GYM_RUSH_MIN_MATCH = 6
 const gymRushWait = (ms: number) => new Promise(resolve => window.setTimeout(resolve, ms))
-const makeGymRushBoard = () => Array.from({ length: 25 }, () => GYM_RUSH_POOL[Math.floor(Math.random() * GYM_RUSH_POOL.length)])
-function findGymRushMatches(board: typeof GYM_RUSH_SYMBOLS) {
+const randomGymRushSymbol = () => GYM_RUSH_POOL[Math.floor(Math.random() * GYM_RUSH_POOL.length)]
+const makeGymRushBoard = () => Array.from({ length: 25 }, randomGymRushSymbol)
+function findGymRushMatches(board: (typeof GYM_RUSH_SYMBOLS)[number][]) {
   const visited = new Set<number>()
   const matches: number[][] = []
-  board.forEach((symbol, index) => {
-    if (visited.has(index) || symbol.id === 'bonus') return
+  for (let index = 0; index < board.length; index++) {
+    if (visited.has(index) || board[index].id === 'bonus') continue
+    const symbolId = board[index].id
     const group: number[] = []
     const stack = [index]
     visited.add(index)
@@ -868,15 +869,20 @@ function findGymRushMatches(board: typeof GYM_RUSH_SYMBOLS) {
       group.push(current)
       const row = Math.floor(current / GYM_RUSH_SIZE)
       const col = current % GYM_RUSH_SIZE
-      const neighbors = [row > 0 ? current - 5 : -1, row < 4 ? current + 5 : -1, col > 0 ? current - 1 : -1, col < 4 ? current + 1 : -1]
-      neighbors.forEach(next => {
-        if (next < 0 || visited.has(next) || board[next].id !== symbol.id) return
+      const neighbors = [
+        row > 0 ? current - GYM_RUSH_SIZE : -1,
+        row < GYM_RUSH_SIZE - 1 ? current + GYM_RUSH_SIZE : -1,
+        col > 0 ? current - 1 : -1,
+        col < GYM_RUSH_SIZE - 1 ? current + 1 : -1,
+      ]
+      for (const next of neighbors) {
+        if (next < 0 || visited.has(next) || board[next]?.id !== symbolId) continue
         visited.add(next)
         stack.push(next)
-      })
+      }
     }
     if (group.length >= GYM_RUSH_MIN_MATCH) matches.push(group)
-  })
+  }
   return matches
 }
 function GymRushPage({ onOpenMarket }: { onOpenMarket: () => void }) {
@@ -891,74 +897,96 @@ function GymRushPage({ onOpenMarket }: { onOpenMarket: () => void }) {
   const [falling, setFalling] = useState(false)
   const [spinAccumulated, setSpinAccumulated] = useState(0)
   const [cascadeNumber, setCascadeNumber] = useState(0)
+  const [autoSpin, setAutoSpin] = useState(false)
+  const [turbo, setTurbo] = useState(false)
+  const spinRef = useRef<() => Promise<void>>(async () => {})
+  const autoRef = useRef(false)
+  autoRef.current = autoSpin
 
   const spin = async () => {
-    if (spinning || (freeSpins === 0 && demoBalance < GYM_RUSH_BET)) return
+    if (spinning) return
+    if (freeSpins === 0 && demoBalance < GYM_RUSH_BET) {
+      setAutoSpin(false)
+      setResult('SALDO DEMO INSUFICIENTE')
+      return
+    }
+    const delay = (normal: number) => gymRushWait(turbo ? Math.max(55, normal * 0.32) : normal)
     const usingFreeSpin = freeSpins > 0
-    if (usingFreeSpin) setFreeSpins(value => value - 1)
-    else setDemoBalance(value => value - GYM_RUSH_BET)
+    if (usingFreeSpin) setFreeSpins(value => Math.max(0, value - 1))
+    else setDemoBalance(value => Math.max(0, value - GYM_RUSH_BET))
     setSpinning(true)
     setSpinAccumulated(0)
     setCascadeNumber(0)
     setMatchedTiles([])
     setResult('🎰 LOS CARRETES ESTÁN GIRANDO…')
-    await gymRushWait(650)
-    let nextBoard = makeGymRushBoard()
-    setBoard(nextBoard)
+    const nextBoard = makeGymRushBoard()
+    // Cada columna se detiene después de la anterior, como una tragamonedas real.
+    for (let col = 0; col < GYM_RUSH_SIZE; col++) {
+      await delay(turbo ? 95 : 260)
+      setBoard(previous => {
+        const updated = [...previous]
+        for (let row = 0; row < GYM_RUSH_SIZE; row++) updated[row * GYM_RUSH_SIZE + col] = nextBoard[row * GYM_RUSH_SIZE + col]
+        return updated
+      })
+    }
     setSpins(value => value + 1)
-    await gymRushWait(500)
+    await delay(160)
 
     const bonusCount = nextBoard.filter(symbol => symbol.id === 'bonus').length
     if (bonusCount >= 3) setFreeSpins(value => value + 10)
     let chain = 0
     let total = 0
-    let multiplier = comboMultiplier
-    while (true) {
-      const groups = findGymRushMatches(nextBoard)
+    let multiplier = 1
+    let workingBoard = [...nextBoard]
+    while (chain < 20) {
+      const groups = findGymRushMatches(workingBoard)
       if (!groups.length) break
       chain += 1
       setCascadeNumber(chain)
       const indexes = groups.flat()
       setMatchedTiles(indexes)
-      setResult('¡COMBO! ' + groups.length + ' grupo(s) · CASCADA ' + chain)
-      // Puntuación provisional de demostración: 10 puntos por ficha eliminada,
-      // multiplicados por el nivel de combo. No acredita tokens reales.
-      const removed = indexes.length
-      const roundGain = removed * 10 * multiplier
+      setResult('¡COMBO! ' + indexes.length + ' FICHAS · CASCADA ' + chain)
+      const roundGain = indexes.length * 10 * multiplier
       total += roundGain
       setSpinAccumulated(total)
-      await gymRushWait(520)
+      await delay(520)
 
       const removedSet = new Set(indexes)
-      const collapsed: (typeof GYM_RUSH_SYMBOLS)[number][] = []
+      const collapsed: (typeof GYM_RUSH_SYMBOLS)[number][] = Array(25)
       for (let col = 0; col < GYM_RUSH_SIZE; col++) {
         const survivors: (typeof GYM_RUSH_SYMBOLS)[number][] = []
         for (let row = GYM_RUSH_SIZE - 1; row >= 0; row--) {
           const index = row * GYM_RUSH_SIZE + col
-          if (!removedSet.has(index)) survivors.push(nextBoard[index])
+          if (!removedSet.has(index)) survivors.push(workingBoard[index])
         }
-        const refill = Array.from({ length: GYM_RUSH_SIZE - survivors.length }, () => GYM_RUSH_POOL[Math.floor(Math.random() * GYM_RUSH_POOL.length)])
+        const refill = Array.from({ length: GYM_RUSH_SIZE - survivors.length }, randomGymRushSymbol)
         const column = [...refill, ...survivors]
         for (let row = 0; row < GYM_RUSH_SIZE; row++) collapsed[row * GYM_RUSH_SIZE + col] = column[row]
       }
-      nextBoard = collapsed
-      setBoard(nextBoard)
+      workingBoard = collapsed
       setMatchedTiles([])
       setFalling(true)
-      await gymRushWait(360)
+      setBoard(workingBoard)
+      await delay(360)
       setFalling(false)
       multiplier = multiplier === 1 ? 2 : multiplier === 2 ? 3 : 5
-      setComboMultiplier(multiplier)
-      await gymRushWait(420)
     }
-
-    if (bonusCount >= 3) setResult(total > 0 ? '👑 ¡10 GIROS GRATIS! · COMBO TERMINADO' : '👑 ¡BONUS ACTIVADO! · 10 GIROS GRATIS')
+    setBoard(workingBoard)
+    setSpinAccumulated(total)
+    if (bonusCount >= 3) setResult(total > 0 ? '👑 ¡10 GIROS GRATIS! · +'+total+' PUNTOS DEMO' : '👑 ¡BONUS ACTIVADO! · 10 GIROS GRATIS')
     else if (total > 0) setResult('¡CASCADAS TERMINADAS! · +' + total.toLocaleString() + ' PUNTOS DEMO')
     else setResult('SIN COMBINACIÓN · ¡Sigue entrenando!')
-    if (total === 0) setComboMultiplier(1)
+    setComboMultiplier(chain > 0 ? (chain >= 4 ? 5 : chain === 3 ? 3 : chain === 2 ? 2 : 1) : 1)
     setMatchedTiles([])
     setSpinning(false)
   }
+  spinRef.current = spin
+
+  useEffect(() => {
+    if (!autoSpin || spinning) return
+    const timer = window.setTimeout(() => { void spinRef.current() }, turbo ? 100 : 450)
+    return () => window.clearTimeout(timer)
+  }, [autoSpin, spinning, turbo])
 
   return <section className="gymrush-page">
     <div className="gymrush-hero">
@@ -977,7 +1005,7 @@ function GymRushPage({ onOpenMarket }: { onOpenMarket: () => void }) {
     </div>
     <div className="gymrush-machine">
       <div className="gymrush-machine-head"><span>★ ARNOLD CHALLENGE ★</span><span>RONDA #{spins + 1}</span></div>
-      <div className={'gymrush-board' + (spinning ? ' is-spinning' : '') + (falling ? ' is-falling' : '')} aria-label="Tablero de 5 por 5 símbolos">
+      <div className={'gymrush-board' + (spinning ? ' is-spinning' : '') + (falling ? ' is-falling' : '') + (turbo ? ' is-turbo' : '')} aria-label="Tablero de 5 por 5 símbolos">
         {board.map((symbol, index) => <div className={'gymrush-tile' + (symbol.id === 'arnold' ? ' arnold-tile' : '') + (symbol.id === 'bonus' ? ' bonus-tile' : '') + (matchedTiles.includes(index) ? ' is-matched' : '')} key={index}>
           <span>{symbol.icon}</span><small>{symbol.label}</small>
         </div>)}
@@ -988,8 +1016,12 @@ function GymRushPage({ onOpenMarket }: { onOpenMarket: () => void }) {
         <small>{cascadeNumber > 0 ? 'CADENA DE ' + cascadeNumber + ' CASCADA(S)' : 'SE ELIMINAN GRUPOS DE 6 O MÁS'}</small>
       </div>
       <div className="gymrush-result" aria-live="polite">{result}</div>
-      <button className="gymrush-spin" type="button" onClick={() => void spin()} disabled={spinning || (freeSpins === 0 && demoBalance < GYM_RUSH_BET)}>
-        <span>⚡</span>{spinning ? 'GIRANDO Y ELIMINANDO…' : freeSpins > 0 ? 'USAR GIRO GRATIS' : 'GIRAR · 100 ARNOLD'}<span>⚡</span>
+      <div className="gymrush-controls">
+        <button className={'gymrush-control auto' + (autoSpin ? ' active' : '')} type="button" onClick={() => setAutoSpin(value => !value)} aria-pressed={autoSpin}>{autoSpin ? '⏸ DETENER' : '🔁 AUTO'}</button>
+        <button className={'gymrush-control turbo' + (turbo ? ' active' : '')} type="button" onClick={() => setTurbo(value => !value)} aria-pressed={turbo}>⚡ TURBO {turbo ? 'ON' : 'OFF'}</button>
+      </div>
+      <button className="gymrush-spin" type="button" onClick={() => void spin()} disabled={spinning || autoSpin || (freeSpins === 0 && demoBalance < GYM_RUSH_BET)}>
+        <span>⚡</span>{spinning ? 'GIRANDO…' : freeSpins > 0 ? 'USAR GIRO GRATIS' : 'GIRAR · 100 ARNOLD'}<span>⚡</span>
       </button>
       <div className="gymrush-bet-note">{freeSpins > 0 ? 'TIENES ' + freeSpins + ' GIROS GRATIS DISPONIBLES' : '100 ARNOLD DEMO POR GIRO · SIN COBROS REALES'}</div>
       <button className="gymrush-spin" type="button" onClick={onOpenMarket}>🛒 COMPRAR ARNOLD EN EL MERCADO</button>
