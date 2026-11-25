@@ -852,7 +852,7 @@ const GYM_RUSH_POOL = GYM_RUSH_SYMBOLS.flatMap(symbol => Array(symbol.weight).fi
 const GYM_RUSH_BET = 100
 const GYM_RUSH_SIZE = 5
 const GYM_RUSH_ROWS = 3
-const GYM_RUSH_MIN_MATCH = 7
+const GYM_RUSH_MIN_MATCH = 6
 const gymRushWait = (ms: number) => new Promise(resolve => window.setTimeout(resolve, ms))
 const randomGymRushSymbol = () => GYM_RUSH_POOL[Math.floor(Math.random() * GYM_RUSH_POOL.length)]
 const makeGymRushBoard = () => Array.from({ length: GYM_RUSH_SIZE * GYM_RUSH_ROWS }, randomGymRushSymbol)
@@ -1016,23 +1016,23 @@ function GymRushPage({ onOpenMarket }: { onOpenMarket: () => void }) {
       <div className="gymrush-accumulator" aria-live="polite">
         <span>{spinning ? 'ACUMULADO EN ESTE GIRO' : 'TOTAL DEL ÚLTIMO GIRO'}</span>
         <strong>+{spinAccumulated.toLocaleString()} <small>PUNTOS DEMO</small></strong>
-        <small>{cascadeNumber > 0 ? 'CADENA DE ' + cascadeNumber + ' CASCADA(S)' : 'SE ELIMINAN GRUPOS DE 7 O MÁS'}</small>
+        <small>{cascadeNumber > 0 ? 'CADENA DE ' + cascadeNumber + ' CASCADA(S)' : 'SE ELIMINAN GRUPOS DE 6 O MÁS'}</small>
       </div>
       {bonusMessage && <div className="gymrush-free-spins-pop" role="status" aria-live="assertive"><span>👑</span><strong>+10 FREE SPINS</strong><small>¡BONUS DESBLOQUEADO!</small></div>}
       {freeSpins > 0 && <div className="gymrush-free-spins-counter" role="status" aria-live="polite"><span>🎰 FREE SPINS</span><strong>{freeSpins}<small> / 10</small></strong><em>{spinning ? "GIRO GRATIS EN CURSO…" : "SIGUIENTE GIRO GRATIS"}</em></div>}
       <div className="gymrush-result" aria-live="polite">{result}</div>
-      <button className="gymrush-spin-button" type="button" onClick={() => void spin()} disabled={spinning || autoSpin || (freeSpins === 0 && demoBalance < GYM_RUSH_BET)}>
-        <span className="gymrush-spin-icon">✦</span><span>{spinning ? 'GIRANDO…' : freeSpins > 0 ? 'GIRO GRATIS' : 'GIRAR'}</span><small>{freeSpins > 0 ? freeSpins + ' GIROS DISPONIBLES' : 'APUESTA DEMO · 100 ARNOLD'}</small><span className="gymrush-spin-icon">✦</span>
+      <button className="gymrush-spin-button" style={{display:"grid",gridTemplateColumns:"22px 1fr 22px",gridTemplateRows:"auto auto",alignItems:"center",justifyItems:"center",gap:1,width:"min(100%,218px)",minHeight:54,margin:"10px auto 7px",padding:"7px 10px",border:"2px solid #ffe6a6",borderRadius:13,background:"linear-gradient(180deg,#ffe7a4,#f1b84f 42%,#b96b1c)",color:"#291503",boxShadow:"0 4px 0 #65370e,0 7px 15px #0009,inset 0 2px 3px #fff9"}} type="button" onClick={() => void spin()} disabled={spinning || autoSpin || (freeSpins === 0 && demoBalance < GYM_RUSH_BET)}>
+        <span className="gymrush-spin-icon" style={{fontSize:13,color:"#fff5c7"}}>✦</span><span style={{fontSize:15,lineHeight:"17px",fontWeight:1000,letterSpacing:2}}>{spinning ? 'GIRANDO…' : freeSpins > 0 ? 'GIRO GRATIS' : 'GIRAR'}</span><small style={{gridColumn:"1/4",fontSize:7,fontWeight:900,letterSpacing:1.1,opacity:.8}}>{freeSpins > 0 ? freeSpins + ' GIROS DISPONIBLES' : 'APUESTA DEMO · 100 ARNOLD'}</small><span className="gymrush-spin-icon">✦</span>
       </button>
-      <div className="gymrush-action-row">
-        <button className={'gymrush-auto-button' + (autoSpin ? ' active' : '')} type="button" onClick={() => setAutoSpin(value => !value)} aria-pressed={autoSpin}>{autoSpin ? 'Ⅱ PAUSAR' : '↻ AUTO'}</button>
-        <button className="gymrush-market-button" type="button" onClick={onOpenMarket}>＋ COMPRAR ARNOLD</button>
+      <div className="gymrush-action-row" style={{display:"flex",justifyContent:"center",gap:7,margin:"8px auto 3px"}}>
+        <button className={'gymrush-auto-button' + (autoSpin ? ' active' : '')} style={{minHeight:29,padding:"5px 11px",border:"1px solid #b98a45",borderRadius:8,background:autoSpin?"linear-gradient(180deg,#ffe39a,#c17b24)":"linear-gradient(180deg,#302214,#15100b)",color:autoSpin?"#281505":"#edca86",fontSize:8,fontWeight:1000,letterSpacing:.9,boxShadow:"0 2px 0 #080604,inset 0 1px #fff2"}} type="button" onClick={() => setAutoSpin(value => !value)} aria-pressed={autoSpin}>{autoSpin ? 'Ⅱ PAUSAR' : '↻ AUTO'}</button>
+        <button className="gymrush-market-button" style={{minHeight:29,padding:"5px 11px",border:"1px solid #d6a64f",borderRadius:8,background:"linear-gradient(180deg,#302214,#15100b)",color:"#ffe2a0",fontSize:8,fontWeight:1000,letterSpacing:.9,boxShadow:"0 2px 0 #080604,inset 0 1px #fff2"}} type="button" onClick={onOpenMarket}>＋ COMPRAR ARNOLD</button>
       </div>
       <div className="gymrush-bet-note">{freeSpins > 0 ? 'LOS GIROS GRATIS SE DESCUENTAN UNO A UNO' : 'MODO DEMOSTRACIÓN · SIN COBROS REALES'}</div>
     </div>
     <div className="gymrush-prizes">
       <div className="gymrush-section-title"><span> REGLAS DE GYM RUSH </span><i /></div>
-      <div className="gymrush-prize-row"><b className="prize-arnold">A</b><span><strong>7 O MÁS FIGURAS IGUALES</strong><small>Desaparecen, caen nuevas fichas y continúan las cascadas</small></span><em>COMBOS</em></div>
+      <div className="gymrush-prize-row"><b className="prize-arnold">A</b><span><strong>6 O MÁS FIGURAS IGUALES</strong><small>Desaparecen, caen nuevas fichas y continúan las cascadas</small></span><em>COMBOS</em></div>
       <div className="gymrush-prize-row"><b>👑</b><span><strong>3 SÍMBOLOS BONUS</strong><small>Activa 10 giros gratis</small></span><em>10 GIROS</em></div>
       <div className="gymrush-prize-row"><b>⚡</b><span><strong>MULTIPLICADORES DE COMBO</strong><small>Escala: x1 · x2 · x3 · x5</small></span><em>HASTA x5</em></div>
     </div>
