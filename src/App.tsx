@@ -879,6 +879,7 @@ function GymRushPage({ onOpenMarket }: { onOpenMarket: () => void }) {
   const [falling, setFalling] = useState(false)
   const [spinAccumulated, setSpinAccumulated] = useState(0)
   const [cascadeNumber, setCascadeNumber] = useState(0)
+  const [bonusMessage, setBonusMessage] = useState('')
   const [autoSpin, setAutoSpin] = useState(false)
   const spinRef = useRef<() => Promise<void>>(async () => {})
   const spinningRef = useRef(false)
@@ -903,6 +904,7 @@ function GymRushPage({ onOpenMarket }: { onOpenMarket: () => void }) {
     setStoppedReels([])
     setSpinAccumulated(0)
     setCascadeNumber(0)
+    setBonusMessage('')
     setMatchedTiles([])
     setResult('🎰 LOS CARRETES ESTÁN GIRANDO…')
     const nextBoard = makeGymRushBoard()
@@ -919,8 +921,13 @@ function GymRushPage({ onOpenMarket }: { onOpenMarket: () => void }) {
     setSpins(value => value + 1)
     await delay(160)
 
-    const bonusCount = nextBoard.filter(symbol => symbol.id === 'bonus').length
-    if (bonusCount >= 3) setFreeSpins(value => value + 10)
+    const bonusCount = nextBoard.filter(symbol => symbol?.id === 'bonus').length
+    const bonusTriggered = bonusCount >= 3
+    if (bonusTriggered) {
+      setFreeSpins(value => value + 10)
+      setBonusMessage('+10 FREE SPINS')
+      setResult('👑 BONUS ACTIVADO · +10 FREE SPINS')
+    }
     let chain = 0
     let total = 0
     let multiplier = 1
@@ -960,7 +967,7 @@ function GymRushPage({ onOpenMarket }: { onOpenMarket: () => void }) {
     }
     setBoard(workingBoard)
     setSpinAccumulated(total)
-    if (bonusCount >= 3) setResult(total > 0 ? '👑 ¡10 GIROS GRATIS! · +'+total+' PUNTOS DEMO' : '👑 ¡BONUS ACTIVADO! · 10 GIROS GRATIS')
+    if (bonusTriggered) setResult(total > 0 ? '👑 +10 FREE SPINS · +' + total.toLocaleString() + ' PUNTOS DEMO' : '👑 +10 FREE SPINS')
     else if (total > 0) setResult('¡CASCADAS TERMINADAS! · +' + total.toLocaleString() + ' PUNTOS DEMO')
     else setResult('SIN COMBINACIÓN · ¡Sigue entrenando!')
     setComboMultiplier(chain > 0 ? (chain >= 4 ? 5 : chain === 3 ? 3 : chain === 2 ? 2 : 1) : 1)
@@ -1002,6 +1009,7 @@ function GymRushPage({ onOpenMarket }: { onOpenMarket: () => void }) {
         <strong>+{spinAccumulated.toLocaleString()} <small>PUNTOS DEMO</small></strong>
         <small>{cascadeNumber > 0 ? 'CADENA DE ' + cascadeNumber + ' CASCADA(S)' : 'SE ELIMINAN GRUPOS DE 6 O MÁS'}</small>
       </div>
+      {bonusMessage && <div className="gymrush-free-spins-pop" role="status" aria-live="assertive"><span>👑</span><strong>{bonusMessage}</strong><small>¡BONUS DESBLOQUEADO!</small></div>}
       <div className="gymrush-result" aria-live="polite">{result}</div>
       <div className="gymrush-controls">
         <button className={'gymrush-control auto' + (autoSpin ? ' active' : '')} type="button" onClick={() => setAutoSpin(value => !value)} aria-pressed={autoSpin}>{autoSpin ? '⏸ DETENER' : '🔁 AUTO'}</button>
