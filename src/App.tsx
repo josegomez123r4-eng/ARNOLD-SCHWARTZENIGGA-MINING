@@ -283,6 +283,10 @@ function TasksPage({ t }: { t: (phrase: string) => string }) {
     try {
       const data = await post(kind==='channel'?'claim_channel':'claim_support')
       setMessage(data.claimed ? t('¡Recompensa de 2 ARNOLD acreditada!') : t('La tarea todavía está en enfriamiento.'))
+      if (data.claimed) {
+        if (kind === 'channel') { setChannelJoinClicked(false); setChannelWaitUntil(null) }
+        else { setSupportJoinClicked(false); setSupportWaitUntil(null) }
+      }
       await refresh()
     } catch(e) { setError(e instanceof Error ? t(e.message) : t('No se pudo reclamar.')) }
     finally { setBusy(null) }
@@ -306,9 +310,11 @@ function TasksPage({ t }: { t: (phrase: string) => string }) {
         <div className="task-card-content">
           <div className="task-card-heading"><h2>{t('Únete a nuestro canal de noticias')}</h2><span className="task-reward-amount">+2 <small>ARNOLD</small></span></div>
           <p>{t('Forma parte de la comunidad y mantente al día con las novedades de ARNOLD.')}{status?.channel_next_available_at && !channelReady ? <small className="task-inline-cooldown"> · {t('Disponible en')} {clock(status.channel_next_available_at)}</small> : null}</p>
-          {status?.channel_member && channelJoinReady
-            ? <button className="task-join-link" type="button" disabled={busy!==null || !channelReady} onClick={()=>void act('channel')}>GO</button>
-            : <a className="task-join-link" href="https://t.me/arnoldschwartzenigganews" target="_blank" rel="noreferrer" onClick={openNews}>GO</a>}
+          {!channelReady
+            ? <button className="task-join-link task-cooldown-button" type="button" disabled aria-label={t('Disponible en')+' '+clock(status?.channel_next_available_at)}>{clock(status?.channel_next_available_at)}</button>
+            : status?.channel_member && channelJoinReady
+              ? <button className="task-join-link" type="button" disabled={busy!==null} onClick={()=>void act('channel')}>{busy==='channel'?t('…'):'CLAIM'}</button>
+              : <a className="task-join-link" href="https://t.me/arnoldschwartzenigganews" target="_blank" rel="noreferrer" onClick={openNews}>GO</a>}
         </div>
       </div>
     </article>
@@ -318,9 +324,11 @@ function TasksPage({ t }: { t: (phrase: string) => string }) {
         <div className="task-card-content">
           <div className="task-card-heading"><h2>{t('Join our support channel')}</h2><span className="task-reward-amount">+2 <small>ARNOLD</small></span></div>
           <p>{t('Join the ARNOLD support community and get help with your questions.')}{status?.support_channel_next_available_at && !supportReady ? <small className="task-inline-cooldown"> · {t('Available in')} {clock(status.support_channel_next_available_at)}</small> : null}</p>
-          {status?.support_channel_member && supportJoinReady
-            ? <button className="task-join-link" type="button" disabled={busy!==null || !supportReady} onClick={()=>void act('support')}>GO</button>
-            : <a className="task-join-link" href="https://t.me/arnoldchatsupport" target="_blank" rel="noreferrer" onClick={openSupport}>GO</a>}
+          {!supportReady
+            ? <button className="task-join-link task-cooldown-button" type="button" disabled aria-label={t('Available in')+' '+clock(status?.support_channel_next_available_at)}>{clock(status?.support_channel_next_available_at)}</button>
+            : status?.support_channel_member && supportJoinReady
+              ? <button className="task-join-link" type="button" disabled={busy!==null} onClick={()=>void act('support')}>{busy==='support'?t('…'):'CLAIM'}</button>
+              : <a className="task-join-link" href="https://t.me/arnoldchatsupport" target="_blank" rel="noreferrer" onClick={openSupport}>GO</a>}
         </div>
       </div>
     </article>
