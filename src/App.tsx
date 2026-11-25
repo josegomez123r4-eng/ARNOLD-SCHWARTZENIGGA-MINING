@@ -994,7 +994,7 @@ function GymRushPage({ onOpenMarket }: { onOpenMarket: () => void }) {
       <div><span>SALDO DEMO</span><b>{demoBalance.toLocaleString()} <small>ARNOLD</small></b></div>
     </div>
     <div className="gymrush-stats">
-      <div><span>GIROS GRATIS</span><b>{freeSpins}</b></div>
+      <div className={freeSpins > 0 ? "has-free-spins" : ""}><span>FREE SPINS RESTANTES</span><b>{freeSpins}</b></div>
       <div><span>MULTIPLICADOR COMBO</span><b>x{comboMultiplier}</b></div>
     </div>
     <div className="gymrush-machine">
@@ -1009,7 +1009,8 @@ function GymRushPage({ onOpenMarket }: { onOpenMarket: () => void }) {
         <strong>+{spinAccumulated.toLocaleString()} <small>PUNTOS DEMO</small></strong>
         <small>{cascadeNumber > 0 ? 'CADENA DE ' + cascadeNumber + ' CASCADA(S)' : 'SE ELIMINAN GRUPOS DE 6 O MÁS'}</small>
       </div>
-      {bonusMessage && <div className="gymrush-free-spins-pop" role="status" aria-live="assertive"><span>👑</span><strong>{bonusMessage}</strong><small>¡BONUS DESBLOQUEADO!</small></div>}
+      {bonusMessage && <div className="gymrush-free-spins-pop" role="status" aria-live="assertive"><span>👑</span><strong>+10 FREE SPINS</strong><small>¡BONUS DESBLOQUEADO!</small></div>}
+      {freeSpins > 0 && <div className="gymrush-free-spins-counter" role="status" aria-live="polite"><span>🎰 FREE SPINS</span><strong>{freeSpins}<small> / 10</small></strong><em>{spinning ? "GIRO GRATIS EN CURSO…" : "SIGUIENTE GIRO GRATIS"}</em></div>}
       <div className="gymrush-result" aria-live="polite">{result}</div>
       <div className="gymrush-controls">
         <button className={'gymrush-control auto' + (autoSpin ? ' active' : '')} type="button" onClick={() => setAutoSpin(value => !value)} aria-pressed={autoSpin}>{autoSpin ? '⏸ DETENER' : '🔁 AUTO'}</button>
