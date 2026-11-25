@@ -922,12 +922,14 @@ function GymRushPage({ onOpenMarket }: { onOpenMarket: () => void }) {
     setSpins(value => value + 1)
     await delay(160)
 
-    const bonusCount = nextBoard.filter(symbol => symbol?.id === 'bonus').length
+    // Revisar las 15 posiciones del tablero ya detenido; la ubicación no importa.
+    const bonusCount = nextBoard.reduce((count, symbol) => count + (symbol?.id === 'bonus' ? 1 : 0), 0)
     const bonusTriggered = bonusCount >= 3
-    if (bonusTriggered) {
-      setFreeSpins(value => value + 10)
-      setBonusMessage('+10 FREE SPINS')
-      setResult('👑 BONUS ACTIVADO · +10 FREE SPINS')
+    const bonusAward = bonusTriggered ? (usingFreeSpin ? 3 : 10) : 0
+    if (bonusAward > 0) {
+      setFreeSpins(value => value + bonusAward)
+      setBonusMessage('+' + bonusAward + ' FREE SPINS')
+      setResult('👑 BONUS ACTIVADO · +' + bonusAward + ' FREE SPINS')
     }
     let chain = 0
     let total = 0
@@ -1018,8 +1020,8 @@ function GymRushPage({ onOpenMarket }: { onOpenMarket: () => void }) {
         <strong>+{spinAccumulated.toLocaleString()} <small>PUNTOS DEMO</small></strong>
         <small>{cascadeNumber > 0 ? 'CADENA DE ' + cascadeNumber + ' CASCADA(S)' : 'SE ELIMINAN GRUPOS DE 6 O MÁS'}</small>
       </div>
-      {bonusMessage && <div className="gymrush-free-spins-pop" role="status" aria-live="assertive"><span>👑</span><strong>+10 FREE SPINS</strong><small>¡BONUS DESBLOQUEADO!</small></div>}
-      {freeSpins > 0 && <div className="gymrush-free-spins-counter" role="status" aria-live="polite"><span>🎰 FREE SPINS</span><strong>{freeSpins}<small> / 10</small></strong><em>{spinning ? "GIRO GRATIS EN CURSO…" : "SIGUIENTE GIRO GRATIS"}</em></div>}
+      {bonusMessage && <div className="gymrush-free-spins-pop" role="status" aria-live="assertive"><span>👑</span><strong>{bonusMessage}</strong><small>¡3 CORONAS EN CUALQUIER POSICIÓN!</small></div>}
+      {freeSpins > 0 && <div className="gymrush-free-spins-counter" role="status" aria-live="polite"><span>🎰 FREE SPINS</span><strong>{freeSpins}<small> GRATIS</small></strong><em>{spinning ? "GIRO GRATIS EN CURSO…" : "SIGUIENTE GIRO GRATIS"}</em></div>}
       <div className="gymrush-result" aria-live="polite">{result}</div>
       <button className="gymrush-spin-button" style={{display:"grid",gridTemplateColumns:"22px 1fr 22px",gridTemplateRows:"auto auto",alignItems:"center",justifyItems:"center",gap:1,width:"min(100%,218px)",minHeight:54,margin:"10px auto 7px",padding:"7px 10px",border:"2px solid #ffe6a6",borderRadius:13,background:"linear-gradient(180deg,#ffe7a4,#f1b84f 42%,#b96b1c)",color:"#291503",boxShadow:"0 4px 0 #65370e,0 7px 15px #0009,inset 0 2px 3px #fff9"}} type="button" onClick={() => void spin()} disabled={spinning || autoSpin || (freeSpins === 0 && demoBalance < GYM_RUSH_BET)}>
         <span className="gymrush-spin-icon" style={{fontSize:13,color:"#fff5c7"}}>✦</span><span style={{fontSize:15,lineHeight:"17px",fontWeight:1000,letterSpacing:2}}>{spinning ? 'GIRANDO…' : freeSpins > 0 ? 'GIRO GRATIS' : 'GIRAR'}</span><small style={{gridColumn:"1/4",fontSize:7,fontWeight:900,letterSpacing:1.1,opacity:.8}}>{freeSpins > 0 ? freeSpins + ' GIROS DISPONIBLES' : 'APUESTA DEMO · 100 ARNOLD'}</small><span className="gymrush-spin-icon">✦</span>
