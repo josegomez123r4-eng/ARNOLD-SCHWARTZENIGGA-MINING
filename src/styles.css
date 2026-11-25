@@ -1542,3 +1542,24 @@ html,body{background:#090909;color:#f4f0e7}
 @keyframes gymrush-real-drop{0%{transform:translateY(-150%);opacity:.15}72%{transform:translateY(7%);opacity:1}100%{transform:translateY(0);opacity:1}}
 @media(max-width:360px){.gymrush-machine{padding:9px}.gymrush-reel{padding:3px 2px}.gymrush-board{gap:3px;padding:5px}}
 @media(prefers-reduced-motion:reduce){.gymrush-board.is-spinning .gymrush-reel .gymrush-tile,.gymrush-board.is-falling .gymrush-reel .gymrush-tile{animation:none;filter:none;opacity:1}}
+
+
+/* GYM RUSH — compact arcade controls, less generic casino styling */
+.gymrush-controls{display:flex;justify-content:center;align-items:center;margin:9px auto 7px;max-width:none}
+.gymrush-control{width:auto;min-width:104px;min-height:32px;padding:6px 17px;border:1px solid #e4b85e;border-radius:999px;background:linear-gradient(180deg,#3a2916,#171009);color:#f7d58d;font-size:9px;font-weight:1000;letter-spacing:1.4px;box-shadow:0 2px 0 #080604,0 0 10px #e4a83b22,inset 0 1px #fff3;transition:transform .15s ease,box-shadow .15s ease,filter .15s ease}
+.gymrush-control.active{background:linear-gradient(180deg,#ffe39a,#c17b24);color:#2a1606;border-color:#fff0b9;box-shadow:0 2px 0 #66370d,0 0 14px #f4bd4d66,inset 0 1px #fff9}
+.gymrush-control:active{transform:translateY(1px) scale(.97)}
+.gymrush-machine>.gymrush-spin{min-height:45px;width:min(100%,270px);margin:3px auto 0;border:2px solid #ffe4a0;border-radius:999px;background:linear-gradient(180deg,#ffe59b 0%,#e9a83e 45%,#a95b18 100%);color:#281405;font-size:11px;font-weight:1000;letter-spacing:1.8px;text-shadow:0 1px #fff6;box-shadow:0 4px 0 #61330d,0 7px 18px #0009,0 0 17px #e9ad4777,inset 0 2px 3px #fff9}
+.gymrush-machine>.gymrush-spin:first-of-type{display:flex}
+.gymrush-machine>.gymrush-spin:last-of-type{width:auto;min-height:30px;margin:12px auto 0;padding:5px 13px;border:1px solid #b98a45;border-radius:999px;background:linear-gradient(180deg,#302214,#171009);color:#eac57d;font-size:8px;letter-spacing:.8px;box-shadow:0 2px 0 #080604,inset 0 1px #fff2}
+.gymrush-machine>.gymrush-spin:last-of-type:active{transform:translateY(1px)}
+.gymrush-spin:disabled{filter:saturate(.55);opacity:.68}
+.gymrush-bet-note{font-size:7px;letter-spacing:1.2px;margin:8px 0 0}
+.gymrush-stats>div{padding:9px 10px;border-radius:10px}
+.gymrush-stats b{font-size:22px}
+.gymrush-free-spins-pop{padding:9px;margin:8px 0;border-radius:11px}
+.gymrush-free-spins-pop>span{font-size:21px}
+.gymrush-free-spins-pop>strong{font-size:23px}
+.gymrush-free-spins-counter{padding:8px 10px;margin:7px 0}
+.gymrush-accumulator{min-height:76px;padding:8px;margin:8px 0 2px}
+.gymrush-accumulator>strong{font-size:30px}
