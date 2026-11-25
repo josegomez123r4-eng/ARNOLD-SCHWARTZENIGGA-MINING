@@ -1423,3 +1423,21 @@ html,body{background:#090909;color:#f4f0e7}
 .gymrush-prize-row em{color:#f0c36c;font:900 14px 'Barlow Condensed',sans-serif;font-style:normal;white-space:nowrap}
 .gymrush-demo-warning{margin:12px 2px 0;padding:11px;border:1px solid #9d713c44;border-radius:10px;background:#21170d;color:#b7a07a;font-size:8px;line-height:1.6;text-align:center}
 @media(max-width:360px){.gymrush-machine{padding:9px}.gymrush-board{gap:3px;padding:5px}.gymrush-tile small{font-size:4px}.gymrush-stats b{font-size:22px}}
+
+
+/* GYM RUSH: casino-style reels, winning flashes and cascade counter */
+.gymrush-board{position:relative;overflow:hidden;perspective:700px}
+.gymrush-board.is-spinning .gymrush-tile{animation:gymrush-reel .12s linear infinite;filter:blur(1.2px);opacity:.82}
+.gymrush-board.is-spinning .gymrush-tile:nth-child(3n){animation-delay:-.04s}
+.gymrush-board.is-spinning .gymrush-tile:nth-child(3n + 1){animation-delay:-.08s}
+@keyframes gymrush-reel{0%{transform:translateY(-13px) scaleY(.92);filter:blur(2px)}100%{transform:translateY(13px) scaleY(1.04);filter:blur(1px)}}
+.gymrush-tile.is-matched{position:relative;z-index:2;animation:gymrush-win .5s ease-in-out forwards;border-color:#fff0a1;background:radial-gradient(circle,#fff4a9,#e5a62f 58%,#67350c);box-shadow:0 0 18px #ffcf55,inset 0 0 12px #fff8}
+.gymrush-tile.is-matched>span{transform:scale(1.25);filter:drop-shadow(0 0 5px #fff)}
+@keyframes gymrush-win{0%,100%{transform:scale(1);opacity:1}45%{transform:scale(1.12);opacity:.9}75%{transform:scale(.65);opacity:.45}}
+.gymrush-accumulator{display:flex;flex-direction:column;align-items:center;gap:3px;margin:10px 0 3px;padding:10px 8px;border:1px solid #e8b45177;border-radius:10px;background:linear-gradient(110deg,#211609,#493014 50%,#1a1209);box-shadow:inset 0 1px #fff2,0 0 16px #e7a63b19}
+.gymrush-accumulator>span{color:#c9a568;font-size:7px;font-weight:900;letter-spacing:1.5px}
+.gymrush-accumulator>strong{color:#ffe19a;font:900 27px/1 'Barlow Condensed',sans-serif;text-shadow:0 0 12px #f5b83d66}
+.gymrush-accumulator>strong small{font:800 8px 'DM Sans',sans-serif;color:#c5a36b}
+.gymrush-accumulator>small{color:#a58c64;font-size:7px;font-weight:800;letter-spacing:1px}
+.gymrush-spin:not(:disabled):active{transform:translateY(1px) scale(.99)}
+@media(prefers-reduced-motion:reduce){.gymrush-board.is-spinning .gymrush-tile,.gymrush-tile.is-matched{animation:none}}
