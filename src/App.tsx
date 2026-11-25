@@ -43,7 +43,7 @@ function normalizeTonAddress(address: string): string | null {
   } catch { return null }
 }
 
-type Tab = 'mining' | 'tasks' | 'referrals' | 'wallet' | 'market' | 'p2p'
+type Tab = 'mining' | 'tasks' | 'referrals' | 'wallet' | 'market' | 'gymrush'
 
 const tabs = [
   { id: 'mining', label: 'MINING', icon: Pickaxe },
@@ -51,7 +51,7 @@ const tabs = [
   { id: 'referrals', label: 'REFERRALS', icon: Gift },
   { id: 'wallet', label: 'WALLET', icon: Wallet },
   { id: 'market', label: 'MARKET', icon: ShoppingBag },
-  { id: 'p2p', label: 'P2P', icon: Handshake },
+  { id: 'gymrush', label: 'GYM RUSH', icon: Flame },
 ] satisfies { id: Tab; label: string; icon: typeof Pickaxe }[]
 
 function Header({ language, onLanguageChange }: { language: LanguageCode; onLanguageChange: (language: LanguageCode) => void }) {
@@ -840,13 +840,80 @@ function MarketPage({ t, walletAddress, onConnect, tonConnect }: { t: (phrase: s
     <div className="sale-security-note"><ShieldCheck size={15} /><span>{t('La compra se inicia únicamente desde una orden activa y requiere confirmación de pago en la red antes de entregar los $ARNOLD.')}</span></div>
   </section>
 }
-function P2PPage({ t }: { t: (phrase: string) => string }) {
-  return <section className="inner-page p2p-page">
-    <div className="p2p-emblem"><Handshake size={38} /></div><div className="kicker">{t('PEER-TO-PEER TRADING')}</div>
-    <h1>P2P<br /><span>{t('MARKET.')}</span></h1>
-    <div className="coming-soon">{t('COMING SOON')}</div>
-    <p>{t('Trade $ARNOLD directly with other community members. User listings and peer-to-peer orders will arrive in the next phase.')}</p>
-    <div className="p2p-lock"><LockKeyhole size={16} /> {t('P2P TRADING IS NOT ACTIVE')}</div>
+const GYM_RUSH_SYMBOLS = [
+  { id: 'arnold', label: 'ARNOLD', icon: 'A', weight: 1 },
+  { id: 'dumbbell', label: 'MANCUERNA', icon: '🏋️', weight: 3 },
+  { id: 'barbell', label: 'BARRA', icon: '💪', weight: 3 },
+  { id: 'trophy', label: 'TROFEO', icon: '🏆', weight: 3 },
+  { id: 'protein', label: 'PROTEÍNA', icon: '🥤', weight: 3 },
+  { id: 'kettlebell', label: 'KETTLEBELL', icon: '🔔', weight: 3 },
+]
+const GYM_RUSH_POOL = GYM_RUSH_SYMBOLS.flatMap(symbol => Array(symbol.weight).fill(symbol))
+
+function GymRushPage() {
+  const [board, setBoard] = useState(() => Array.from({ length: 25 }, (_, index) => GYM_RUSH_SYMBOLS[index % GYM_RUSH_SYMBOLS.length]))
+  const [demoPoints, setDemoPoints] = useState(0)
+  const [spins, setSpins] = useState(0)
+  const [result, setResult] = useState('¡Prepárate para entrenar y probar tu suerte!')
+  const [spinning, setSpinning] = useState(false)
+
+  const spin = () => {
+    if (spinning) return
+    setSpinning(true)
+    const nextBoard = Array.from({ length: 25 }, () => GYM_RUSH_POOL[Math.floor(Math.random() * GYM_RUSH_POOL.length)])
+    const counts = nextBoard.reduce<Record<string, number>>((all, symbol) => {
+      all[symbol.id] = (all[symbol.id] || 0) + 1
+      return all
+    }, {})
+    const arnoldCount = counts.arnold || 0
+    const bestGymMatch = Math.max(0, ...Object.entries(counts).filter(([id]) => id !== 'arnold').map(([, count]) => count))
+    let earned = 0
+    let message = 'Esta vez no hubo combinación. ¡Vuelve a intentarlo!'
+    if (arnoldCount >= 5) {
+      earned = 25
+      message = '¡JACKPOT ARNOLD! +25 puntos de prueba'
+    } else if (bestGymMatch >= 8) {
+      earned = 5
+      message = '¡COMBO DE GIMNASIO! +5 puntos de prueba'
+    }
+    setBoard(nextBoard)
+    setDemoPoints(points => points + earned)
+    setSpins(value => value + 1)
+    setResult(message)
+    window.setTimeout(() => setSpinning(false), 450)
+  }
+
+  return <section className="gymrush-page">
+    <div className="gymrush-hero">
+      <div className="gymrush-eyebrow"><span /> ARNOLD ARCADE <span /></div>
+      <div className="gymrush-title">GYM <em>RUSH</em></div>
+      <p>ENTRENA TU SUERTE. CONQUISTA EL JACKPOT.</p>
+      <div className="gymrush-mascot">A</div>
+    </div>
+    <div className="gymrush-stats">
+      <div><span>APUESTA DE PRUEBA</span><b>0.05 <small>GRAM</small></b></div>
+      <div><span>TUS PUNTOS DEMO</span><b>{demoPoints.toLocaleString()} <small>ARNOLD</small></b></div>
+    </div>
+    <div className="gymrush-machine">
+      <div className="gymrush-machine-head"><span>★ ARNOLD CHALLENGE ★</span><span>RONDA #{spins + 1}</span></div>
+      <div className="gymrush-board" aria-label="Tablero de 5 por 5 símbolos">
+        {board.map((symbol, index) => <div className={symbol.id === 'arnold' ? 'gymrush-tile arnold-tile' : 'gymrush-tile'} key={index}>
+          <span>{symbol.icon}</span><small>{symbol.id === 'arnold' ? 'ARNOLD' : symbol.label}</small>
+        </div>)}
+      </div>
+      <div className="gymrush-result" aria-live="polite">{result}</div>
+      <button className="gymrush-spin" type="button" onClick={spin} disabled={spinning}>
+        <span>⚡</span>{spinning ? 'GIRANDO…' : 'GIRAR · DEMO'}<span>⚡</span>
+      </button>
+      <div className="gymrush-bet-note">0.05 GRAM POR GIRO · SIMULACIÓN VISUAL</div>
+    </div>
+    <div className="gymrush-prizes">
+      <div className="gymrush-section-title"><span> TABLA DE PREMIOS </span><i /></div>
+      <div className="gymrush-prize-row"><b className="prize-arnold">A</b><span><strong>5+ SÍMBOLOS ARNOLD</strong><small>Jackpot ultra raro</small></span><em>+25 PTS</em></div>
+      <div className="gymrush-prize-row"><b>🏋️</b><span><strong>8+ SÍMBOLOS IGUALES</strong><small>Combo de gimnasio</small></span><em>+5 PTS</em></div>
+      <div className="gymrush-prize-row"><b>🏆</b><span><strong>OTRAS COMBINACIONES</strong><small>Desafío sin premio</small></span><em>0 PTS</em></div>
+    </div>
+    <div className="gymrush-demo-warning">MODO DEMOSTRACIÓN · No se cobra GRAM. Los puntos mostrados son ficticios y no son tokens, no se pueden retirar ni transferir. Las probabilidades y premios finales se definirán antes de habilitar pagos reales.</div>
   </section>
 }
 
@@ -1120,7 +1187,7 @@ export default function App() {
       {tab === 'referrals' && <ReferralsPage t={t} />}
       {tab === 'wallet' && <WalletPage t={t} walletAddress={walletAddress} walletReady={walletReady} onConnect={connectWallet} onDisconnect={disconnectWallet} onReconnect={() => { void reconnectWallet() }} onRefreshBalance={refreshBalance} onVerifyPayment={verifyWalletPayment} walletAppName={walletAppName} paymentState={paymentState} arnoldBalance={arnoldBalance} balanceLoading={balanceLoading} balanceError={balanceError} />}
       {tab === 'market' && <MarketPage t={t} walletAddress={walletAddress} onConnect={connectWallet} tonConnect={tonConnect.current} />}
-      {tab === 'p2p' && <P2PPage t={t} />}
+      {tab === 'gymrush' && <GymRushPage />}
     </div>
     <nav className="bottom-nav" aria-label="Main navigation">
       {tabs.map(({ id, label, icon: Icon }) => <button key={id} className={`bottom-nav-item ${id === 'referrals' ? 'referral-nav-item' : ''} ${tab === id ? 'selected' : ''}`} aria-label={id === 'referrals' ? t('REFERRALS') : t(label)} aria-current={tab === id ? 'page' : undefined} onClick={() => { setTab(id) }}>
