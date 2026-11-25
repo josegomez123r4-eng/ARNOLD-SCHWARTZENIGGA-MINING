@@ -851,49 +851,109 @@ const GYM_RUSH_SYMBOLS = [
 ]
 const GYM_RUSH_POOL = GYM_RUSH_SYMBOLS.flatMap(symbol => Array(symbol.weight).fill(symbol))
 const GYM_RUSH_BET = 100
-
+const GYM_RUSH_SIZE = 5
+const GYM_RUSH_MIN_MATCH = 6
+const gymRushWait = (ms: number) => new Promise(resolve => window.setTimeout(resolve, ms))
+const makeGymRushBoard = () => Array.from({ length: 25 }, () => GYM_RUSH_POOL[Math.floor(Math.random() * GYM_RUSH_POOL.length)])
+function findGymRushMatches(board: typeof GYM_RUSH_SYMBOLS) {
+  const visited = new Set<number>()
+  const matches: number[][] = []
+  board.forEach((symbol, index) => {
+    if (visited.has(index) || symbol.id === 'bonus') return
+    const group: number[] = []
+    const stack = [index]
+    visited.add(index)
+    while (stack.length) {
+      const current = stack.pop()!
+      group.push(current)
+      const row = Math.floor(current / GYM_RUSH_SIZE)
+      const col = current % GYM_RUSH_SIZE
+      const neighbors = [row > 0 ? current - 5 : -1, row < 4 ? current + 5 : -1, col > 0 ? current - 1 : -1, col < 4 ? current + 1 : -1]
+      neighbors.forEach(next => {
+        if (next < 0 || visited.has(next) || board[next].id !== symbol.id) return
+        visited.add(next)
+        stack.push(next)
+      })
+    }
+    if (group.length >= GYM_RUSH_MIN_MATCH) matches.push(group)
+  })
+  return matches
+}
 function GymRushPage({ onOpenMarket }: { onOpenMarket: () => void }) {
-  const [board, setBoard] = useState(() => Array.from({ length: 25 }, (_, index) => GYM_RUSH_SYMBOLS[index % 6]))
+  const [board, setBoard] = useState(() => makeGymRushBoard())
   const [demoBalance, setDemoBalance] = useState(10000)
   const [spins, setSpins] = useState(0)
   const [freeSpins, setFreeSpins] = useState(0)
   const [comboMultiplier, setComboMultiplier] = useState(1)
   const [result, setResult] = useState('¡Prepárate! Esta es una prueba visual, sin movimientos reales de ARNOLD.')
   const [spinning, setSpinning] = useState(false)
+  const [matchedTiles, setMatchedTiles] = useState<number[]>([])
+  const [spinAccumulated, setSpinAccumulated] = useState(0)
+  const [cascadeNumber, setCascadeNumber] = useState(0)
 
-  const spin = () => {
+  const spin = async () => {
     if (spinning || (freeSpins === 0 && demoBalance < GYM_RUSH_BET)) return
     const usingFreeSpin = freeSpins > 0
     if (usingFreeSpin) setFreeSpins(value => value - 1)
     else setDemoBalance(value => value - GYM_RUSH_BET)
     setSpinning(true)
-
-    const nextBoard = Array.from({ length: 25 }, () => GYM_RUSH_POOL[Math.floor(Math.random() * GYM_RUSH_POOL.length)])
-    const counts = nextBoard.reduce<Record<string, number>>((all, symbol) => {
-      all[symbol.id] = (all[symbol.id] || 0) + 1
-      return all
-    }, {})
-    const bonusCount = counts.bonus || 0
-    const matches = Object.entries(counts).filter(([id, count]) => id !== 'bonus' && count >= 6)
-      .sort((left, right) => right[1] - left[1])
-    const bestMatch = matches[0]
-    let message = 'SIN COMBINACIÓN · ¡Sigue entrenando!'
-    if (bonusCount >= 3) {
-      setFreeSpins(value => value + 10)
-      message = '¡BONUS ACTIVADO! 👑 10 GIROS GRATIS'
-    }
-    if (bestMatch) {
-      const nextMultiplier = comboMultiplier === 1 ? 2 : comboMultiplier === 2 ? 3 : 5
-      setComboMultiplier(nextMultiplier)
-      const matchLabel = GYM_RUSH_SYMBOLS.find(symbol => symbol.id === bestMatch[0])?.label ?? bestMatch[0]
-      message = (bonusCount >= 3 ? '¡BONUS + COMBO! · ' : '¡COMBO! · ') + bestMatch[1] + ' ' + matchLabel + ' · MULTIPLICADOR x' + nextMultiplier
-    } else if (bonusCount < 3) {
-      setComboMultiplier(1)
-    }
+    setSpinAccumulated(0)
+    setCascadeNumber(0)
+    setMatchedTiles([])
+    setResult('🎰 LOS CARRETES ESTÁN GIRANDO…')
+    await gymRushWait(650)
+    let nextBoard = makeGymRushBoard()
     setBoard(nextBoard)
     setSpins(value => value + 1)
-    setResult(message)
-    window.setTimeout(() => setSpinning(false), 450)
+    await gymRushWait(500)
+
+    const bonusCount = nextBoard.filter(symbol => symbol.id === 'bonus').length
+    if (bonusCount >= 3) setFreeSpins(value => value + 10)
+    let chain = 0
+    let total = 0
+    let multiplier = comboMultiplier
+    while (true) {
+      const groups = findGymRushMatches(nextBoard)
+      if (!groups.length) break
+      chain += 1
+      setCascadeNumber(chain)
+      const indexes = groups.flat()
+      setMatchedTiles(indexes)
+      setResult('¡COMBO! ' + groups.length + ' grupo(s) · CASCADA ' + chain)
+      // Puntuación provisional de demostración: 10 puntos por ficha eliminada,
+      // multiplicados por el nivel de combo. No acredita tokens reales.
+      const removed = indexes.length
+      const roundGain = removed * 10 * multiplier
+      total += roundGain
+      setSpinAccumulated(total)
+      await gymRushWait(520)
+
+      const removedSet = new Set(indexes)
+      const collapsed: (typeof GYM_RUSH_SYMBOLS)[number][] = []
+      for (let col = 0; col < GYM_RUSH_SIZE; col++) {
+        const survivors: (typeof GYM_RUSH_SYMBOLS)[number][] = []
+        for (let row = GYM_RUSH_SIZE - 1; row >= 0; row--) {
+          const index = row * GYM_RUSH_SIZE + col
+          if (!removedSet.has(index)) survivors.push(nextBoard[index])
+        }
+        const refill = Array.from({ length: GYM_RUSH_SIZE - survivors.length }, () => GYM_RUSH_POOL[Math.floor(Math.random() * GYM_RUSH_POOL.length)])
+        const column = [...refill, ...survivors]
+        for (let row = 0; row < GYM_RUSH_SIZE; row++) collapsed[row * GYM_RUSH_SIZE + col] = column[row]
+      }
+      nextBoard = collapsed
+      setBoard(nextBoard)
+      setMatchedTiles([])
+      multiplier = multiplier === 1 ? 2 : multiplier === 2 ? 3 : 5
+      setComboMultiplier(multiplier)
+      await gymRushWait(420)
+    }
+
+    if (bonusCount >= 3) setResult(total > 0 ? '👑 ¡10 GIROS GRATIS! · COMBO TERMINADO' : '👑 ¡BONUS ACTIVADO! · 10 GIROS GRATIS')
+    else if (total > 0) setResult('¡CASCADAS TERMINADAS! · +' + total.toLocaleString() + ' PUNTOS DEMO')
+    else setResult('SIN COMBINACIÓN · ¡Sigue entrenando!')
+    if (total === 0) setComboMultiplier(1)
+    setMatchedTiles([])
+    setSpinning(false)
   }
 
   return <section className="gymrush-page">
@@ -913,28 +973,32 @@ function GymRushPage({ onOpenMarket }: { onOpenMarket: () => void }) {
     </div>
     <div className="gymrush-machine">
       <div className="gymrush-machine-head"><span>★ ARNOLD CHALLENGE ★</span><span>RONDA #{spins + 1}</span></div>
-      <div className="gymrush-board" aria-label="Tablero de 5 por 5 símbolos">
-        {board.map((symbol, index) => <div className={symbol.id === 'arnold' ? 'gymrush-tile arnold-tile' : symbol.id === 'bonus' ? 'gymrush-tile bonus-tile' : 'gymrush-tile'} key={index}>
+      <div className={'gymrush-board' + (spinning ? ' is-spinning' : '')} aria-label="Tablero de 5 por 5 símbolos">
+        {board.map((symbol, index) => <div className={'gymrush-tile' + (symbol.id === 'arnold' ? ' arnold-tile' : '') + (symbol.id === 'bonus' ? ' bonus-tile' : '') + (matchedTiles.includes(index) ? ' is-matched' : '')} key={index}>
           <span>{symbol.icon}</span><small>{symbol.label}</small>
         </div>)}
       </div>
+      <div className="gymrush-accumulator" aria-live="polite">
+        <span>{spinning ? 'ACUMULADO EN ESTE GIRO' : 'TOTAL DEL ÚLTIMO GIRO'}</span>
+        <strong>+{spinAccumulated.toLocaleString()} <small>PUNTOS DEMO</small></strong>
+        <small>{cascadeNumber > 0 ? 'CADENA DE ' + cascadeNumber + ' CASCADA(S)' : 'SE ELIMINAN GRUPOS DE 6 O MÁS'}</small>
+      </div>
       <div className="gymrush-result" aria-live="polite">{result}</div>
-      <button className="gymrush-spin" type="button" onClick={spin} disabled={spinning || (freeSpins === 0 && demoBalance < GYM_RUSH_BET)}>
-        <span>⚡</span>{spinning ? 'GIRANDO…' : freeSpins > 0 ? 'USAR GIRO GRATIS' : 'GIRAR · 100 ARNOLD'}<span>⚡</span>
+      <button className="gymrush-spin" type="button" onClick={() => void spin()} disabled={spinning || (freeSpins === 0 && demoBalance < GYM_RUSH_BET)}>
+        <span>⚡</span>{spinning ? 'GIRANDO Y ELIMINANDO…' : freeSpins > 0 ? 'USAR GIRO GRATIS' : 'GIRAR · 100 ARNOLD'}<span>⚡</span>
       </button>
       <div className="gymrush-bet-note">{freeSpins > 0 ? 'TIENES ' + freeSpins + ' GIROS GRATIS DISPONIBLES' : '100 ARNOLD DEMO POR GIRO · SIN COBROS REALES'}</div>
       <button className="gymrush-spin" type="button" onClick={onOpenMarket}>🛒 COMPRAR ARNOLD EN EL MERCADO</button>
     </div>
     <div className="gymrush-prizes">
       <div className="gymrush-section-title"><span> REGLAS DE GYM RUSH </span><i /></div>
-      <div className="gymrush-prize-row"><b className="prize-arnold">A</b><span><strong>6 O MÁS SÍMBOLOS IGUALES</strong><small>Combinaciones y cascadas por validar</small></span><em>PREMIO</em></div>
+      <div className="gymrush-prize-row"><b className="prize-arnold">A</b><span><strong>6 O MÁS FIGURAS IGUALES CONECTADAS</strong><small>Desaparecen, caen nuevas fichas y continúan las cascadas</small></span><em>COMBOS</em></div>
       <div className="gymrush-prize-row"><b>👑</b><span><strong>3 SÍMBOLOS BONUS</strong><small>Activa 10 giros gratis</small></span><em>10 GIROS</em></div>
-      <div className="gymrush-prize-row"><b>⚡</b><span><strong>MULTIPLICADORES DE COMBO</strong><small>Escala aprobada: x1 · x2 · x3 · x5</small></span><em>HASTA x5</em></div>
+      <div className="gymrush-prize-row"><b>⚡</b><span><strong>MULTIPLICADORES DE COMBO</strong><small>Escala: x1 · x2 · x3 · x5</small></span><em>HASTA x5</em></div>
     </div>
-    <div className="gymrush-demo-warning">VISTA PREVIEW · MODO DEMOSTRACIÓN. El saldo y los giros son ficticios: no se descuentan ni acreditan tokens reales. La tabla DRAM, las probabilidades y el RTP objetivo del 95.2% deben validarse matemáticamente antes de habilitar apuestas reales.</div>
+    <div className="gymrush-demo-warning">VISTA PREVIEW · MODO DEMOSTRACIÓN. El contador usa puntos ficticios (10 por ficha eliminada × multiplicador) y no representa premios ARNOLD reales. No se descuentan ni acreditan tokens. La tabla de pagos, probabilidades y RTP deben validarse antes de activar apuestas reales.</div>
   </section>
 }
-
 export default function App() {
   const [tab, setTab] = useState<Tab>('mining')
   const [language, setLanguage] = useState<LanguageCode>(detectLanguage)
