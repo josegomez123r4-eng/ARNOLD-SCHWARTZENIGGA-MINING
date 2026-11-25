@@ -289,47 +289,56 @@ function TasksPage({ t }: { t: (phrase: string) => string }) {
     } catch(e) { setError(e instanceof Error ? t(e.message) : t('No se pudo reclamar.')) }
     finally { setBusy(null) }
   }
-  const joinChannel = () => { setChannelJoinClicked(true); setChannelWaitUntil(Date.now() + 5000); window.setTimeout(() => { void refresh() }, 5000) }
-  const joinSupport = () => { setSupportJoinClicked(true); setSupportWaitUntil(Date.now() + 5000); window.setTimeout(() => { void refresh() }, 5000) }
-  return <section className="inner-page tasks-page tasks-reference-layout">
-    <article className="task-reward-card task-reference-card checkin-reference-card">
-      <div className="task-card-main">
-        <span className="task-card-icon"><Clock3 size={27}/></span>
-        <div className="task-card-content">
-          <div className="task-card-heading"><h2>{t('CHECK-IN DIARIO')}</h2><span className="task-reward-amount">+0.5 <small>ARNOLD</small></span></div>
-          <p>{t('CHECK-IN DE 7 DÍAS')} · {t('RACHA')}: {status?.checkin_streak??0}/7 · {t('Siguiente check-in en')} {clock(nextCheckin)}</p>
-        </div>
-        <button className="task-join-link task-reference-action" type="button" disabled={busy!==null || !checkinReady} onClick={()=>void act('checkin')}>{busy==='checkin'?t('GUARDANDO…'):checkinReady?t('CHECK IN'):t('COMPLETADO')}</button>
-      </div>
+  const days = Array.from({length:7},(_,i)=>i+1)
+  return <section className="inner-page tasks-page">
+    <div className="tasks-banner-wrap"><img className="tasks-banner-image" src="https://azure-high-cougar-588.mypinata.cloud/ipfs/bafybeih5epoypzce6oidj3w5ucf55b6b2otort2qaglzybs5f4kicpfpg4" alt="ARNOLD Daily Tasks" /></div>
+    <article className="checkin-card">
+      <div className="checkin-heading"><div><div className="kicker">{t('RECOMPENSA DIARIA')}</div><h2>{t('CHECK-IN DE 7 DÍAS')}</h2></div><strong>+0.5 <small>{t('ARNOLD / DÍA')}</small></strong></div>
+      <p>{t('Haz check-in cada día para mantener tu racha. Si pierdes un día, vuelves al día 1.')}</p>
+      <div className="checkin-days">{days.map(day=><div className={'checkin-day'+(day<=(status?.checkin_streak??0)?' completed':'')+(day===(status?.checkin_streak??0)+1 && !status?.checkin_claimed_today?' current':'')} key={day}><span>{day<=(status?.checkin_streak??0)?'✓':day}</span><small>{t('DÍA')}</small><b>0.5</b></div>)}</div>
+      <div className="checkin-total"><span>{t('PROGRESO SEMANAL')}</span><strong>{status?.checkin_streak??0}/7 · {((status?.checkin_streak??0)*0.5).toFixed(1)} / 3.5 ARNOLD</strong></div>
+      <button className="checkin-claim-btn" type="button" disabled={busy!==null || !checkinReady} onClick={()=>void act('checkin')}>{busy==='checkin'?t('GUARDANDO…'):checkinReady?t('HACER CHECK-IN · +0.5 ARNOLD'):t('CHECK-IN COMPLETADO HOY')}</button>
+      <div className="checkin-countdown">{t('Siguiente check-in en')} <strong>{clock(nextCheckin)}</strong> · {t('Reinicio diario UTC')}</div>
     </article>
+    <div className="feature-panel"><div className="feature-icon"><ListChecks size={22} /></div><div><b>{t('REWARD TASKS')}</b><span>{t('Completa tareas y gana recompensas ARNOLD.')}</span></div></div>
     <article className="task-reward-card task-reference-card">
       <div className="task-card-main">
-        <span className="task-card-icon"><Gift size={27}/></span>
+        <span className="task-card-icon"><Gift size={22}/></span>
         <div className="task-card-content">
           <div className="task-card-heading"><h2>{t('Únete a nuestro canal de noticias')}</h2><span className="task-reward-amount">+2 <small>ARNOLD</small></span></div>
-          <p>{t('Forma parte de la comunidad y mantente al día con las novedades de ARNOLD.')}{status?.channel_next_available_at && !channelReady ? ' · '+t('Próximo reclamo en')+' '+clock(status.channel_next_available_at) : ''}</p>
+          <p>{t('Forma parte de la comunidad y mantente al día con las novedades de ARNOLD.')}</p>
+          <a className="task-join-link" href="https://t.me/arnoldschwartzenigganews" target="_blank" rel="noreferrer" onClick={() => { setChannelJoinClicked(true); setChannelWaitUntil(Date.now() + 5000); window.setTimeout(() => { void refresh() }, 5000) }}>{t('IR A LA TAREA')} <span>↗</span></a>
         </div>
-        {!channelJoinClicked || !channelJoinReady
-          ? <a className="task-join-link task-reference-action" href="https://t.me/arnoldschwartzenigganews" target="_blank" rel="noreferrer" onClick={joinChannel}>{!channelJoinClicked || !status?.channel_member ? t('JOIN CHANNEL') : channelWaitUntil !== null && now < channelWaitUntil ? t('CHECKING…') : t('JOIN CHANNEL')} <span>↗</span></a>
-          : <button className="task-join-link task-reference-action" type="button" disabled={busy!==null || !channelReady} onClick={()=>void act('channel')}>{busy==='channel'?t('CLAIMING…'):channelReady?t('CLAIM'):t('LOCKED')}</button>}
       </div>
+      <div className="task-claim-row">
+        <span>{!channelJoinClicked ? t('Pulsa “IR A LA TAREA” para unirte al canal') : channelWaitUntil !== null && now < channelWaitUntil ? t('Comprobando en 5 segundos…') : status?.channel_member ? t('Membresía verificada') : t('Aún no figuras como miembro del canal')}</span>
+        <button type="button" className={channelJoinReady && channelReady && busy===null ? 'task-claim-ready' : ''} style={channelJoinReady && channelReady && busy===null ? { background: 'linear-gradient(135deg, #f7d76b, #c99724)', color: '#17120a', borderColor: '#f7d76b', boxShadow: '0 0 16px rgba(247,215,107,.28)' } : undefined} disabled={busy!==null || !channelJoinReady || !channelReady} onClick={()=>void act('channel')}>{busy==='channel'?t('VERIFICANDO…'):!channelJoinClicked?t('BLOQUEADO'):channelWaitUntil !== null && now < channelWaitUntil?t('ESPERA 5 SEGUNDOS'):!status?.channel_member?t('ÚNETE AL CANAL'):channelReady?t('RECLAMAR 2 ARNOLD'):t('DISPONIBLE EN')+' '+clock(status?.channel_next_available_at)}</button>
+      </div>
+      {status?.channel_next_available_at && !channelReady && <div className="task-cooldown">{t('Próximo reclamo en')} <strong>{clock(status.channel_next_available_at)}</strong></div>}
     </article>
-    <article className="task-reward-card task-reference-card">
+    <article className="task-reward-card">
       <div className="task-card-main">
-        <span className="task-card-icon"><Gift size={27}/></span>
+        <span className="task-card-icon"><Gift size={22}/></span>
         <div className="task-card-content">
           <div className="task-card-heading"><h2>{t('Join our support channel')}</h2><span className="task-reward-amount">+2 <small>ARNOLD</small></span></div>
-          <p>{t('Join the ARNOLD support community and get help with your questions.')}{status?.support_channel_next_available_at && !supportReady ? ' · '+t('Next claim in')+' '+clock(status.support_channel_next_available_at) : ''}</p>
+          <p>{t('Join the ARNOLD support community and get help with your questions.')}</p>
+          <a className="task-join-link" href="https://t.me/arnoldchatsupport" target="_blank" rel="noreferrer" onClick={() => { setSupportJoinClicked(true); setSupportWaitUntil(Date.now() + 5000); window.setTimeout(() => { void refresh() }, 5000) }}>{t('JOIN CHANNEL')} <span>↗</span></a>
         </div>
-        {!supportJoinClicked || !supportJoinReady
-          ? <a className="task-join-link task-reference-action" href="https://t.me/arnoldchatsupport" target="_blank" rel="noreferrer" onClick={joinSupport}>{t('JOIN CHANNEL')} <span>↗</span></a>
-          : <button className="task-join-link task-reference-action" type="button" disabled={busy!==null || !supportReady} onClick={()=>void act('support')}>{busy==='support'?t('CLAIMING…'):supportReady?t('CLAIM'):t('LOCKED')}</button>}
       </div>
+      <div className="task-claim-row">
+        <span>{!supportJoinClicked ? t('Join the support channel to unlock the reward') : supportWaitUntil !== null && now < supportWaitUntil ? t('Checking in 5 seconds…') : status?.support_channel_member ? t('Membership verified') : t('You are not yet a member of the support channel')}</span>
+        <button type="button" className={supportJoinReady && supportReady && busy===null ? 'task-claim-ready' : ''} style={supportJoinReady && supportReady && busy===null ? { background: 'linear-gradient(135deg, #f7d76b, #c99724)', color: '#17120a', borderColor: '#f7d76b', boxShadow: '0 0 16px rgba(247,215,107,.28)' } : undefined} disabled={busy!==null || !supportJoinReady || !supportReady} onClick={()=>void act('support')}>
+          {busy==='support'?t('VERIFYING…'):!supportJoinClicked?t('LOCKED'):supportWaitUntil !== null && now < supportWaitUntil?t('WAIT 5 SECONDS'):!status?.support_channel_member?t('JOIN THE CHANNEL'):supportReady?t('CLAIM 2 ARNOLD'):t('AVAILABLE IN')+' '+clock(status?.support_channel_next_available_at)}
+        </button>
+      </div>
+      {status?.support_channel_next_available_at && !supportReady && <div className="task-cooldown">{t('Next claim in')} <strong>{clock(status.support_channel_next_available_at)}</strong></div>}
     </article>
+
     {message && <p className="task-feedback success" role="status">{message}</p>}
     {error && <p className="task-feedback error" role="alert">{error}</p>}
   </section>
 }
+
 function ReferralsPage({ t }: { t: (phrase: string) => string }) {
   const telegramId = WebApp.initDataUnsafe?.user?.id
   const startParam = WebApp.initDataUnsafe?.start_param
