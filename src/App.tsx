@@ -1123,7 +1123,7 @@ export default function App() {
       {tab === 'p2p' && <P2PPage t={t} />}
     </div>
     <nav className="bottom-nav" aria-label="Main navigation">
-      {tabs.map(({ id, label, icon: Icon }) => <button key={id} className={tab === id ? 'selected' : ''} aria-current={tab === id ? 'page' : undefined} onClick={() => { setTab(id) }}>
+      {tabs.map(({ id, label, icon: Icon }) => <button key={id} className={`bottom-nav-item ${id === 'referrals' ? 'referral-nav-item' : ''} ${tab === id ? 'selected' : ''}`} aria-label={id === 'referrals' ? t('REFERRALS') : t(label)} aria-current={tab === id ? 'page' : undefined} onClick={() => { setTab(id) }}>
         <Icon size={18} strokeWidth={tab === id ? 2.4 : 1.8} /><span>{t(label)}</span>
       </button>)}
     </nav>
