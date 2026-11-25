@@ -162,6 +162,7 @@ function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMin
         <span className={cycle ? (cycleFinished ? 'status ready' : 'status active') : 'status'}><i />{cycle ? (cycleFinished ? t('READY TO CLAIM') : t('ACTIVE')) : t('NOT ACTIVE')}</span>
       </div>
       <div className="mining-dashboard-balance"><span className="coin-mark">A</span><strong>{miningStatus ? totalConfirmedEarnings.toFixed(3) : '—'}</strong><small>$ARNOLD</small></div>
+      <div className="demo-shared-balance"><span>SALDO PRINCIPAL COMPARTIDO · DEMO</span><strong>{demoBalance.toLocaleString()} <small>ARNOLD DE PRUEBA</small></strong><p>El mismo saldo que se usa en GYM RUSH. No representa tokens reales.</p></div>
       <div className="demo-shared-balance"><span>SALDO PRINCIPAL · DEMO COMPARTIDO</span><strong>{demoBalance.toLocaleString()} <small>ARNOLD DE PRUEBA</small></strong></div>
       <div className="mining-center-stage">
         <div className="mining-avatar-orbit"><span className="orbit-glow" /><ArnoldWorkoutMascot active={!!cycle && !cycleFinished} t={t} /></div>
