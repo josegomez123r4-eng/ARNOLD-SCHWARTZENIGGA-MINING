@@ -1465,3 +1465,23 @@ html,body{background:#090909;color:#f4f0e7}
 .gymrush-accumulator{min-height:90px;justify-content:center}
 .gymrush-accumulator>strong{font-size:clamp(28px,8vw,36px);font-variant-numeric:tabular-nums}
 .gymrush-accumulator>strong small{display:inline-block}
+
+
+/* GYM RUSH cascade polish: explosive match clear + stronger falling refill */
+.gymrush-tile{position:relative;isolation:isolate}
+.gymrush-tile.is-matched{z-index:5;overflow:visible;animation:gymrush-mini-explosion .48s cubic-bezier(.18,.72,.28,1) forwards;border-color:#fff7c4;background:radial-gradient(circle at 50% 48%,#fffde0 0%,#ffd45f 24%,#d87518 58%,#4b2109 100%);box-shadow:0 0 9px #fff2a8,0 0 24px #ff9e28,inset 0 0 16px #fff}
+.gymrush-tile.is-matched::before{content:"";position:absolute;z-index:8;inset:-8%;border-radius:50%;pointer-events:none;background:radial-gradient(circle,rgba(255,255,225,.98) 0 5%,rgba(255,211,93,.85) 10%,rgba(255,132,25,.48) 25%,rgba(255,95,10,0) 68%);animation:gymrush-burst-flash .48s ease-out forwards}
+.gymrush-tile.is-matched::after{content:"✦";position:absolute;z-index:9;inset:0;display:grid;place-items:center;color:#fff9c9;font-size:clamp(20px,6vw,31px);text-shadow:0 0 8px #fff,0 0 18px #ff9e22;pointer-events:none;animation:gymrush-spark-burst .48s ease-out forwards}
+.gymrush-tile.is-matched>span,.gymrush-tile.is-matched>small{animation:gymrush-symbol-pop .48s ease-in forwards}
+@keyframes gymrush-mini-explosion{0%{transform:scale(1);opacity:1;filter:brightness(1)}22%{transform:scale(1.18);opacity:1;filter:brightness(2.1)}52%{transform:scale(1.32);opacity:.92;filter:brightness(1.6)}100%{transform:scale(.12);opacity:0;filter:brightness(2.5)}}
+@keyframes gymrush-burst-flash{0%{transform:scale(.12);opacity:0}25%{transform:scale(1.35);opacity:1}100%{transform:scale(2.15);opacity:0}}
+@keyframes gymrush-spark-burst{0%{transform:scale(.1) rotate(0);opacity:0}30%{transform:scale(1.5) rotate(50deg);opacity:1}100%{transform:scale(2.4) rotate(130deg);opacity:0}}
+@keyframes gymrush-symbol-pop{0%,25%{transform:scale(1);opacity:1}100%{transform:scale(.2);opacity:0}}
+.gymrush-board.is-falling .gymrush-tile{animation:gymrush-refill-drop .62s cubic-bezier(.12,.72,.2,1) both}
+.gymrush-board.is-falling .gymrush-tile:nth-child(5n + 1){animation-delay:0ms}
+.gymrush-board.is-falling .gymrush-tile:nth-child(5n + 2){animation-delay:55ms}
+.gymrush-board.is-falling .gymrush-tile:nth-child(5n + 3){animation-delay:110ms}
+.gymrush-board.is-falling .gymrush-tile:nth-child(5n + 4){animation-delay:165ms}
+.gymrush-board.is-falling .gymrush-tile:nth-child(5n){animation-delay:220ms}
+@keyframes gymrush-refill-drop{0%{transform:translateY(-220%) scale(.88);opacity:.15;filter:blur(2px)}62%{transform:translateY(9%) scale(1.03);opacity:1;filter:blur(0)}78%{transform:translateY(-4%) scale(1)}100%{transform:translateY(0) scale(1);opacity:1}}
+@media(prefers-reduced-motion:reduce){.gymrush-tile.is-matched,.gymrush-tile.is-matched::before,.gymrush-tile.is-matched::after,.gymrush-board.is-falling .gymrush-tile{animation:none;opacity:1;transform:none}}
