@@ -73,7 +73,7 @@ function ArnoldWorkoutMascot({ active, t }: { active: boolean; t: (phrase: strin
     </div>
   </div>
 }
-function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMining, onClaimMining, miningBusy }: { t: (phrase: string) => string; onOpenReferrals: () => void; onOpenWallet: () => void; miningStatus: MiningStatus | null; onStartMining: () => void; onClaimMining: () => void; miningBusy: boolean }) {
+function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMining, onClaimMining, miningBusy, demoBalance }: { t: (phrase: string) => string; onOpenReferrals: () => void; onOpenWallet: () => void; miningStatus: MiningStatus | null; onStartMining: () => void; onClaimMining: () => void; miningBusy: boolean; demoBalance: number }) {
   const cycle = miningStatus?.cycle ?? null
   const [referralEarnings, setReferralEarnings] = useState<number | null>(null)
   const taskEarnings = Number(miningStatus?.task_earned ?? 0)
@@ -162,6 +162,7 @@ function MiningPage({ t, onOpenReferrals, onOpenWallet, miningStatus, onStartMin
         <span className={cycle ? (cycleFinished ? 'status ready' : 'status active') : 'status'}><i />{cycle ? (cycleFinished ? t('READY TO CLAIM') : t('ACTIVE')) : t('NOT ACTIVE')}</span>
       </div>
       <div className="mining-dashboard-balance"><span className="coin-mark">A</span><strong>{miningStatus ? totalConfirmedEarnings.toFixed(3) : '—'}</strong><small>$ARNOLD</small></div>
+      <div className="demo-shared-balance"><span>SALDO PRINCIPAL · DEMO COMPARTIDO</span><strong>{demoBalance.toLocaleString()} <small>ARNOLD DE PRUEBA</small></strong></div>
       <div className="mining-center-stage">
         <div className="mining-avatar-orbit"><span className="orbit-glow" /><ArnoldWorkoutMascot active={!!cycle && !cycleFinished} t={t} /></div>
         <div className="mining-avatar-caption"><b>{cycle && !cycleFinished ? t('ARNOLD IS MINING') : t('READY TO MINE')}</b><small>{t('Train. Mine. Earn.')}</small></div>
@@ -868,9 +869,8 @@ function findGymRushMatches(board: (typeof GYM_RUSH_SYMBOLS)[number][]) {
   })
   return Array.from(positionsBySymbol.values()).filter(positions => positions.length >= GYM_RUSH_MIN_MATCH)
 }
-function GymRushPage({ onOpenMarket }: { onOpenMarket: () => void }) {
+function GymRushPage({ onOpenMarket, demoBalance, setDemoBalance }: { onOpenMarket: () => void; demoBalance: number; setDemoBalance: React.Dispatch<React.SetStateAction<number>> }) {
   const [board, setBoard] = useState(() => makeGymRushBoard())
-  const [demoBalance, setDemoBalance] = useState(10000)
   const [spins, setSpins] = useState(0)
   const [freeSpins, setFreeSpins] = useState(0)
   const [comboMultiplier, setComboMultiplier] = useState(1)
@@ -1035,7 +1035,7 @@ function GymRushPage({ onOpenMarket }: { onOpenMarket: () => void }) {
     <div className="gymrush-prizes">
       <div className="gymrush-section-title"><span> REGLAS DE GYM RUSH </span><i /></div>
       <div className="gymrush-prize-row"><b className="prize-arnold">A</b><span><strong>6 O MÁS FIGURAS IGUALES</strong><small>Desaparecen, caen nuevas fichas y continúan las cascadas</small></span><em>COMBOS</em></div>
-      <div className="gymrush-prize-row"><b>👑</b><span><strong>3 SÍMBOLOS BONUS</strong><small>Activa 10 giros gratis</small></span><em>10 GIROS</em></div>
+      <div className="gymrush-prize-row"><b>👑</b><span><strong>3 CORONAS EN CUALQUIER POSICIÓN</strong><small>Giro pagado: +10 gratis · Giro gratis: +3 adicionales, acumulables</small></span><em>+10 / +3</em></div>
       <div className="gymrush-prize-row"><b>⚡</b><span><strong>MULTIPLICADORES DE COMBO</strong><small>Escala: x1 · x2 · x3 · x5</small></span><em>HASTA x5</em></div>
     </div>
     <div className="gymrush-demo-warning">VISTA PREVIEW · MODO DEMOSTRACIÓN. El contador usa puntos ficticios (10 por ficha eliminada × multiplicador) y no representa premios ARNOLD reales. No se descuentan ni acreditan tokens. La tabla de pagos, probabilidades y RTP deben validarse antes de activar apuestas reales.</div>
@@ -1050,6 +1050,7 @@ export default function App() {
   const [verificationIntent, setVerificationIntent] = useState<{ intent_id: string; memo: string; recipient: string; amount_nano: string } | null>(null)
   const [verificationSent, setVerificationSent] = useState(false)
   const [miningStatus, setMiningStatus] = useState<MiningStatus | null>(null)
+  const [demoArnoldBalance, setDemoArnoldBalance] = useState(10000)
   const [miningBusy, setMiningBusy] = useState(false)
   const [walletReady, setWalletReady] = useState(false)
   const [arnoldBalance, setArnoldBalance] = useState<string | null>(null)
@@ -1306,12 +1307,12 @@ export default function App() {
     <div className="glow glow-a" /><div className="glow glow-b" />
     <Header language={language} onLanguageChange={changeLanguage} />
     <div className="content">
-      {tab === 'mining' && <MiningPage t={t} onOpenReferrals={() => setTab('referrals')} onOpenWallet={() => setTab('wallet')} miningStatus={miningStatus} onStartMining={() => { void runMiningAction('start') }} onClaimMining={() => { void runMiningAction('claim') }} miningBusy={miningBusy} />}
+      {tab === 'mining' && <MiningPage t={t} onOpenReferrals={() => setTab('referrals')} onOpenWallet={() => setTab('wallet')} miningStatus={miningStatus} onStartMining={() => { void runMiningAction('start') }} onClaimMining={() => { void runMiningAction('claim') }} miningBusy={miningBusy} demoBalance={demoArnoldBalance} />}
       {tab === 'tasks' && <TasksPage t={t} />}
       {tab === 'referrals' && <ReferralsPage t={t} />}
       {tab === 'wallet' && <WalletPage t={t} walletAddress={walletAddress} walletReady={walletReady} onConnect={connectWallet} onDisconnect={disconnectWallet} onReconnect={() => { void reconnectWallet() }} onRefreshBalance={refreshBalance} onVerifyPayment={verifyWalletPayment} walletAppName={walletAppName} paymentState={paymentState} arnoldBalance={arnoldBalance} balanceLoading={balanceLoading} balanceError={balanceError} />}
       {tab === 'market' && <MarketPage t={t} walletAddress={walletAddress} onConnect={connectWallet} tonConnect={tonConnect.current} />}
-      {tab === 'gymrush' && <GymRushPage onOpenMarket={() => setTab('market')} />}
+      {tab === 'gymrush' && <GymRushPage onOpenMarket={() => setTab('market')} demoBalance={demoArnoldBalance} setDemoBalance={setDemoArnoldBalance} />}
     </div>
     <nav className="bottom-nav" aria-label="Main navigation">
       {tabs.map(({ id, label, icon: Icon }) => <button key={id} className={`bottom-nav-item ${id === 'referrals' ? 'referral-nav-item' : ''} ${tab === id ? 'selected' : ''}`} aria-label={id === 'referrals' ? t('REFERRALS') : t(label)} aria-current={tab === id ? 'page' : undefined} onClick={() => { setTab(id) }}>
