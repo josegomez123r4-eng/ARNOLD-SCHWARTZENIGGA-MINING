@@ -1364,63 +1364,17 @@ html,body{background:#090909;color:#f4f0e7}
 }
 
 
-/* Final reference match: one compact horizontal row per task, like supplied ATF example. */
-.tasks-reference-layout{gap:12px!important}
-.tasks-reference-layout .task-reward-card{
-  padding:18px 16px!important;min-height:132px;border-radius:24px!important;
-  background:linear-gradient(110deg,rgba(43,34,20,.97),rgba(12,12,11,.98) 78%)!important;
-  border:1px solid rgba(224,184,103,.66)!important;
-  box-shadow:inset 0 1px rgba(255,239,204,.12),0 8px 22px #0008!important;
-}
-.tasks-reference-layout .task-card-main{
-  display:grid!important;grid-template-columns:76px minmax(0,1fr) 142px!important;
-  align-items:center!important;gap:18px!important;
-}
-.tasks-reference-layout .task-card-icon{
-  width:70px!important;height:70px!important;margin:0!important;
-  border:2px solid #dfb85e!important;border-radius:50%!important;
-  color:#ffd978!important;background:radial-gradient(circle,#493416,#100d08 72%)!important;
-  box-shadow:inset 0 0 0 5px #f5d17b12,0 0 0 4px #d8a94e22,0 0 18px #e5ac4325!important;
-}
-.tasks-reference-layout .task-card-content{display:flex!important;flex-direction:column!important;gap:7px!important;min-width:0}
-.tasks-reference-layout .task-card-heading{display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:5px!important}
-.tasks-reference-layout .task-card-heading h2{
-  margin:0!important;font:700 19px/1.2 'DM Sans',sans-serif!important;letter-spacing:0!important;color:#fff5df!important;
-}
-.tasks-reference-layout .task-reward-amount{
-  margin:0!important;padding:0!important;border:0!important;background:none!important;
-  color:#f5c968!important;font:800 18px/1.1 'DM Sans',sans-serif!important;
-}
-.tasks-reference-layout .task-reward-amount small{font-size:11px!important}
-.tasks-reference-layout .task-card-content p{
-  margin:2px 0 0!important;color:#c4b99f!important;font-size:13px!important;line-height:1.42!important;
-}
-.tasks-reference-layout .task-reference-action{
-  grid-column:3!important;grid-row:1!important;align-self:center!important;
-  display:flex!important;align-items:center!important;justify-content:center!important;
-  width:100%!important;min-width:0!important;max-width:none!important;min-height:58px!important;
-  padding:10px 12px!important;border-radius:32px!important;
-  border:1px solid #ffe9ac!important;
-  background:linear-gradient(180deg,#ffe9a5 0%,#f3c85f 52%,#d49a31 100%)!important;
-  color:#1d1508!important;font-size:15px!important;font-weight:900!important;letter-spacing:.25px!important;
-  line-height:1.15!important;text-align:center!important;text-decoration:none!important;
-  box-shadow:inset 0 1px #fff9,0 5px 16px #d49a3130!important;
-}
-.tasks-reference-layout .task-reference-action:disabled{opacity:.55!important;filter:grayscale(.5)}
-.tasks-reference-layout .checkin-reference-card{min-height:112px!important}
-.tasks-reference-layout .task-feedback{margin:2px 0!important}
-@media(max-width:430px){
- .tasks-reference-layout .task-reward-card{padding:15px 12px!important;min-height:120px}
- .tasks-reference-layout .task-card-main{grid-template-columns:58px minmax(0,1fr) 104px!important;gap:12px!important}
- .tasks-reference-layout .task-card-icon{width:54px!important;height:54px!important}
- .tasks-reference-layout .task-card-heading h2{font-size:15px!important}
- .tasks-reference-layout .task-reward-amount{font-size:15px!important}
- .tasks-reference-layout .task-card-content p{font-size:10px!important}
- .tasks-reference-layout .task-reference-action{min-height:48px!important;padding:8px 7px!important;font-size:11px!important}
-}
-@media(max-width:350px){
- .tasks-reference-layout .task-card-main{grid-template-columns:48px minmax(0,1fr) 88px!important;gap:9px!important}
- .tasks-reference-layout .task-card-icon{width:46px!important;height:46px!important}
- .tasks-reference-layout .task-card-heading h2{font-size:13px!important}
- .tasks-reference-layout .task-reference-action{font-size:10px!important}
-}
+
+/* Compact reference layout applies ONLY to the two reward-task cards. Check-in and task banner/logo retain their original design. */
+.tasks-page .task-reference-card{padding:16px 15px!important;border-radius:22px!important;border:1px solid rgba(224,184,103,.66)!important;background:linear-gradient(110deg,rgba(43,34,20,.97),rgba(12,12,11,.98) 78%)!important;box-shadow:inset 0 1px rgba(255,239,204,.12),0 8px 22px #0008!important}
+.tasks-page .task-reference-card .task-card-main{display:grid!important;grid-template-columns:68px minmax(0,1fr) 132px!important;align-items:center!important;gap:16px!important}
+.tasks-page .task-reference-card .task-card-icon{grid-column:1!important;grid-row:1/span 2!important;width:62px!important;height:62px!important;margin:0!important;border:2px solid #dfb85e!important;border-radius:50%!important;color:#ffd978!important;background:radial-gradient(circle,#493416,#100d08 72%)!important;box-shadow:inset 0 0 0 5px #f5d17b12,0 0 0 4px #d8a94e22,0 0 18px #e5ac4325!important}
+.tasks-page .task-reference-card .task-card-content{display:contents!important}
+.tasks-page .task-reference-card .task-card-heading{grid-column:2!important;grid-row:1!important;display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:5px!important;min-width:0!important}
+.tasks-page .task-reference-card .task-card-heading h2{margin:0!important;font:700 18px/1.2 'DM Sans',sans-serif!important;letter-spacing:0!important;color:#fff5df!important}
+.tasks-page .task-reference-card .task-reward-amount{margin:0!important;padding:0!important;border:0!important;background:none!important;color:#f5c968!important;font:800 17px/1.1 'DM Sans',sans-serif!important}
+.tasks-page .task-reference-card .task-reward-amount small{font-size:10px!important}
+.tasks-page .task-reference-card .task-card-content p{grid-column:2!important;grid-row:2!important;margin:5px 0 0!important;color:#c4b99f!important;font-size:12px!important;line-height:1.4!important}
+.tasks-page .task-reference-card .task-join-link{grid-column:3!important;grid-row:1/span 2!important;align-self:center!important;display:flex!important;align-items:center!important;justify-content:center!important;width:100%!important;min-height:54px!important;padding:9px 10px!important;border-radius:30px!important;border:1px solid #ffe9ac!important;background:linear-gradient(180deg,#ffe9a5 0%,#f3c85f 52%,#d49a31 100%)!important;color:#1d1508!important;font-size:14px!important;font-weight:900!important;line-height:1.15!important;text-align:center!important;text-decoration:none!important;box-shadow:inset 0 1px #fff9,0 5px 16px #d49a3130!important}
+.tasks-page .task-reference-card .task-claim-row{margin-top:12px!important;padding-top:10px!important}
+@media(max-width:430px){.tasks-page .task-reference-card{padding:14px 12px!important}.tasks-page .task-reference-card .task-card-main{grid-template-columns:56px minmax(0,1fr) 108px!important;gap:11px!important}.tasks-page .task-reference-card .task-card-icon{width:52px!important;height:52px!important}.tasks-page .task-reference-card .task-card-heading h2{font-size:15px!important}.tasks-page .task-reference-card .task-reward-amount{font-size:15px!important}.tasks-page .task-reference-card .task-card-content p{font-size:10px!important}.tasks-page .task-reference-card .task-join-link{min-height:48px!important;padding:8px 7px!important;font-size:11px!important}}
