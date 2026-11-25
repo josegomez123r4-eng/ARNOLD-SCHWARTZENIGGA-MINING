@@ -851,10 +851,11 @@ const GYM_RUSH_SYMBOLS = [
 const GYM_RUSH_POOL = GYM_RUSH_SYMBOLS.flatMap(symbol => Array(symbol.weight).fill(symbol))
 const GYM_RUSH_BET = 100
 const GYM_RUSH_SIZE = 5
+const GYM_RUSH_ROWS = 3
 const GYM_RUSH_MIN_MATCH = 6
 const gymRushWait = (ms: number) => new Promise(resolve => window.setTimeout(resolve, ms))
 const randomGymRushSymbol = () => GYM_RUSH_POOL[Math.floor(Math.random() * GYM_RUSH_POOL.length)]
-const makeGymRushBoard = () => Array.from({ length: 25 }, randomGymRushSymbol)
+const makeGymRushBoard = () => Array.from({ length: GYM_RUSH_SIZE * GYM_RUSH_ROWS }, randomGymRushSymbol)
 function findGymRushMatches(board: (typeof GYM_RUSH_SYMBOLS)[number][]) {
   // Regla de este juego: contar todas las figuras del mismo tipo en el tablero,
   // aunque no estén pegadas entre sí. BONUS queda fuera de los grupos normales.
@@ -914,7 +915,7 @@ function GymRushPage({ onOpenMarket }: { onOpenMarket: () => void }) {
       setStoppedReels(previous => [...previous, col])
       setBoard(previous => {
         const updated = [...previous]
-        for (let row = 0; row < GYM_RUSH_SIZE; row++) updated[row * GYM_RUSH_SIZE + col] = nextBoard[row * GYM_RUSH_SIZE + col]
+        for (let row = 0; row < GYM_RUSH_ROWS; row++) updated[row * GYM_RUSH_SIZE + col] = nextBoard[row * GYM_RUSH_SIZE + col]
         return updated
       })
     }
@@ -946,16 +947,16 @@ function GymRushPage({ onOpenMarket }: { onOpenMarket: () => void }) {
       await delay(520)
 
       const removedSet = new Set(indexes)
-      const collapsed: (typeof GYM_RUSH_SYMBOLS)[number][] = Array(25)
+      const collapsed: (typeof GYM_RUSH_SYMBOLS)[number][] = Array(GYM_RUSH_SIZE * GYM_RUSH_ROWS)
       for (let col = 0; col < GYM_RUSH_SIZE; col++) {
         const survivors: (typeof GYM_RUSH_SYMBOLS)[number][] = []
-        for (let row = GYM_RUSH_SIZE - 1; row >= 0; row--) {
+        for (let row = GYM_RUSH_ROWS - 1; row >= 0; row--) {
           const index = row * GYM_RUSH_SIZE + col
           if (!removedSet.has(index)) survivors.push(workingBoard[index])
         }
-        const refill = Array.from({ length: GYM_RUSH_SIZE - survivors.length }, randomGymRushSymbol)
+        const refill = Array.from({ length: GYM_RUSH_ROWS - survivors.length }, randomGymRushSymbol)
         const column = [...refill, ...survivors]
-        for (let row = 0; row < GYM_RUSH_SIZE; row++) collapsed[row * GYM_RUSH_SIZE + col] = column[row]
+        for (let row = 0; row < GYM_RUSH_ROWS; row++) collapsed[row * GYM_RUSH_SIZE + col] = column[row]
       }
       workingBoard = collapsed
       setMatchedTiles([])
@@ -999,9 +1000,15 @@ function GymRushPage({ onOpenMarket }: { onOpenMarket: () => void }) {
     </div>
     <div className="gymrush-machine">
       <div className="gymrush-machine-head"><span>★ ARNOLD CHALLENGE ★</span><span>RONDA #{spins + 1}</span></div>
-      <div className={'gymrush-board' + (spinning ? ' is-spinning' : '') + (falling ? ' is-falling' : '')} aria-label="Tablero de 5 por 5 símbolos">
-        {board.map((symbol, index) => <div className={'gymrush-tile' + (spinning && stoppedReels.includes(index % GYM_RUSH_SIZE) ? ' reel-stopped' : '') + (symbol.id === 'arnold' ? ' arnold-tile' : '') + (symbol.id === 'bonus' ? ' bonus-tile' : '') + (matchedTiles.includes(index) ? ' is-matched' : '')} key={index}>
-          <span>{symbol.icon}</span><small>{symbol.label}</small>
+      <div className={'gymrush-board' + (spinning ? ' is-spinning' : '') + (falling ? ' is-falling' : '')} aria-label="Tragamonedas de 5 carretes y 3 filas">
+        {Array.from({ length: GYM_RUSH_SIZE }, (_, col) => <div className={'gymrush-reel' + (spinning && stoppedReels.includes(col) ? ' reel-stopped' : '')} key={col}>
+          {Array.from({ length: GYM_RUSH_ROWS }, (_, row) => {
+            const index = row * GYM_RUSH_SIZE + col
+            const symbol = board[index]
+            return <div className={'gymrush-tile' + (symbol.id === 'arnold' ? ' arnold-tile' : '') + (symbol.id === 'bonus' ? ' bonus-tile' : '') + (matchedTiles.includes(index) ? ' is-matched' : '')} key={index}>
+              <span>{symbol.icon}</span><small>{symbol.label}</small>
+            </div>
+          })}
         </div>)}
       </div>
       <div className="gymrush-accumulator" aria-live="polite">
