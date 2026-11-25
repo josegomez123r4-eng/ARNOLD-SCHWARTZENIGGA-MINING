@@ -1170,3 +1170,126 @@ html,body{background:#090909;color:#f4f0e7}
   .tasks-page .task-claim-row{align-items:stretch;flex-direction:column}
   .tasks-page .task-claim-row button{width:100%;max-width:none}
 }
+
+/* ARNOLD Tasks — premium reward-list layout; task actions and rewards remain unchanged. */
+.tasks-page{gap:14px}
+.tasks-page .feature-panel{
+  margin:2px 0 0;
+  border:1px solid rgba(231,179,78,.42);
+  background:linear-gradient(115deg,rgba(76,48,13,.72),rgba(18,15,10,.96) 62%,#0d0c0a);
+  box-shadow:inset 0 1px rgba(255,232,177,.08),0 10px 26px #0008;
+}
+.tasks-page .feature-icon{
+  border:1px solid rgba(244,197,107,.38);
+  background:radial-gradient(circle,#65471955,#21180b);
+  color:#f7d17b;
+  box-shadow:0 0 16px rgba(228,166,58,.14);
+}
+.tasks-page .feature-panel b{font:800 15px 'Barlow Condensed',sans-serif;letter-spacing:1.3px;color:#ffe2a1}
+.tasks-page .feature-panel span{font-size:10px;color:#c2b08e}
+.tasks-page .task-reward-card{
+  position:relative;
+  display:block;
+  margin:0;
+  padding:15px;
+  overflow:hidden;
+  border:1px solid rgba(235,190,100,.55);
+  border-radius:20px;
+  background:
+    radial-gradient(ellipse at 0% 0%,rgba(183,123,38,.16),transparent 54%),
+    linear-gradient(145deg,rgba(43,34,20,.97),rgba(17,15,12,.98) 58%,#0d0c0a);
+  box-shadow:inset 0 1px rgba(255,235,190,.09),0 12px 28px rgba(0,0,0,.38),0 0 18px rgba(205,147,52,.07);
+}
+.tasks-page .task-reward-card:after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  border-radius:inherit;
+  background:linear-gradient(110deg,transparent 35%,rgba(255,220,145,.035) 50%,transparent 68%);
+}
+.task-card-main{position:relative;z-index:1;display:grid;grid-template-columns:54px minmax(0,1fr);align-items:start;gap:13px}
+.tasks-page .task-card-icon{
+  width:52px;height:52px;margin-top:2px;
+  border:1px solid #d8a94e;
+  border-radius:50%;
+  background:radial-gradient(circle at 35% 25%,#60471f,#17120a 70%);
+  color:#ffdb83;
+  box-shadow:inset 0 0 0 4px rgba(246,201,112,.08),0 0 0 3px rgba(218,169,78,.12),0 0 18px rgba(229,172,67,.15);
+}
+.task-card-content{min-width:0}
+.task-card-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.tasks-page .task-reward-card h2{
+  min-width:0;margin:1px 0 5px;
+  font:700 18px/1.18 'DM Sans',sans-serif;
+  letter-spacing:-.25px;color:#fff3d8;
+}
+.tasks-page .task-reward-amount{
+  flex:none;margin-top:1px;padding:5px 8px;
+  border:1px solid rgba(242,195,96,.38);
+  border-radius:20px;background:rgba(224,169,65,.12);
+  color:#ffda83;font:800 12px 'Barlow Condensed',sans-serif;
+  white-space:nowrap;
+}
+.tasks-page .task-reward-amount small{font:700 8px 'DM Sans',sans-serif;letter-spacing:.6px}
+.tasks-page .task-reward-card p{
+  margin:0 0 11px;color:#c0b39b;font-size:11px;line-height:1.45;
+}
+.tasks-page .task-join-link{
+  width:max-content;max-width:100%;min-height:35px;
+  justify-content:center;padding:8px 15px;
+  border:1px solid #ffe39a;border-radius:22px;
+  background:linear-gradient(180deg,#ffe49a 0%,#e6b84f 48%,#b77a22 100%);
+  color:#211506;font-size:10px;font-weight:900;letter-spacing:.8px;
+  box-shadow:inset 0 1px rgba(255,255,255,.55),0 4px 14px rgba(211,155,53,.2);
+}
+.tasks-page .task-claim-row{
+  position:relative;z-index:1;
+  margin:13px 0 0;padding-top:11px;
+  border-top:1px solid rgba(235,190,100,.17);
+  align-items:center;flex-direction:row;gap:10px;
+}
+.tasks-page .task-claim-row>span{
+  flex:1;min-width:0;color:#b7a98e;font-size:10px;line-height:1.4;
+}
+.tasks-page .task-claim-row button{
+  width:auto;min-width:118px;max-width:52%;
+  padding:10px 12px;border:1px solid rgba(239,194,105,.4);
+  border-radius:22px;background:linear-gradient(145deg,#302719,#17130d);
+  color:#f5cf7d;font-size:9px;letter-spacing:.45px;
+  box-shadow:inset 0 1px rgba(255,255,255,.06);
+}
+.tasks-page .task-claim-row button:disabled{opacity:.66;color:#a99b7f}
+.tasks-page .task-claim-row button.task-claim-ready{
+  border-color:#ffe29a!important;
+  background:linear-gradient(180deg,#ffe49a,#d49a32)!important;
+  color:#201506!important;
+  box-shadow:0 0 15px rgba(240,190,82,.22)!important;
+}
+.tasks-page .task-cooldown{
+  position:relative;z-index:1;margin:10px 0 0;
+  color:#c5b38e;font-size:10px;
+}
+.tasks-page .checkin-card{
+  border:1px solid rgba(235,190,100,.58);
+  border-radius:20px;
+  background:radial-gradient(ellipse at 0 0,rgba(183,123,38,.18),transparent 58%),linear-gradient(145deg,#282014,#100e0b 72%);
+  box-shadow:inset 0 1px rgba(255,235,190,.09),0 12px 28px #0008;
+}
+.tasks-page .checkin-heading .kicker{color:#f5ca70;letter-spacing:1.5px}
+.tasks-page .checkin-heading h2{font:800 21px 'Barlow Condensed',sans-serif;letter-spacing:.8px;color:#fff0cf}
+.tasks-page .checkin-heading>strong{color:#ffda83}
+.tasks-page .checkin-day{background:#17130d;border-color:#554122}
+.tasks-page .checkin-day.completed{border-color:#c8963e;background:#332613}
+.tasks-page .checkin-claim-btn{
+  border:1px solid #ffe39a;
+  background:linear-gradient(180deg,#ffe49a,#d49a32);
+  color:#211506;
+  box-shadow:inset 0 1px rgba(255,255,255,.55),0 5px 16px rgba(211,155,53,.18);
+}
+@media(max-width:390px){
+  .task-card-main{grid-template-columns:46px minmax(0,1fr);gap:10px}
+  .tasks-page .task-card-icon{width:45px;height:45px}
+  .tasks-page .task-reward-card h2{font-size:16px}
+  .tasks-page .task-claim-row button{min-width:104px;padding:9px 8px;font-size:8px}
+}
