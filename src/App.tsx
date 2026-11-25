@@ -51,7 +51,7 @@ const tabs = [
   { id: 'referrals', label: 'REFERRALS', icon: Gift },
   { id: 'wallet', label: 'WALLET', icon: Wallet },
   { id: 'market', label: 'MARKET', icon: ShoppingBag },
-  { id: 'gymrush', label: 'GYM RUSH', icon: Flame },
+  { id: 'gymrush', label: 'GAMES', icon: Flame },
 ] satisfies { id: Tab; label: string; icon: typeof Pickaxe }[]
 
 function Header({ language, onLanguageChange }: { language: LanguageCode; onLanguageChange: (language: LanguageCode) => void }) {
