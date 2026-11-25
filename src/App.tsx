@@ -856,34 +856,16 @@ const gymRushWait = (ms: number) => new Promise(resolve => window.setTimeout(res
 const randomGymRushSymbol = () => GYM_RUSH_POOL[Math.floor(Math.random() * GYM_RUSH_POOL.length)]
 const makeGymRushBoard = () => Array.from({ length: 25 }, randomGymRushSymbol)
 function findGymRushMatches(board: (typeof GYM_RUSH_SYMBOLS)[number][]) {
-  const visited = new Set<number>()
-  const matches: number[][] = []
-  for (let index = 0; index < board.length; index++) {
-    if (visited.has(index) || board[index].id === 'bonus') continue
-    const symbolId = board[index].id
-    const group: number[] = []
-    const stack = [index]
-    visited.add(index)
-    while (stack.length) {
-      const current = stack.pop()!
-      group.push(current)
-      const row = Math.floor(current / GYM_RUSH_SIZE)
-      const col = current % GYM_RUSH_SIZE
-      const neighbors = [
-        row > 0 ? current - GYM_RUSH_SIZE : -1,
-        row < GYM_RUSH_SIZE - 1 ? current + GYM_RUSH_SIZE : -1,
-        col > 0 ? current - 1 : -1,
-        col < GYM_RUSH_SIZE - 1 ? current + 1 : -1,
-      ]
-      for (const next of neighbors) {
-        if (next < 0 || visited.has(next) || board[next]?.id !== symbolId) continue
-        visited.add(next)
-        stack.push(next)
-      }
-    }
-    if (group.length >= GYM_RUSH_MIN_MATCH) matches.push(group)
-  }
-  return matches
+  // Regla de este juego: contar todas las figuras del mismo tipo en el tablero,
+  // aunque no estén pegadas entre sí. BONUS queda fuera de los grupos normales.
+  const positionsBySymbol = new Map<string, number[]>()
+  board.forEach((symbol, index) => {
+    if (!symbol || symbol.id === 'bonus') return
+    const positions = positionsBySymbol.get(symbol.id) ?? []
+    positions.push(index)
+    positionsBySymbol.set(symbol.id, positions)
+  })
+  return Array.from(positionsBySymbol.values()).filter(positions => positions.length >= GYM_RUSH_MIN_MATCH)
 }
 function GymRushPage({ onOpenMarket }: { onOpenMarket: () => void }) {
   const [board, setBoard] = useState(() => makeGymRushBoard())
