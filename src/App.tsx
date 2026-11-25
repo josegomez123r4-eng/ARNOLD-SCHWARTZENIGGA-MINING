@@ -302,10 +302,14 @@ function TasksPage({ t }: { t: (phrase: string) => string }) {
     </article>
     <div className="feature-panel"><div className="feature-icon"><ListChecks size={22} /></div><div><b>{t('REWARD TASKS')}</b><span>{t('Completa tareas y gana recompensas ARNOLD.')}</span></div></div>
     <article className="task-reward-card">
-      <div className="task-card-top"><span className="task-card-icon"><Gift size={20}/></span><span className="task-reward-amount">+2 ARNOLD</span></div>
-      <h2>{t('Únete a nuestro canal de noticias')}</h2>
-      <p>{t('Forma parte de la comunidad y mantente al día con las novedades de ARNOLD.')}</p>
-      <a className="task-join-link" href="https://t.me/arnoldschwartzenigganews" target="_blank" rel="noreferrer" onClick={() => { setChannelJoinClicked(true); setChannelWaitUntil(Date.now() + 5000); window.setTimeout(() => { void refresh() }, 5000) }}>{t('IR A LA TAREA')} <span>↗</span></a>
+      <div className="task-card-main">
+        <span className="task-card-icon"><Gift size={22}/></span>
+        <div className="task-card-content">
+          <div className="task-card-heading"><h2>{t('Únete a nuestro canal de noticias')}</h2><span className="task-reward-amount">+2 <small>ARNOLD</small></span></div>
+          <p>{t('Forma parte de la comunidad y mantente al día con las novedades de ARNOLD.')}</p>
+          <a className="task-join-link" href="https://t.me/arnoldschwartzenigganews" target="_blank" rel="noreferrer" onClick={() => { setChannelJoinClicked(true); setChannelWaitUntil(Date.now() + 5000); window.setTimeout(() => { void refresh() }, 5000) }}>{t('IR A LA TAREA')} <span>↗</span></a>
+        </div>
+      </div>
       <div className="task-claim-row">
         <span>{!channelJoinClicked ? t('Pulsa “IR A LA TAREA” para unirte al canal') : channelWaitUntil !== null && now < channelWaitUntil ? t('Comprobando en 5 segundos…') : status?.channel_member ? t('Membresía verificada') : t('Aún no figuras como miembro del canal')}</span>
         <button type="button" className={channelJoinReady && channelReady && busy===null ? 'task-claim-ready' : ''} style={channelJoinReady && channelReady && busy===null ? { background: 'linear-gradient(135deg, #f7d76b, #c99724)', color: '#17120a', borderColor: '#f7d76b', boxShadow: '0 0 16px rgba(247,215,107,.28)' } : undefined} disabled={busy!==null || !channelJoinReady || !channelReady} onClick={()=>void act('channel')}>{busy==='channel'?t('VERIFICANDO…'):!channelJoinClicked?t('BLOQUEADO'):channelWaitUntil !== null && now < channelWaitUntil?t('ESPERA 5 SEGUNDOS'):!status?.channel_member?t('ÚNETE AL CANAL'):channelReady?t('RECLAMAR 2 ARNOLD'):t('DISPONIBLE EN')+' '+clock(status?.channel_next_available_at)}</button>
@@ -313,10 +317,14 @@ function TasksPage({ t }: { t: (phrase: string) => string }) {
       {status?.channel_next_available_at && !channelReady && <div className="task-cooldown">{t('Próximo reclamo en')} <strong>{clock(status.channel_next_available_at)}</strong></div>}
     </article>
     <article className="task-reward-card">
-      <div className="task-card-top"><span className="task-card-icon"><Gift size={20}/></span><span className="task-reward-amount">+2 ARNOLD</span></div>
-      <h2>{t('Join our support channel')}</h2>
-      <p>{t('Join the ARNOLD support community and get help with your questions.')}</p>
-      <a className="task-join-link" href="https://t.me/arnoldchatsupport" target="_blank" rel="noreferrer" onClick={() => { setSupportJoinClicked(true); setSupportWaitUntil(Date.now() + 5000); window.setTimeout(() => { void refresh() }, 5000) }}>{t('JOIN CHANNEL')} <span>↗</span></a>
+      <div className="task-card-main">
+        <span className="task-card-icon"><Gift size={22}/></span>
+        <div className="task-card-content">
+          <div className="task-card-heading"><h2>{t('Join our support channel')}</h2><span className="task-reward-amount">+2 <small>ARNOLD</small></span></div>
+          <p>{t('Join the ARNOLD support community and get help with your questions.')}</p>
+          <a className="task-join-link" href="https://t.me/arnoldchatsupport" target="_blank" rel="noreferrer" onClick={() => { setSupportJoinClicked(true); setSupportWaitUntil(Date.now() + 5000); window.setTimeout(() => { void refresh() }, 5000) }}>{t('JOIN CHANNEL')} <span>↗</span></a>
+        </div>
+      </div>
       <div className="task-claim-row">
         <span>{!supportJoinClicked ? t('Join the support channel to unlock the reward') : supportWaitUntil !== null && now < supportWaitUntil ? t('Checking in 5 seconds…') : status?.support_channel_member ? t('Membership verified') : t('You are not yet a member of the support channel')}</span>
         <button type="button" className={supportJoinReady && supportReady && busy===null ? 'task-claim-ready' : ''} style={supportJoinReady && supportReady && busy===null ? { background: 'linear-gradient(135deg, #f7d76b, #c99724)', color: '#17120a', borderColor: '#f7d76b', boxShadow: '0 0 16px rgba(247,215,107,.28)' } : undefined} disabled={busy!==null || !supportJoinReady || !supportReady} onClick={()=>void act('support')}>
