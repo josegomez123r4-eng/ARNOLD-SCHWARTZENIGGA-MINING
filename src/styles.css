@@ -1508,3 +1508,12 @@ html,body{background:#090909;color:#f4f0e7}
 .gymrush-free-spins-pop>strong{color:#fff0b4;font-size:clamp(22px,7vw,30px);font-weight:1000;letter-spacing:1.4px;text-shadow:0 0 12px #ffb82e}
 .gymrush-free-spins-pop>small{color:#f3cf85;font-size:8px;font-weight:900;letter-spacing:1.5px}
 @keyframes gymrush-free-spins-in{0%{transform:scale(.72);opacity:0}65%{transform:scale(1.06);opacity:1}100%{transform:scale(1);opacity:1}}
+
+
+.gymrush-free-spins-counter{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:9px 0;padding:10px 12px;border:1px solid #f2c45f;border-radius:12px;background:linear-gradient(100deg,#241707,#644315 52%,#241707);box-shadow:0 0 15px #eeb64a44,inset 0 1px #fff3;animation:gymrush-counter-pulse 1.8s ease-in-out infinite}
+.gymrush-free-spins-counter>span{color:#f5d48d;font-size:9px;font-weight:1000;letter-spacing:1px}
+.gymrush-free-spins-counter>strong{color:#fff0b4;font-size:27px;line-height:1;font-weight:1000;font-variant-numeric:tabular-nums;text-shadow:0 0 10px #ffbb35}
+.gymrush-free-spins-counter>strong small{font-size:11px;color:#e9c77f}
+.gymrush-free-spins-counter>em{font-style:normal;color:#d7b978;font-size:7px;font-weight:900;letter-spacing:.5px;text-align:right}
+.gymrush-stats .has-free-spins{border-color:#f4c45b!important;box-shadow:0 0 12px #f4c45b44}
+@keyframes gymrush-counter-pulse{0%,100%{box-shadow:0 0 10px #eeb64a33,inset 0 1px #fff2}50%{box-shadow:0 0 19px #eeb64a77,inset 0 1px #fff4}}
