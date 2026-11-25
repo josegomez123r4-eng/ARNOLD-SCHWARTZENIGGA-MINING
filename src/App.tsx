@@ -309,7 +309,7 @@ function TasksPage({ t }: { t: (phrase: string) => string }) {
         <span className="task-card-icon"><Gift size={22}/></span>
         <div className="task-card-content">
           <div className="task-card-heading"><h2>{t('Únete a nuestro canal de noticias')}</h2><span className="task-reward-amount">+2 <small>ARNOLD</small></span></div>
-          <p>{t('Forma parte de la comunidad y mantente al día con las novedades de ARNOLD.')}{status?.channel_next_available_at && !channelReady ? <small className="task-inline-cooldown"> · {t('Disponible en')} {clock(status.channel_next_available_at)}</small> : null}</p>
+          <p>{t('Forma parte de la comunidad y mantente al día con las novedades de ARNOLD.')}</p>
           {!channelReady
             ? <button className="task-join-link task-cooldown-button" type="button" disabled aria-label={t('Disponible en')+' '+clock(status?.channel_next_available_at)}>{clock(status?.channel_next_available_at)}</button>
             : status?.channel_member && channelJoinReady
@@ -323,7 +323,7 @@ function TasksPage({ t }: { t: (phrase: string) => string }) {
         <span className="task-card-icon"><Gift size={22}/></span>
         <div className="task-card-content">
           <div className="task-card-heading"><h2>{t('Join our support channel')}</h2><span className="task-reward-amount">+2 <small>ARNOLD</small></span></div>
-          <p>{t('Join the ARNOLD support community and get help with your questions.')}{status?.support_channel_next_available_at && !supportReady ? <small className="task-inline-cooldown"> · {t('Available in')} {clock(status.support_channel_next_available_at)}</small> : null}</p>
+          <p>{t('Join the ARNOLD support community and get help with your questions.')}</p>
           {!supportReady
             ? <button className="task-join-link task-cooldown-button" type="button" disabled aria-label={t('Available in')+' '+clock(status?.support_channel_next_available_at)}>{clock(status?.support_channel_next_available_at)}</button>
             : status?.support_channel_member && supportJoinReady
