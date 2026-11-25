@@ -1485,3 +1485,19 @@ html,body{background:#090909;color:#f4f0e7}
 .gymrush-board.is-falling .gymrush-tile:nth-child(5n){animation-delay:220ms}
 @keyframes gymrush-refill-drop{0%{transform:translateY(-220%) scale(.88);opacity:.15;filter:blur(2px)}62%{transform:translateY(9%) scale(1.03);opacity:1;filter:blur(0)}78%{transform:translateY(-4%) scale(1)}100%{transform:translateY(0) scale(1);opacity:1}}
 @media(prefers-reduced-motion:reduce){.gymrush-tile.is-matched,.gymrush-tile.is-matched::before,.gymrush-tile.is-matched::after,.gymrush-board.is-falling .gymrush-tile{animation:none;opacity:1;transform:none}}
+
+
+/* Softer casino reels and round symbol tokens */
+.gymrush-board{gap:clamp(5px,1.5vw,9px);padding:clamp(7px,2vw,12px)}
+.gymrush-tile{aspect-ratio:1/1;border-radius:50%!important;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-direction:column;min-width:0;min-height:0;border:2px solid #d9ae63!important;background:radial-gradient(circle at 34% 25%,#5a4528 0%,#24180e 62%,#100b07 100%)!important;box-shadow:inset 0 2px 5px #fff2,inset 0 -5px 9px #0009,0 2px 5px #0008;transition:transform .18s ease,filter .18s ease}
+.gymrush-tile>span{font-size:clamp(19px,5.4vw,31px);line-height:1.05}
+.gymrush-tile>small{font-size:clamp(5px,1.3vw,7px);letter-spacing:.25px}
+.gymrush-board.is-spinning .gymrush-tile:not(.reel-stopped){animation:gymrush-controlled-roll .19s linear infinite;filter:blur(1px)}
+.gymrush-board.is-spinning .gymrush-tile.reel-stopped{animation:none;filter:none;transform:none}
+@keyframes gymrush-controlled-roll{0%{transform:translateY(-8px);opacity:.7}100%{transform:translateY(8px);opacity:1}}
+.gymrush-board.is-falling .gymrush-tile{animation:gymrush-round-drop .55s cubic-bezier(.16,.72,.22,1) both}
+@keyframes gymrush-round-drop{0%{transform:translateY(-145%);opacity:.2}72%{transform:translateY(6%);opacity:1}88%{transform:translateY(-2%)}100%{transform:translateY(0);opacity:1}}
+.gymrush-tile.is-matched{border-color:#fff2a5!important}
+.gymrush-tile.is-matched::before{border-radius:50%}
+.gymrush-controls{grid-template-columns:1fr;max-width:180px;margin:10px auto}
+@media(prefers-reduced-motion:reduce){.gymrush-board.is-spinning .gymrush-tile:not(.reel-stopped),.gymrush-board.is-falling .gymrush-tile{animation:none}}
