@@ -852,7 +852,7 @@ const GYM_RUSH_POOL = GYM_RUSH_SYMBOLS.flatMap(symbol => Array(symbol.weight).fi
 const GYM_RUSH_BET = 100
 const GYM_RUSH_SIZE = 5
 const GYM_RUSH_ROWS = 3
-const GYM_RUSH_MIN_MATCH = 6
+const GYM_RUSH_MIN_MATCH = 8
 const gymRushWait = (ms: number) => new Promise(resolve => window.setTimeout(resolve, ms))
 const randomGymRushSymbol = () => GYM_RUSH_POOL[Math.floor(Math.random() * GYM_RUSH_POOL.length)]
 const makeGymRushBoard = () => Array.from({ length: GYM_RUSH_SIZE * GYM_RUSH_ROWS }, randomGymRushSymbol)
@@ -941,7 +941,7 @@ function GymRushPage({ onOpenMarket }: { onOpenMarket: () => void }) {
       const indexes = groups.flat()
       setMatchedTiles(indexes)
       setResult('¡COMBO! ' + indexes.length + ' FICHAS · CASCADA ' + chain)
-      const roundGain = indexes.length * 10 * multiplier
+      const roundGain = indexes.length * 5 * multiplier
       total += roundGain
       setSpinAccumulated(total)
       await delay(520)
