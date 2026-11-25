@@ -847,37 +847,50 @@ const GYM_RUSH_SYMBOLS = [
   { id: 'trophy', label: 'TROFEO', icon: '🏆', weight: 3 },
   { id: 'protein', label: 'PROTEÍNA', icon: '🥤', weight: 3 },
   { id: 'kettlebell', label: 'KETTLEBELL', icon: '🔔', weight: 3 },
+  { id: 'bonus', label: 'BONUS', icon: '👑', weight: 1 },
 ]
 const GYM_RUSH_POOL = GYM_RUSH_SYMBOLS.flatMap(symbol => Array(symbol.weight).fill(symbol))
+const GYM_RUSH_BET = 100
 
-function GymRushPage() {
-  const [board, setBoard] = useState(() => Array.from({ length: 25 }, (_, index) => GYM_RUSH_SYMBOLS[index % GYM_RUSH_SYMBOLS.length]))
-  const [demoPoints, setDemoPoints] = useState(0)
+function GymRushPage({ onOpenMarket }: { onOpenMarket: () => void }) {
+  const [board, setBoard] = useState(() => Array.from({ length: 25 }, (_, index) => GYM_RUSH_SYMBOLS[index % 6]))
+  const [demoBalance, setDemoBalance] = useState(10000)
   const [spins, setSpins] = useState(0)
-  const [result, setResult] = useState('¡Prepárate para entrenar y probar tu suerte!')
+  const [freeSpins, setFreeSpins] = useState(0)
+  const [comboMultiplier, setComboMultiplier] = useState(1)
+  const [result, setResult] = useState('¡Prepárate! Esta es una prueba visual, sin movimientos reales de ARNOLD.')
   const [spinning, setSpinning] = useState(false)
 
   const spin = () => {
-    if (spinning) return
+    if (spinning || (freeSpins === 0 && demoBalance < GYM_RUSH_BET)) return
+    const usingFreeSpin = freeSpins > 0
+    if (usingFreeSpin) setFreeSpins(value => value - 1)
+    else setDemoBalance(value => value - GYM_RUSH_BET)
     setSpinning(true)
+
     const nextBoard = Array.from({ length: 25 }, () => GYM_RUSH_POOL[Math.floor(Math.random() * GYM_RUSH_POOL.length)])
     const counts = nextBoard.reduce<Record<string, number>>((all, symbol) => {
       all[symbol.id] = (all[symbol.id] || 0) + 1
       return all
     }, {})
-    const arnoldCount = counts.arnold || 0
-    const bestGymMatch = Math.max(0, ...Object.entries(counts).filter(([id]) => id !== 'arnold').map(([, count]) => count))
-    let earned = 0
-    let message = 'Esta vez no hubo combinación. ¡Vuelve a intentarlo!'
-    if (arnoldCount >= 5) {
-      earned = 25
-      message = '¡JACKPOT ARNOLD! +25 puntos de prueba'
-    } else if (bestGymMatch >= 8) {
-      earned = 5
-      message = '¡COMBO DE GIMNASIO! +5 puntos de prueba'
+    const bonusCount = counts.bonus || 0
+    const matches = Object.entries(counts).filter(([id, count]) => id !== 'bonus' && count >= 6)
+      .sort((left, right) => right[1] - left[1])
+    const bestMatch = matches[0]
+    let message = 'SIN COMBINACIÓN · ¡Sigue entrenando!'
+    if (bonusCount >= 3) {
+      setFreeSpins(value => value + 10)
+      message = '¡BONUS ACTIVADO! 👑 10 GIROS GRATIS'
+    }
+    if (bestMatch) {
+      const nextMultiplier = comboMultiplier === 1 ? 2 : comboMultiplier === 2 ? 3 : 5
+      setComboMultiplier(nextMultiplier)
+      const matchLabel = GYM_RUSH_SYMBOLS.find(symbol => symbol.id === bestMatch[0])?.label ?? bestMatch[0]
+      message = (bonusCount >= 3 ? '¡BONUS + COMBO! · ' : '¡COMBO! · ') + bestMatch[1] + ' ' + matchLabel + ' · MULTIPLICADOR x' + nextMultiplier
+    } else if (bonusCount < 3) {
+      setComboMultiplier(1)
     }
     setBoard(nextBoard)
-    setDemoPoints(points => points + earned)
     setSpins(value => value + 1)
     setResult(message)
     window.setTimeout(() => setSpinning(false), 450)
@@ -891,29 +904,34 @@ function GymRushPage() {
       <div className="gymrush-mascot">A</div>
     </div>
     <div className="gymrush-stats">
-      <div><span>APUESTA DE PRUEBA</span><b>0.05 <small>GRAM</small></b></div>
-      <div><span>TUS PUNTOS DEMO</span><b>{demoPoints.toLocaleString()} <small>ARNOLD</small></b></div>
+      <div><span>APUESTA POR GIRO</span><b>100 <small>ARNOLD</small></b></div>
+      <div><span>SALDO DEMO</span><b>{demoBalance.toLocaleString()} <small>ARNOLD</small></b></div>
+    </div>
+    <div className="gymrush-stats">
+      <div><span>GIROS GRATIS</span><b>{freeSpins}</b></div>
+      <div><span>MULTIPLICADOR COMBO</span><b>x{comboMultiplier}</b></div>
     </div>
     <div className="gymrush-machine">
       <div className="gymrush-machine-head"><span>★ ARNOLD CHALLENGE ★</span><span>RONDA #{spins + 1}</span></div>
       <div className="gymrush-board" aria-label="Tablero de 5 por 5 símbolos">
-        {board.map((symbol, index) => <div className={symbol.id === 'arnold' ? 'gymrush-tile arnold-tile' : 'gymrush-tile'} key={index}>
-          <span>{symbol.icon}</span><small>{symbol.id === 'arnold' ? 'ARNOLD' : symbol.label}</small>
+        {board.map((symbol, index) => <div className={symbol.id === 'arnold' ? 'gymrush-tile arnold-tile' : symbol.id === 'bonus' ? 'gymrush-tile bonus-tile' : 'gymrush-tile'} key={index}>
+          <span>{symbol.icon}</span><small>{symbol.label}</small>
         </div>)}
       </div>
       <div className="gymrush-result" aria-live="polite">{result}</div>
-      <button className="gymrush-spin" type="button" onClick={spin} disabled={spinning}>
-        <span>⚡</span>{spinning ? 'GIRANDO…' : 'GIRAR · DEMO'}<span>⚡</span>
+      <button className="gymrush-spin" type="button" onClick={spin} disabled={spinning || (freeSpins === 0 && demoBalance < GYM_RUSH_BET)}>
+        <span>⚡</span>{spinning ? 'GIRANDO…' : freeSpins > 0 ? 'USAR GIRO GRATIS' : 'GIRAR · 100 ARNOLD'}<span>⚡</span>
       </button>
-      <div className="gymrush-bet-note">0.05 GRAM POR GIRO · SIMULACIÓN VISUAL</div>
+      <div className="gymrush-bet-note">{freeSpins > 0 ? 'TIENES ' + freeSpins + ' GIROS GRATIS DISPONIBLES' : '100 ARNOLD DEMO POR GIRO · SIN COBROS REALES'}</div>
+      <button className="gymrush-spin" type="button" onClick={onOpenMarket}>🛒 COMPRAR ARNOLD EN EL MERCADO</button>
     </div>
     <div className="gymrush-prizes">
-      <div className="gymrush-section-title"><span> TABLA DE PREMIOS </span><i /></div>
-      <div className="gymrush-prize-row"><b className="prize-arnold">A</b><span><strong>5+ SÍMBOLOS ARNOLD</strong><small>Jackpot ultra raro</small></span><em>+25 PTS</em></div>
-      <div className="gymrush-prize-row"><b>🏋️</b><span><strong>8+ SÍMBOLOS IGUALES</strong><small>Combo de gimnasio</small></span><em>+5 PTS</em></div>
-      <div className="gymrush-prize-row"><b>🏆</b><span><strong>OTRAS COMBINACIONES</strong><small>Desafío sin premio</small></span><em>0 PTS</em></div>
+      <div className="gymrush-section-title"><span> REGLAS DE GYM RUSH </span><i /></div>
+      <div className="gymrush-prize-row"><b className="prize-arnold">A</b><span><strong>6 O MÁS SÍMBOLOS IGUALES</strong><small>Combinaciones y cascadas por validar</small></span><em>PREMIO</em></div>
+      <div className="gymrush-prize-row"><b>👑</b><span><strong>3 SÍMBOLOS BONUS</strong><small>Activa 10 giros gratis</small></span><em>10 GIROS</em></div>
+      <div className="gymrush-prize-row"><b>⚡</b><span><strong>MULTIPLICADORES DE COMBO</strong><small>Escala aprobada: x1 · x2 · x3 · x5</small></span><em>HASTA x5</em></div>
     </div>
-    <div className="gymrush-demo-warning">MODO DEMOSTRACIÓN · No se cobra GRAM. Los puntos mostrados son ficticios y no son tokens, no se pueden retirar ni transferir. Las probabilidades y premios finales se definirán antes de habilitar pagos reales.</div>
+    <div className="gymrush-demo-warning">VISTA PREVIEW · MODO DEMOSTRACIÓN. El saldo y los giros son ficticios: no se descuentan ni acreditan tokens reales. La tabla DRAM, las probabilidades y el RTP objetivo del 95.2% deben validarse matemáticamente antes de habilitar apuestas reales.</div>
   </section>
 }
 
@@ -1187,7 +1205,7 @@ export default function App() {
       {tab === 'referrals' && <ReferralsPage t={t} />}
       {tab === 'wallet' && <WalletPage t={t} walletAddress={walletAddress} walletReady={walletReady} onConnect={connectWallet} onDisconnect={disconnectWallet} onReconnect={() => { void reconnectWallet() }} onRefreshBalance={refreshBalance} onVerifyPayment={verifyWalletPayment} walletAppName={walletAppName} paymentState={paymentState} arnoldBalance={arnoldBalance} balanceLoading={balanceLoading} balanceError={balanceError} />}
       {tab === 'market' && <MarketPage t={t} walletAddress={walletAddress} onConnect={connectWallet} tonConnect={tonConnect.current} />}
-      {tab === 'gymrush' && <GymRushPage />}
+      {tab === 'gymrush' && <GymRushPage onOpenMarket={() => setTab('market')} />}
     </div>
     <nav className="bottom-nav" aria-label="Main navigation">
       {tabs.map(({ id, label, icon: Icon }) => <button key={id} className={`bottom-nav-item ${id === 'referrals' ? 'referral-nav-item' : ''} ${tab === id ? 'selected' : ''}`} aria-label={id === 'referrals' ? t('REFERRALS') : t(label)} aria-current={tab === id ? 'page' : undefined} onClick={() => { setTab(id) }}>
