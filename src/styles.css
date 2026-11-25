@@ -1501,3 +1501,10 @@ html,body{background:#090909;color:#f4f0e7}
 .gymrush-tile.is-matched::before{border-radius:50%}
 .gymrush-controls{grid-template-columns:1fr;max-width:180px;margin:10px auto}
 @media(prefers-reduced-motion:reduce){.gymrush-board.is-spinning .gymrush-tile:not(.reel-stopped),.gymrush-board.is-falling .gymrush-tile{animation:none}}
+
+
+.gymrush-free-spins-pop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;margin:10px 0;padding:12px 8px;border:1px solid #ffe19a;border-radius:14px;background:radial-gradient(ellipse at center,#73501c 0%,#30200e 58%,#160f08 100%);box-shadow:0 0 18px #ffc64e88,inset 0 0 18px #ffe9a633;animation:gymrush-free-spins-in .42s cubic-bezier(.2,.8,.25,1) both}
+.gymrush-free-spins-pop>span{font-size:26px;filter:drop-shadow(0 0 9px #ffdc70)}
+.gymrush-free-spins-pop>strong{color:#fff0b4;font-size:clamp(22px,7vw,30px);font-weight:1000;letter-spacing:1.4px;text-shadow:0 0 12px #ffb82e}
+.gymrush-free-spins-pop>small{color:#f3cf85;font-size:8px;font-weight:900;letter-spacing:1.5px}
+@keyframes gymrush-free-spins-in{0%{transform:scale(.72);opacity:0}65%{transform:scale(1.06);opacity:1}100%{transform:scale(1);opacity:1}}
