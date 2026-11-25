@@ -1517,3 +1517,28 @@ html,body{background:#090909;color:#f4f0e7}
 .gymrush-free-spins-counter>em{font-style:normal;color:#d7b978;font-size:7px;font-weight:900;letter-spacing:.5px;text-align:right}
 .gymrush-stats .has-free-spins{border-color:#f4c45b!important;box-shadow:0 0 12px #f4c45b44}
 @keyframes gymrush-counter-pulse{0%,100%{box-shadow:0 0 10px #eeb64a33,inset 0 1px #fff2}50%{box-shadow:0 0 19px #eeb64a77,inset 0 1px #fff4}}
+
+
+/* GYM RUSH — cabinet and five true vertical slot reels (3 windows each) */
+.gymrush-machine{position:relative;padding:clamp(12px,3vw,19px);border:3px solid #d9a64c;border-radius:24px;background:linear-gradient(135deg,#57340f 0%,#17100a 24%,#080706 70%,#6e4519 100%);box-shadow:0 0 0 3px #4a2b0d,0 0 0 6px #e9bf69aa,0 16px 34px #000c,inset 0 2px 8px #fff3}
+.gymrush-machine:before{content:"";position:absolute;inset:5px;border:1px solid #ffe3a366;border-radius:17px;pointer-events:none}
+.gymrush-machine-head{position:relative;z-index:1;margin:0 2px 12px;padding:8px 10px;border:1px solid #f3ce7c88;border-radius:8px;background:linear-gradient(90deg,#271507,#805019 50%,#271507);color:#ffe2a0;font-size:9px;letter-spacing:1.4px;text-shadow:0 1px 4px #000}
+.gymrush-board{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:clamp(4px,1.4vw,8px);padding:clamp(7px,2vw,11px);border:3px solid #a97932;border-radius:14px;background:linear-gradient(180deg,#070606,#17110b 50%,#050404);box-shadow:inset 0 0 0 2px #f4d18a33,inset 0 0 25px #000,0 4px 0 #4d2b0c}
+.gymrush-reel{display:grid;grid-template-rows:repeat(3,minmax(0,1fr));gap:clamp(4px,1.4vw,8px);min-width:0;padding:4px 3px;border:1px solid #c18b3c88;border-radius:9px;background:linear-gradient(90deg,#080706,#21180e 50%,#080706);box-shadow:inset 2px 0 5px #000,inset -2px 0 5px #000;overflow:hidden}
+.gymrush-reel .gymrush-tile{width:100%;aspect-ratio:1/1;min-height:0;border-radius:50%!important;border:2px solid #d8b36c!important;background:radial-gradient(circle at 35% 25%,#fff0c0 0%,#c08b3b 16%,#4b2e12 57%,#140d07 100%)!important;box-shadow:inset 0 2px 5px #fff8,inset 0 -5px 9px #000b,0 2px 4px #000}
+.gymrush-reel .gymrush-tile>span{font-size:clamp(18px,5.5vw,30px);filter:drop-shadow(0 2px 2px #0009)}
+.gymrush-reel .gymrush-tile>small{font-size:clamp(4px,1.15vw,6px);color:#ffe3a7}
+.gymrush-reel.reel-stopped{border-color:#f5cf7a;box-shadow:inset 0 0 12px #000,0 0 8px #f3bd4a55}
+.gymrush-board.is-spinning .gymrush-reel:not(.reel-stopped) .gymrush-tile{animation:gymrush-real-reel .105s linear infinite;filter:blur(1.5px);opacity:.82}
+.gymrush-board.is-spinning .gymrush-reel:not(.reel-stopped) .gymrush-tile:nth-child(2){animation-delay:-.035s}
+.gymrush-board.is-spinning .gymrush-reel:not(.reel-stopped) .gymrush-tile:nth-child(3){animation-delay:-.07s}
+.gymrush-board.is-spinning .gymrush-reel.reel-stopped .gymrush-tile{animation:none;filter:none;opacity:1;transform:none}
+@keyframes gymrush-real-reel{0%{transform:translateY(-38%) scaleY(.82);opacity:.35}100%{transform:translateY(38%) scaleY(1.08);opacity:1}}
+.gymrush-reel .gymrush-tile.arnold-tile{background:radial-gradient(circle,#ffe58a,#d28b22 48%,#512b09)!important;border-color:#fff0a5!important}
+.gymrush-reel .gymrush-tile.arnold-tile>span{width:clamp(24px,7vw,36px);height:clamp(24px,7vw,36px);border:2px solid #fff0b8;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#e8a82e,#68370c);color:#fff4c9;font-size:clamp(18px,5vw,27px);font-weight:1000}
+.gymrush-reel .gymrush-tile.bonus-tile{border-color:#ffe7a0!important;box-shadow:0 0 12px #ffc64c99,inset 0 0 8px #fff7}
+.gymrush-reel .gymrush-tile.is-matched{z-index:4}
+.gymrush-board.is-falling .gymrush-reel .gymrush-tile{animation:gymrush-real-drop .48s cubic-bezier(.15,.75,.2,1) both}
+@keyframes gymrush-real-drop{0%{transform:translateY(-150%);opacity:.15}72%{transform:translateY(7%);opacity:1}100%{transform:translateY(0);opacity:1}}
+@media(max-width:360px){.gymrush-machine{padding:9px}.gymrush-reel{padding:3px 2px}.gymrush-board{gap:3px;padding:5px}}
+@media(prefers-reduced-motion:reduce){.gymrush-board.is-spinning .gymrush-reel .gymrush-tile,.gymrush-board.is-falling .gymrush-reel .gymrush-tile{animation:none;filter:none;opacity:1}}
