@@ -888,6 +888,7 @@ function GymRushPage({ onOpenMarket }: { onOpenMarket: () => void }) {
   const [result, setResult] = useState('¡Prepárate! Esta es una prueba visual, sin movimientos reales de ARNOLD.')
   const [spinning, setSpinning] = useState(false)
   const [matchedTiles, setMatchedTiles] = useState<number[]>([])
+  const [falling, setFalling] = useState(false)
   const [spinAccumulated, setSpinAccumulated] = useState(0)
   const [cascadeNumber, setCascadeNumber] = useState(0)
 
@@ -943,6 +944,9 @@ function GymRushPage({ onOpenMarket }: { onOpenMarket: () => void }) {
       nextBoard = collapsed
       setBoard(nextBoard)
       setMatchedTiles([])
+      setFalling(true)
+      await gymRushWait(360)
+      setFalling(false)
       multiplier = multiplier === 1 ? 2 : multiplier === 2 ? 3 : 5
       setComboMultiplier(multiplier)
       await gymRushWait(420)
@@ -973,7 +977,7 @@ function GymRushPage({ onOpenMarket }: { onOpenMarket: () => void }) {
     </div>
     <div className="gymrush-machine">
       <div className="gymrush-machine-head"><span>★ ARNOLD CHALLENGE ★</span><span>RONDA #{spins + 1}</span></div>
-      <div className={'gymrush-board' + (spinning ? ' is-spinning' : '')} aria-label="Tablero de 5 por 5 símbolos">
+      <div className={'gymrush-board' + (spinning ? ' is-spinning' : '') + (falling ? ' is-falling' : '')} aria-label="Tablero de 5 por 5 símbolos">
         {board.map((symbol, index) => <div className={'gymrush-tile' + (symbol.id === 'arnold' ? ' arnold-tile' : '') + (symbol.id === 'bonus' ? ' bonus-tile' : '') + (matchedTiles.includes(index) ? ' is-matched' : '')} key={index}>
           <span>{symbol.icon}</span><small>{symbol.label}</small>
         </div>)}
