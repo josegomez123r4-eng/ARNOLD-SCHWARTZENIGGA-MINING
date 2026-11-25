@@ -1047,3 +1047,30 @@ html,body{background:#090909;color:#f4f0e7}
 .referral-status{flex-shrink:0;padding:5px 8px;border-radius:20px;font-size:9px;font-weight:800;letter-spacing:.45px}
 .referral-status.eligible{border:1px solid #398d5a66;background:#1b5a3433;color:#86e0a4}
 .referral-status.pending{border:1px solid #c9943744;background:#c9943718;color:#e7bd69}
+
+
+/* Prevent accidental text selection and long-press callouts in the Mini App UI. */
+.app-shell,
+.app-shell * {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Keep editable fields usable, including cursor placement and text editing. */
+.app-shell input,
+.app-shell textarea,
+.app-shell select,
+.app-shell [contenteditable="true"],
+.app-shell [contenteditable=""] {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+}
+
+/* Avoid image drag previews on touch and desktop browsers. */
+.app-shell img,
+.app-shell svg {
+  -webkit-user-drag: none;
+  user-drag: none;
+}
