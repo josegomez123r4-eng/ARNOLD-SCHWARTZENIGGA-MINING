@@ -973,7 +973,9 @@ function GymRushPage({ onOpenMarket }: { onOpenMarket: () => void }) {
     else setResult('SIN COMBINACIÓN · ¡Sigue entrenando!')
     setComboMultiplier(chain > 0 ? (chain >= 4 ? 5 : chain === 3 ? 3 : chain === 2 ? 2 : 1) : 1)
     setMatchedTiles([])
+    setStoppedReels([0, 1, 2, 3, 4])
     setSpinning(false)
+    spinningRef.current = false
   }
   spinRef.current = spin
 
