@@ -20,7 +20,7 @@ declare global {
   }
 }
 import {
-  Clock3, Coins, Flame, Gift, Handshake, ListChecks, LockKeyhole,
+  Clock3, Coins, Flame, Gift, ListChecks, LockKeyhole,
   Pickaxe, ShoppingBag, ShieldCheck, Wallet, Zap, ArrowDownToLine
 } from 'lucide-react'
 
