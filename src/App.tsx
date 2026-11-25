@@ -880,23 +880,27 @@ function GymRushPage({ onOpenMarket }: { onOpenMarket: () => void }) {
   const [spinAccumulated, setSpinAccumulated] = useState(0)
   const [cascadeNumber, setCascadeNumber] = useState(0)
   const [autoSpin, setAutoSpin] = useState(false)
-  const [turbo, setTurbo] = useState(false)
   const spinRef = useRef<() => Promise<void>>(async () => {})
+  const spinningRef = useRef(false)
+  const [stoppedReels, setStoppedReels] = useState<number[]>([0, 1, 2, 3, 4])
   const autoRef = useRef(false)
   autoRef.current = autoSpin
 
   const spin = async () => {
-    if (spinning) return
+    if (spinningRef.current) return
+    spinningRef.current = true
     if (freeSpins === 0 && demoBalance < GYM_RUSH_BET) {
       setAutoSpin(false)
       setResult('SALDO DEMO INSUFICIENTE')
+      spinningRef.current = false
       return
     }
-    const delay = (normal: number) => gymRushWait(turbo ? Math.max(55, normal * 0.32) : normal)
+    const delay = (normal: number) => gymRushWait(normal)
     const usingFreeSpin = freeSpins > 0
     if (usingFreeSpin) setFreeSpins(value => Math.max(0, value - 1))
     else setDemoBalance(value => Math.max(0, value - GYM_RUSH_BET))
     setSpinning(true)
+    setStoppedReels([])
     setSpinAccumulated(0)
     setCascadeNumber(0)
     setMatchedTiles([])
@@ -904,7 +908,8 @@ function GymRushPage({ onOpenMarket }: { onOpenMarket: () => void }) {
     const nextBoard = makeGymRushBoard()
     // Cada columna se detiene después de la anterior, como una tragamonedas real.
     for (let col = 0; col < GYM_RUSH_SIZE; col++) {
-      await delay(turbo ? 95 : 260)
+      await delay(320)
+      setStoppedReels(previous => [...previous, col])
       setBoard(previous => {
         const updated = [...previous]
         for (let row = 0; row < GYM_RUSH_SIZE; row++) updated[row * GYM_RUSH_SIZE + col] = nextBoard[row * GYM_RUSH_SIZE + col]
@@ -966,9 +971,9 @@ function GymRushPage({ onOpenMarket }: { onOpenMarket: () => void }) {
 
   useEffect(() => {
     if (!autoSpin || spinning) return
-    const timer = window.setTimeout(() => { void spinRef.current() }, turbo ? 100 : 450)
+    const timer = window.setTimeout(() => { void spinRef.current() }, 450)
     return () => window.clearTimeout(timer)
-  }, [autoSpin, spinning, turbo])
+  }, [autoSpin, spinning])
 
   return <section className="gymrush-page">
     <div className="gymrush-hero">
@@ -987,8 +992,8 @@ function GymRushPage({ onOpenMarket }: { onOpenMarket: () => void }) {
     </div>
     <div className="gymrush-machine">
       <div className="gymrush-machine-head"><span>★ ARNOLD CHALLENGE ★</span><span>RONDA #{spins + 1}</span></div>
-      <div className={'gymrush-board' + (spinning ? ' is-spinning' : '') + (falling ? ' is-falling' : '') + (turbo ? ' is-turbo' : '')} aria-label="Tablero de 5 por 5 símbolos">
-        {board.map((symbol, index) => <div className={'gymrush-tile' + (symbol.id === 'arnold' ? ' arnold-tile' : '') + (symbol.id === 'bonus' ? ' bonus-tile' : '') + (matchedTiles.includes(index) ? ' is-matched' : '')} key={index}>
+      <div className={'gymrush-board' + (spinning ? ' is-spinning' : '') + (falling ? ' is-falling' : '')} aria-label="Tablero de 5 por 5 símbolos">
+        {board.map((symbol, index) => <div className={'gymrush-tile' + (spinning && stoppedReels.includes(index % GYM_RUSH_SIZE) ? ' reel-stopped' : '') + (symbol.id === 'arnold' ? ' arnold-tile' : '') + (symbol.id === 'bonus' ? ' bonus-tile' : '') + (matchedTiles.includes(index) ? ' is-matched' : '')} key={index}>
           <span>{symbol.icon}</span><small>{symbol.label}</small>
         </div>)}
       </div>
@@ -1000,7 +1005,6 @@ function GymRushPage({ onOpenMarket }: { onOpenMarket: () => void }) {
       <div className="gymrush-result" aria-live="polite">{result}</div>
       <div className="gymrush-controls">
         <button className={'gymrush-control auto' + (autoSpin ? ' active' : '')} type="button" onClick={() => setAutoSpin(value => !value)} aria-pressed={autoSpin}>{autoSpin ? '⏸ DETENER' : '🔁 AUTO'}</button>
-        <button className={'gymrush-control turbo' + (turbo ? ' active' : '')} type="button" onClick={() => setTurbo(value => !value)} aria-pressed={turbo}>⚡ TURBO {turbo ? 'ON' : 'OFF'}</button>
       </div>
       <button className="gymrush-spin" type="button" onClick={() => void spin()} disabled={spinning || autoSpin || (freeSpins === 0 && demoBalance < GYM_RUSH_BET)}>
         <span>⚡</span>{spinning ? 'GIRANDO…' : freeSpins > 0 ? 'USAR GIRO GRATIS' : 'GIRAR · 100 ARNOLD'}<span>⚡</span>
@@ -1010,7 +1014,7 @@ function GymRushPage({ onOpenMarket }: { onOpenMarket: () => void }) {
     </div>
     <div className="gymrush-prizes">
       <div className="gymrush-section-title"><span> REGLAS DE GYM RUSH </span><i /></div>
-      <div className="gymrush-prize-row"><b className="prize-arnold">A</b><span><strong>6 O MÁS FIGURAS IGUALES CONECTADAS</strong><small>Desaparecen, caen nuevas fichas y continúan las cascadas</small></span><em>COMBOS</em></div>
+      <div className="gymrush-prize-row"><b className="prize-arnold">A</b><span><strong>6 O MÁS FIGURAS IGUALES</strong><small>Desaparecen, caen nuevas fichas y continúan las cascadas</small></span><em>COMBOS</em></div>
       <div className="gymrush-prize-row"><b>👑</b><span><strong>3 SÍMBOLOS BONUS</strong><small>Activa 10 giros gratis</small></span><em>10 GIROS</em></div>
       <div className="gymrush-prize-row"><b>⚡</b><span><strong>MULTIPLICADORES DE COMBO</strong><small>Escala: x1 · x2 · x3 · x5</small></span><em>HASTA x5</em></div>
     </div>
