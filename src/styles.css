@@ -1380,3 +1380,46 @@ html,body{background:#090909;color:#f4f0e7}
 .tasks-page .task-reference-card .task-join-link{grid-column:3!important;grid-row:1/span 2!important;align-self:center!important;display:flex!important;align-items:center!important;justify-content:center!important;width:100%!important;min-height:40px!important;padding:7px 8px!important;border-radius:24px!important;border:1px solid #ffe9ac!important;background:linear-gradient(180deg,#ffe9a5 0%,#f3c85f 52%,#d49a31 100%)!important;color:#1d1508!important;font-size:13px!important;font-weight:900!important;line-height:1!important;text-align:center!important;text-decoration:none!important;box-shadow:inset 0 1px #fff9,0 4px 12px #d49a3125!important}
 .tasks-page .task-reference-card .task-join-link:disabled{opacity:.58!important}
 @media(max-width:430px){.tasks-page .task-reference-card{padding:10px 11px!important}.tasks-page .task-reference-card .task-card-main{grid-template-columns:48px minmax(0,1fr) 76px!important;gap:9px!important}.tasks-page .task-reference-card .task-card-icon{width:44px!important;height:44px!important}.tasks-page .task-reference-card .task-card-heading h2{font-size:13px!important}.tasks-page .task-reference-card .task-reward-amount{font-size:13px!important}.tasks-page .task-reference-card .task-card-content p{font-size:9px!important}.tasks-page .task-reference-card .task-join-link{min-height:36px!important;font-size:11px!important}}
+
+
+/* ARNOLD GYM RUSH — demo interface only */
+.gymrush-page{padding:18px 0 28px}
+.gymrush-hero{text-align:center;position:relative;padding:15px 8px 20px;overflow:hidden;border:1px solid #b98b3d55;border-radius:18px;background:radial-gradient(ellipse at 50% 0%,#65341455,transparent 68%),linear-gradient(145deg,#21160f,#100d0a)}
+.gymrush-eyebrow{display:flex;align-items:center;justify-content:center;gap:9px;color:#e9b85d;font-size:8px;font-weight:900;letter-spacing:3px}
+.gymrush-eyebrow span{width:23px;height:1px;background:#d69a3c}
+.gymrush-title{margin-top:8px;font:900 clamp(45px,13vw,62px)/.95 'Barlow Condensed',sans-serif;letter-spacing:2px;color:#fff0d0;text-shadow:0 4px 22px #e78b2844}
+.gymrush-title em{font-style:normal;color:#f3b84e}
+.gymrush-hero p{margin:8px 0 0;color:#b8a184;font-size:8px;font-weight:800;letter-spacing:1.6px}
+.gymrush-mascot{width:43px;height:43px;margin:14px auto 0;display:grid;place-items:center;border-radius:50%;border:2px solid #ffcf70;background:radial-gradient(circle,#edb94f,#6d370f 70%);color:#1b1008;font:900 25px 'Barlow Condensed',sans-serif;box-shadow:0 0 22px #e9a53c66}
+.gymrush-stats{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:12px 0}
+.gymrush-stats>div{padding:12px;border:1px solid #b88a3b55;border-radius:12px;background:linear-gradient(145deg,#21190f,#110f0c)}
+.gymrush-stats span{display:block;color:#9e8d70;font-size:7px;font-weight:800;letter-spacing:1px}
+.gymrush-stats b{display:block;margin-top:5px;color:#f4c66d;font:800 25px 'Barlow Condensed',sans-serif}
+.gymrush-stats small{font:800 8px 'DM Sans',sans-serif;color:#b79a69}
+.gymrush-machine{padding:13px;border:1px solid #e3aa4d99;border-radius:17px;background:radial-gradient(ellipse at 50% 0%,#6a3b1555,transparent 55%),linear-gradient(155deg,#21180f,#0d0b09);box-shadow:0 12px 38px #0009,inset 0 1px #fff2}
+.gymrush-machine-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:11px;color:#d7a64f;font-size:7px;font-weight:900;letter-spacing:1px}
+.gymrush-machine-head span:last-child{color:#8d806b}
+.gymrush-board{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;padding:7px;border:1px solid #e6b45c66;border-radius:11px;background:#090807;box-shadow:inset 0 0 22px #000}
+.gymrush-tile{min-width:0;aspect-ratio:1/1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:1px solid #b58a3c44;border-radius:7px;background:linear-gradient(145deg,#322315,#17110c);box-shadow:inset 0 1px #fff1}
+.gymrush-tile>span{font-size:clamp(18px,5vw,25px);line-height:1.1}
+.gymrush-tile small{max-width:100%;overflow:hidden;color:#c8a66d;font-size:clamp(4px,1.25vw,6px);font-weight:900;letter-spacing:.2px;white-space:nowrap}
+.gymrush-tile.arnold-tile{border-color:#ffcf6c;background:radial-gradient(circle,#f6c65d,#805018 75%);box-shadow:0 0 10px #e5a63d44,inset 0 1px #fff8}
+.arnold-tile>span{width:27px;height:27px;display:grid;place-items:center;border:2px solid #ffe5a3;border-radius:50%;background:#a15c13;color:#fff0bf;font:900 20px 'Barlow Condensed',sans-serif}
+.arnold-tile small{color:#fff1c8}
+.gymrush-result{min-height:34px;display:flex;align-items:center;justify-content:center;text-align:center;color:#f2c76e;font-size:10px;font-weight:800;padding:7px 2px}
+.gymrush-spin{width:100%;min-height:49px;display:flex;align-items:center;justify-content:center;gap:12px;border:1px solid #ffdc8c;border-radius:11px;background:linear-gradient(100deg,#9c541b,#f0bd56 48%,#a75c1c);color:#241306;font-size:12px;font-weight:1000;letter-spacing:1.7px;box-shadow:0 6px 22px #d8892d33}
+.gymrush-spin:disabled{opacity:.7}
+.gymrush-bet-note{text-align:center;margin-top:8px;color:#8e8069;font-size:7px;font-weight:800;letter-spacing:1px}
+.gymrush-prizes{margin-top:15px;padding:14px;border:1px solid #a77a3544;border-radius:14px;background:#15110c}
+.gymrush-section-title{display:flex;align-items:center;gap:9px;margin-bottom:9px;color:#e8b45a;font-size:9px;font-weight:900;letter-spacing:1.5px}
+.gymrush-section-title i{height:1px;flex:1;background:#9b733744}
+.gymrush-prize-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #ffffff0d}
+.gymrush-prize-row:last-child{border-bottom:0}
+.gymrush-prize-row>b{width:34px;height:34px;flex:none;display:grid;place-items:center;border:1px solid #b98b3d55;border-radius:9px;background:#2b1e10;font-size:19px}
+.gymrush-prize-row>b.prize-arnold{border-radius:50%;background:#b87a22;color:#fff0bd;font:900 22px 'Barlow Condensed',sans-serif}
+.gymrush-prize-row>span{display:flex;flex:1;min-width:0;flex-direction:column;gap:3px}
+.gymrush-prize-row strong{color:#e8d4ad;font-size:8px;letter-spacing:.5px}
+.gymrush-prize-row small{color:#8e8069;font-size:8px}
+.gymrush-prize-row em{color:#f0c36c;font:900 14px 'Barlow Condensed',sans-serif;font-style:normal;white-space:nowrap}
+.gymrush-demo-warning{margin:12px 2px 0;padding:11px;border:1px solid #9d713c44;border-radius:10px;background:#21170d;color:#b7a07a;font-size:8px;line-height:1.6;text-align:center}
+@media(max-width:360px){.gymrush-machine{padding:9px}.gymrush-board{gap:3px;padding:5px}.gymrush-tile small{font-size:4px}.gymrush-stats b{font-size:22px}}
